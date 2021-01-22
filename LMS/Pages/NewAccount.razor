@@ -1,0 +1,64 @@
+﻿@page "/newaccount"
+@using Shared.Models;
+@using Data;
+@inject NavigationManager NavMan;
+@inject IDbService DbService;
+@inject AzureDbContext AzureDb;
+
+<div class="row text-center">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <div class="card LMS-card">
+            <div class="card-header LMS-title">
+                <h3>New Account</h3>
+            </div>
+            <div class="card-body">
+                <EditForm Model="@acctModel" OnValidSubmit="@CreateAccount">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div>
+                        <label class="LMS-form-label text-left" for="fname"><strong>First Name</strong></label>
+                        <InputText id="fname" class="LMS-input" type="text" placeholder="First Name" @bind-Value="acctModel.FirstName" />
+                    </div>
+                    <div>
+                        <label class="LMS-form-label text-left" for="lname"><strong>Last Name</strong></label>
+                        <InputText id="lname" class="LMS-input" type="text" placeholder="Last Name" @bind-Value="acctModel.LastName" />
+                    </div>
+                    <div>
+                        <label class="LMS-form-label text-left" for="email"><strong>Email</strong></label>
+                        <InputText id="email" class="LMS-input" type="text" placeholder="This will be your username" @bind-Value="acctModel.Email" />
+                    </div>
+                    <div>
+                        <label class="LMS-form-label text-left" for="email"><strong>Password</strong></label>
+                        <InputText id="email" class="LMS-input" type="text" placeholder="Password" @bind-Value="acctModel.Auth.Password" />
+                    </div>
+                    <button class="btn btn-primary LMS-btn" type="submit">Create Account</button>
+                </EditForm>
+
+                <a href="/login">Already have an account?</a>
+
+                @if (!string.IsNullOrEmpty(message))
+                {
+                    <p class="LMS-message">@message</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3"></div>
+</div>
+
+@code {
+    private AccountModel acctModel = new AccountModel();
+    private string message = string.Empty;
+
+    private async void CreateAccount()
+    {
+        message = "Error trying to create account. Account may already exist.";
+        var acctCreated = await DbService.CreateAccount(AzureDb, acctModel);
+        if (acctCreated)
+        {
+            message = "Account Created. Proceed to login page.";
+            NavMan.NavigateTo("/");
+        }
+    }
+}

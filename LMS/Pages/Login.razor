@@ -1,0 +1,63 @@
+﻿@page "/login"
+@using Shared.Models;
+@using Data;
+@inject NavigationManager NavMan;
+@inject IDbService DbService;
+@inject AzureDbContext AzureDb;
+
+    <div class="row text-center">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            <div class="card LMS-card">
+                <div class="card-header LMS-title">
+                    <h3>Login</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@authModel" OnValidSubmit="@TryAuthenticate">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div>
+                            <label class="LMS-form-label text-left" for="LMSusername"><strong>Username</strong></label>
+                            <InputText id="LMSusername" class="LMS-input" type="text" placeholder="Username" @bind-Value="authModel.UserName" />
+                        </div>
+                        <div>
+                            <label class="LMS-form-label text-left" for="LMSpassword"><strong>Password</strong></label>
+                            <InputText id="LMSpassword" class="LMS-input" type="password" placeholder="Password" @bind-Value="authModel.Password" />
+                        </div>
+
+                        <button class="btn btn-primary LMS-btn" type="submit">Submit</button>
+                    </EditForm>
+
+                    <a href="/newaccount">Don't have an account?</a>
+
+                    @if (!string.IsNullOrEmpty(message))
+                    {
+                        <p class="LMS-message">@message</p>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3"></div>
+    </div>
+
+    @code {
+        private AuthModel authModel = new AuthModel();
+        private string message = string.Empty;
+
+        //protected override async Task OnInitializedAsync()
+        //{
+
+        //}
+
+        private async void TryAuthenticate()
+        {
+            message = "Login failed.";
+            var authenticated = await DbService.Authenticate(AzureDb, authModel);
+            if (authenticated)
+            {
+                //create cookie?
+                //redirect to some page?
+                message = "Good job, you logged in.";
+            }
+        }
+    }
