@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\A01\\LMS.csproj": {}
+    "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj": {}
   },
   "projects": {
-    "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\A01\\LMS.csproj": {
+    "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\A01\\LMS.csproj",
+        "projectUniqueName": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj",
         "projectName": "LMS",
-        "projectPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\A01\\LMS.csproj",
+        "projectPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj",
         "packagesPath": "C:\\Users\\seros\\.nuget\\packages\\",
-        "outputPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\A01\\obj\\",
+        "outputPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Microsoft\\Xamarin\\NuGet\\",
@@ -45,6 +45,10 @@
         "netcoreapp3.1": {
           "targetAlias": "netcoreapp3.1",
           "dependencies": {
+            "Blazored.LocalStorage": {
+              "target": "Package",
+              "version": "[3.0.0, )"
+            },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
               "version": "[3.1.10, )"
@@ -70,6 +74,10 @@
             "RestSharp": {
               "target": "Package",
               "version": "[106.11.7, )"
+            },
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[5.0.1, )"
             }
           },
           "imports": [

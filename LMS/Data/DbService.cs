@@ -1,26 +1,30 @@
 ﻿using LMS.Shared.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using RestSharp;
-using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
 using LMS.Data.Models;
-
+using Blazored.LocalStorage;
+using System.Dynamic;
+using LMS.Data.Helper;
 
 namespace LMS.Data
 {
     public interface IDbService
     {
-        public Task<bool> Authenticate(AzureDbContext db, AuthModel model);
+        public Task<bool> Authenticate(ILocalStorageService storage, AzureDbContext db, AuthModel model);
         public Task<bool> CreateAccount(AzureDbContext db, AccountModel model);
     }
     public class DbService : IDbService
     {
-        public async Task<bool> Authenticate(AzureDbContext db, AuthModel model)
+        /// <summary>
+        /// Authenticates a user and creates a new session.
+        /// </summary>
+        /// <param name="storage"></param>
+        /// <param name="db"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public async Task<bool> Authenticate(ILocalStorageService storage, AzureDbContext db, AuthModel model)
         {
-            //determine if login is a success
             try
             {
                 var acct = db.Accounts.FirstOrDefault(a => a.Email.ToLower().Equals(model.UserName.ToLower()));
@@ -31,6 +35,9 @@ namespace LMS.Data
 
                 if (!model.Password.Equals(auth.Password)) return false; // case-sensitive
 
+                await SessionObj.DeleteSession(db, storage); // delete any existing to renew session
+                await SessionObj.CreateSession(db, storage); 
+
                 return true;
             }
             catch (Exception ex)
@@ -40,9 +47,14 @@ namespace LMS.Data
             }
         }
 
+        /// <summary>
+        /// Creates a new account.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
         public async Task<bool> CreateAccount(AzureDbContext db, AccountModel model)
         {
-            //determine if login is a success
             try
             {
                 var acctExists = db.Accounts.Any(a => a.Email.ToLower().Equals(model.Email.ToLower()));
@@ -50,12 +62,13 @@ namespace LMS.Data
 
                 bool savedAcct = false, savedAuth = false;
 
-                //create account 
                 var accountToAdd = new Account()
                 {
                     Email = model.Email,
                     FirstName = model.FirstName,
-                    LastName = model.LastName
+                    LastName = model.LastName,
+                    CreateDate = DateTime.UtcNow,
+                    Role = (int)Enum.Role.STUDENT
                 };
                 db.Accounts.Add(accountToAdd);
                 savedAcct = db.SaveChanges() > 0;
@@ -66,7 +79,8 @@ namespace LMS.Data
                     db.Authentications.Add(new Authentication()
                     {
                         AccountId = accountToAdd.AccountId,
-                        Password = model.Auth.Password
+                        Password = model.Auth.Password,
+                        CreateDate = DateTime.UtcNow
                     });
                     savedAuth = db.SaveChanges() > 0;
                 }
