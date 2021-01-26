@@ -11,5 +11,6 @@ namespace LMS.Data
         }
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Authentication> Authentications { get; set; }
+        public DbSet<Session> Sessions { get; set; }
     }
 }

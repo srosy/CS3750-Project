@@ -76,21 +76,28 @@ using LMS.Shared;
 #line hidden
 #nullable disable
 #nullable restore
-#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
+#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
 using Shared.Models;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
+#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
+using Data.Helper;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 4 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
 using Data;
 
 #line default
 #line hidden
 #nullable disable
-    [Microsoft.AspNetCore.Components.RouteAttribute("/newaccount")]
-    public partial class NewAccount : Microsoft.AspNetCore.Components.ComponentBase
+    [Microsoft.AspNetCore.Components.RouteAttribute("/dashboard")]
+    public partial class Dashboard : Microsoft.AspNetCore.Components.ComponentBase
     {
         #pragma warning disable 1998
         protected override void BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder)
@@ -98,25 +105,24 @@ using Data;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 50 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
+#line 13 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
        
-    private AccountModel acctModel = new AccountModel();
-    private string message = string.Empty;
 
-    private async void CreateAccount()
+
+    protected override async Task OnInitializedAsync()
     {
-        message = "Error trying to create account. Account may already exist.";
-        var acctCreated = await DbService.CreateAccount(AzureDb, acctModel);
-        if (acctCreated)
+        var validSession = await SessionObj.VerifySession(AzureDb, Storage);
+        if (!validSession)
         {
-            message = "Account Created. Proceed to login page.";
-            NavMan.NavigateTo("/");
+            NavMan.NavigateTo("login");
         }
     }
+
 
 #line default
 #line hidden
 #nullable disable
+        [global::Microsoft.AspNetCore.Components.InjectAttribute] private Blazored.LocalStorage.ILocalStorageService Storage { get; set; }
         [global::Microsoft.AspNetCore.Components.InjectAttribute] private AzureDbContext AzureDb { get; set; }
         [global::Microsoft.AspNetCore.Components.InjectAttribute] private IDbService DbService { get; set; }
         [global::Microsoft.AspNetCore.Components.InjectAttribute] private NavigationManager NavMan { get; set; }

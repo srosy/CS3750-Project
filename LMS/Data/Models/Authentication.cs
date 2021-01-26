@@ -9,5 +9,6 @@ namespace LMS.Data.Models
         public int AuthId { get; set; }
         public int AccountId { get; set; }
         public string Password { get; set; }
+        public DateTime CreateDate { get; internal set; }
     }
 }
