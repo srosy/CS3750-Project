@@ -13,77 +13,77 @@ namespace LMS.Pages
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Components;
 #nullable restore
-#line 1 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 1 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using System.Net.Http;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using Microsoft.AspNetCore.Authorization;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using Microsoft.AspNetCore.Components.Authorization;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 4 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 4 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using Microsoft.AspNetCore.Components.Forms;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 5 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 5 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using Microsoft.AspNetCore.Components.Routing;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 6 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 6 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using Microsoft.AspNetCore.Components.Web;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 7 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 7 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using Microsoft.JSInterop;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 8 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 8 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using LMS;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 9 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 9 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using LMS.Shared;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\Pages\Login.razor"
+#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Login.razor"
 using Shared.Models;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\Pages\Login.razor"
+#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Login.razor"
 using Data;
 
 #line default
@@ -98,32 +98,25 @@ using Data;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 43 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\Pages\Login.razor"
-           
-        private AuthModel authModel = new AuthModel();
-        private string message = string.Empty;
+#line 44 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Login.razor"
+       
+    private AuthModel authModel = new AuthModel();
+    private string message = string.Empty;
 
-        //protected override async Task OnInitializedAsync()
-        //{
-
-        //}
-
-        private async void TryAuthenticate()
+    private async void TryAuthenticate()
+    {
+        message = "Login failed.";
+        var authenticated = await DbService.Authenticate(Storage, AzureDb, authModel);
+        if (authenticated)
         {
-            message = "Login failed.";
-            var authenticated = await DbService.Authenticate(AzureDb, authModel);
-            if (authenticated)
-            {
-                //create cookie?
-                //redirect to some page?
-                message = "Good job, you logged in.";
-            }
+            NavMan.NavigateTo("dashboard");
         }
-    
+    }
 
 #line default
 #line hidden
 #nullable disable
+        [global::Microsoft.AspNetCore.Components.InjectAttribute] private Blazored.LocalStorage.ILocalStorageService Storage { get; set; }
         [global::Microsoft.AspNetCore.Components.InjectAttribute] private AzureDbContext AzureDb { get; set; }
         [global::Microsoft.AspNetCore.Components.InjectAttribute] private IDbService DbService { get; set; }
         [global::Microsoft.AspNetCore.Components.InjectAttribute] private NavigationManager NavMan { get; set; }

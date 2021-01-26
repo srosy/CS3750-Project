@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using LMS.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -23,6 +24,11 @@ namespace LMS
             services.AddServerSideBlazor();
             services.AddDbContext<AzureDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("AzureDbContext")));
             services.AddSingleton<IDbService, DbService>();
+
+            // add localstorage for cookies/session data
+            services.AddBlazoredLocalStorage();   // local storage
+            services.AddBlazoredLocalStorage(config =>
+                config.JsonSerializerOptions.WriteIndented = true);  // local storage
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
