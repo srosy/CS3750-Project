@@ -76,19 +76,20 @@ using LMS.Shared;
 #line hidden
 #nullable disable
 #nullable restore
-#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
+#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
 using Shared.Models;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
+#line 4 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
 using Data;
 
 #line default
 #line hidden
 #nullable disable
+    [Microsoft.AspNetCore.Components.LayoutAttribute(typeof(UnauthenticatedLayout))]
     [Microsoft.AspNetCore.Components.RouteAttribute("/newaccount")]
     public partial class NewAccount : Microsoft.AspNetCore.Components.ComponentBase
     {
@@ -98,20 +99,28 @@ using Data;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 50 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
+#line 55 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
        
     private AccountModel acctModel = new AccountModel();
     private string message = string.Empty;
+    private string ConfirmPassword;
 
     private async void CreateAccount()
     {
-        message = "Error trying to create account. Account may already exist.";
+        if (!ConfirmPassword.Equals(acctModel.Auth.Password))
+        {
+            message = "Passwords do not match!";
+            return;
+        }
+
         var acctCreated = await DbService.CreateAccount(AzureDb, acctModel);
         if (acctCreated)
         {
             message = "Account Created. Proceed to login page.";
             NavMan.NavigateTo("/");
         }
+
+        message = "Error trying to create account. Account may already exist.";
     }
 
 #line default

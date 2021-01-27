@@ -83,10 +83,9 @@ using LMS.Shared;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 33 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Shared\NavMenu.razor"
+#line 28 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Shared\NavMenu.razor"
        
     private bool collapseNavMenu = true;
-
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()

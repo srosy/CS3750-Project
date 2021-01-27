@@ -1,4 +1,5 @@
-﻿@page "/newaccount"
+﻿@page "/newaccount";
+@layout UnauthenticatedLayout;
 @using Shared.Models;
 @using Data;
 @inject NavigationManager NavMan;
@@ -6,7 +7,7 @@
 @inject AzureDbContext AzureDb;
 
 <div class="row text-center">
-    <div class="col-md-3"></div>
+    <div class="col-md-4"></div>
     <div class="col-md-6">
         <div class="card LMS-card">
             <div class="card-header LMS-title">
@@ -29,8 +30,12 @@
                         <InputText id="email" class="LMS-input" type="text" placeholder="This will be your username" @bind-Value="acctModel.Email" />
                     </div>
                     <div>
-                        <label class="LMS-form-label text-left" for="email"><strong>Password</strong></label>
-                        <InputText id="email" class="LMS-input" type="text" placeholder="Password" @bind-Value="acctModel.Auth.Password" />
+                        <label class="LMS-form-label text-left" for="password"><strong>Password</strong></label>
+                        <InputText id="password" class="LMS-input" type="password" placeholder="Password" @bind-Value="acctModel.Auth.Password" />
+                    </div>
+                    <div>
+                        <label class="LMS-form-label text-left" for="confirm-password"><strong>Confirm Password</strong></label>
+                        <InputText id="confirm-password" class="LMS-input" type="password" placeholder="Re-enter password" @bind-Value="ConfirmPassword" />
                     </div>
                     <button class="btn btn-primary LMS-btn" type="submit">Create Account</button>
                 </EditForm>
@@ -44,21 +49,29 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3"></div>
+    <div class="col-md-4"></div>
 </div>
 
 @code {
     private AccountModel acctModel = new AccountModel();
     private string message = string.Empty;
+    private string ConfirmPassword;
 
     private async void CreateAccount()
     {
-        message = "Error trying to create account. Account may already exist.";
+        if (!ConfirmPassword.Equals(acctModel.Auth.Password))
+        {
+            message = "Passwords do not match!";
+            return;
+        }
+
         var acctCreated = await DbService.CreateAccount(AzureDb, acctModel);
         if (acctCreated)
         {
             message = "Account Created. Proceed to login page.";
             NavMan.NavigateTo("/");
         }
+
+        message = "Error trying to create account. Account may already exist.";
     }
 }
