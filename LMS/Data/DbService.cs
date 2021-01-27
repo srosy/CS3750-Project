@@ -33,7 +33,7 @@ namespace LMS.Data
                 var auth = db.Authentications.FirstOrDefault(a => a.AccountId == acct.AccountId);
                 if (auth == null) return false;
 
-                if (!model.Password.Equals(auth.Password)) return false; // case-sensitive
+                if (!Encryption.GenerateSaltedHash(model.Password, auth.Salt).Equals(auth.Password)) return false; // case-sensitive
 
                 await SessionObj.DeleteSession(db, storage); // delete any existing to renew session
                 await SessionObj.CreateSession(db, storage); 
@@ -76,11 +76,14 @@ namespace LMS.Data
                 if (savedAcct)
                 {
                     model.Auth.UserName = model.Email.ToLower();
+
+                    var salt = Encryption.GenSalt();
                     db.Authentications.Add(new Authentication()
                     {
                         AccountId = accountToAdd.AccountId,
-                        Password = model.Auth.Password,
-                        CreateDate = DateTime.UtcNow
+                        CreateDate = DateTime.UtcNow,
+                        Salt = salt,
+                        Password = Encryption.GenerateSaltedHash(model.Auth.Password, salt)
                     });
                     savedAuth = db.SaveChanges() > 0;
                 }

@@ -1,20 +1,21 @@
 ﻿@page "/"
+@layout UnauthenticatedLayout;
 
-    <h3 class="text-center">Welcome to LMS for Weber State's CS3750</h3>
+<h3 class="text-center">Welcome to LMS for Weber State's CS3750</h3>
 
-    <div class="container text-center">
-        <div class="row">
-            <div class="arpit-image-container">
-                <div class="arpit-image"></div>
-            </div>
-        </div>
-        <div class="arpit-description">
-            <p>This class is taught by Professor Arpit Christi.</p>
-            <p>Please select an option below or on the nav menu to continue.</p>
-            <a class="btn btn-primary" href="/login">Login</a>
-            <a class="btn btn-secondary" href="/newaccount">Create Account</a>
+<div class="container text-center">
+    <div class="row">
+        <div class="arpit-image-container">
+            <div class="arpit-image"></div>
         </div>
     </div>
+    <div class="arpit-description">
+        <p>This class is taught by Professor Arpit Christi.</p>
+        <p>Please select an option below or on the nav menu to continue.</p>
+        <a class="btn btn-primary" href="/login">Login</a>
+        <a class="btn btn-secondary" href="/newaccount">Create Account</a>
+    </div>
+</div>
 
-    @code{
-    }
+@code{
+}

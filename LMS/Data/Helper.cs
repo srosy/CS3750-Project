@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Blazored.LocalStorage;
 using LMS.Data.Models;
@@ -92,6 +94,41 @@ namespace LMS.Data.Helper
             }
 
             return true;
+        }
+    }
+
+    public class Encryption
+    {
+        const string _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        private static readonly Random _rand = new Random();
+
+        /// <summary>
+        /// Returns a random string of random length: 5 <= length <= 15.
+        /// </summary>
+        /// <returns></returns>
+        public static string GenSalt() => new string(Enumerable.Repeat(_chars, _rand.Next(5, 15)).Select(s => s[_rand.Next(s.Length)]).ToArray());
+
+        /// <summary>
+        /// Generates a hashed+salted password.
+        /// </summary>
+        /// <param name="password"></param>
+        /// <param name="salt"></param>
+        /// <returns></returns>
+        public static string GenerateSaltedHash(string password, string salt)
+        {
+            var passwordBytes = Encoding.UTF8.GetBytes(password);
+            var saltBytes = Encoding.UTF8.GetBytes(salt);
+
+            HashAlgorithm hashAlg = new SHA256Managed();
+            byte[] passwordPlusSaltBytes = new byte[passwordBytes.Length + saltBytes.Length];
+
+            for (int i = 0; i < passwordBytes.Length; i++)
+                passwordPlusSaltBytes[i] = passwordBytes[i];
+            for (int i = 0; i < saltBytes.Length; i++)
+                passwordPlusSaltBytes[passwordBytes.Length + i] = saltBytes[i];
+
+            var hashedAndSaltedPassword = Convert.ToBase64String(hashAlg.ComputeHash(passwordPlusSaltBytes));
+            return hashedAndSaltedPassword;
         }
     }
 }
