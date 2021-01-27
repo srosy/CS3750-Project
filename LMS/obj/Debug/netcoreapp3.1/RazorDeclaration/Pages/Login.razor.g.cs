@@ -76,19 +76,20 @@ using LMS.Shared;
 #line hidden
 #nullable disable
 #nullable restore
-#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Login.razor"
+#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Login.razor"
 using Shared.Models;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Login.razor"
+#line 4 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Login.razor"
 using Data;
 
 #line default
 #line hidden
 #nullable disable
+    [Microsoft.AspNetCore.Components.LayoutAttribute(typeof(UnauthenticatedLayout))]
     [Microsoft.AspNetCore.Components.RouteAttribute("/login")]
     public partial class Login : Microsoft.AspNetCore.Components.ComponentBase
     {
@@ -98,18 +99,24 @@ using Data;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 44 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Login.razor"
+#line 45 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Login.razor"
        
     private AuthModel authModel = new AuthModel();
     private string message = string.Empty;
 
+    /// <summary>
+    /// Attempt to authenticate a user.
+    /// </summary>
     private async void TryAuthenticate()
     {
-        message = "Login failed.";
         var authenticated = await DbService.Authenticate(Storage, AzureDb, authModel);
         if (authenticated)
         {
             NavMan.NavigateTo("dashboard");
+        }
+        else
+        {
+            message = "Login failed.";
         }
     }
 

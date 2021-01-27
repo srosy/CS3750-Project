@@ -1,14 +1,15 @@
-﻿@page "/login"
+﻿@page "/login";
+@layout UnauthenticatedLayout;
 @using Shared.Models;
 @using Data;
 @inject NavigationManager NavMan;
 @inject IDbService DbService;
 @inject AzureDbContext AzureDb;
-@inject Blazored.LocalStorage.ILocalStorageService Storage
+@inject Blazored.LocalStorage.ILocalStorageService Storage;
 
 <div class="row text-center">
-    <div class="col-md-3"></div>
-    <div class="col-md-6">
+    <div class="col-md-4"></div>
+    <div class="col-md-4">
         <div class="card LMS-card">
             <div class="card-header LMS-title">
                 <h3>Login</h3>
@@ -19,7 +20,7 @@
                     <ValidationSummary />
                     <div>
                         <label class="LMS-form-label text-left" for="LMSusername"><strong>Username</strong></label>
-                        <InputText id="LMSusername" class="LMS-input" type="text" placeholder="Username" @bind-Value="authModel.UserName" />
+                        <InputText id="LMSusername" class="LMS-input" type="text" placeholder="Username (email)" @bind-Value="authModel.UserName" />
                     </div>
                     <div>
                         <label class="LMS-form-label text-left" for="LMSpassword"><strong>Password</strong></label>
@@ -38,7 +39,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3"></div>
+    <div class="col-md-4"></div>
 </div>
 
 @code {

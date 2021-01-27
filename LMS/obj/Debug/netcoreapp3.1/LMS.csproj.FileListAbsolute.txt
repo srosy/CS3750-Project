@@ -373,3 +373,5 @@ E:\School\Spring 2021\CS3750\CS3750-Project\LMS\obj\Debug\netcoreapp3.1\LMS.cspr
 E:\School\Spring 2021\CS3750\CS3750-Project\LMS\obj\Debug\netcoreapp3.1\LMS.genruntimeconfig.cache
 E:\School\Spring 2021\CS3750\CS3750-Project\LMS\obj\Debug\netcoreapp3.1\RazorDeclaration\Pages\Dashboard.razor.g.cs
 E:\School\Spring 2021\CS3750\CS3750-Project\LMS\obj\Debug\netcoreapp3.1\Razor\Pages\Dashboard.razor.g.cs
+E:\School\Spring 2021\CS3750\CS3750-Project\LMS\obj\Debug\netcoreapp3.1\RazorDeclaration\Shared\UnauthenticatedLayout.razor.g.cs
+E:\School\Spring 2021\CS3750\CS3750-Project\LMS\obj\Debug\netcoreapp3.1\Razor\Shared\UnauthenticatedLayout.razor.g.cs
