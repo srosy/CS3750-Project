@@ -37,6 +37,13 @@
                         <label class="LMS-form-label text-left" for="confirm-password"><strong>Confirm Password</strong></label>
                         <InputText id="confirm-password" class="LMS-input" type="password" placeholder="Re-enter password" @bind-Value="ConfirmPassword" />
                     </div>
+                    <div>
+                        <select class="form-control selectpicker" @bind-Value="acctModel.Role">
+                            <option value="0" selected>- select a role -</option>
+                            <option value="1">Student</option>
+                            <option value="2">Instructor</option>
+                        </select>
+                    </div>
                     <button class="btn btn-primary LMS-btn" type="submit">Create Account</button>
                 </EditForm>
 
@@ -59,11 +66,18 @@
 
     private async void CreateAccount()
     {
+        if (acctModel.Role <= 0)
+        {
+            message = "User must select a type";
+            return;
+        }
+
         if (!ConfirmPassword.Equals(acctModel.Auth.Password))
         {
             message = "Passwords do not match!";
             return;
         }
+
 
         var acctCreated = await DbService.CreateAccount(AzureDb, acctModel);
         if (acctCreated)

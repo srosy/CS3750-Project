@@ -338,3 +338,8 @@ E:\School\Spring 2021\CS3750\CS3750-Project\UnitTest\bin\Debug\netcoreapp3.1\run
 E:\School\Spring 2021\CS3750\CS3750-Project\UnitTest\bin\Debug\netcoreapp3.1\runtimes\win\lib\netcoreapp2.1\Microsoft.Data.SqlClient.dll
 E:\School\Spring 2021\CS3750\CS3750-Project\UnitTest\bin\Debug\netcoreapp3.1\LMS.dll
 E:\School\Spring 2021\CS3750\CS3750-Project\UnitTest\bin\Debug\netcoreapp3.1\LMS.pdb
+C:\Users\hamky\OneDrive\Documents\Dev\CS3750-Project\UnitTest\obj\Debug\netcoreapp3.1\UnitTest.csprojAssemblyReference.cache
+C:\Users\hamky\OneDrive\Documents\Dev\CS3750-Project\UnitTest\obj\Debug\netcoreapp3.1\UnitTest.AssemblyInfoInputs.cache
+C:\Users\hamky\OneDrive\Documents\Dev\CS3750-Project\UnitTest\obj\Debug\netcoreapp3.1\UnitTest.AssemblyInfo.cs
+C:\Users\hamky\OneDrive\Documents\Dev\CS3750-Project\UnitTest\obj\Debug\netcoreapp3.1\UnitTest.csproj.CoreCompileInputs.cache
+C:\Users\hamky\OneDrive\Documents\Dev\CS3750-Project\UnitTest\obj\Debug\netcoreapp3.1\UnitTest.dll
