@@ -12,5 +12,6 @@ namespace LMS.Data.Models
         public string Email { get; set; }
         public DateTime CreateDate { get; set; }
         public int Role { get; set; }
+        //public DateTime Birthday { get; set; }
     }
 }

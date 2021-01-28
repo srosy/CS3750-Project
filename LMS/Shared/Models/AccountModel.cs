@@ -10,5 +10,6 @@ namespace LMS.Shared.Models
         [Required] public string LastName { get; set; }
         [Required] [EmailAddress] public string Email { get; set; }
         [Required] public int Role { get; set; }
+        //[Required] public  Birthday { get; set; }
     }
 }
