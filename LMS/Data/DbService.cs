@@ -68,7 +68,7 @@ namespace LMS.Data
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     CreateDate = DateTime.UtcNow,
-                    Role = (int)Enum.Role.STUDENT
+                    Role = model.Role
                 };
                 db.Accounts.Add(accountToAdd);
                 savedAcct = db.SaveChanges() > 0;

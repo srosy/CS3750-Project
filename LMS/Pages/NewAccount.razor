@@ -38,7 +38,8 @@
                         <InputText id="confirm-password" class="LMS-input" type="password" placeholder="Re-enter password" @bind-Value="ConfirmPassword" />
                     </div>
                     <div>
-                        <select class="form-control selectpicker" @bind-Value="acctModel.Role">
+                        <label class="LMS-form-label text-left" for="role"><strong>Role</strong></label>
+                        <select id="role" class="selectpicker LMS-input" @bind="acctModel.Role">
                             <option value="0" selected>- select a role -</option>
                             <option value="1">Student</option>
                             <option value="2">Instructor</option>
