@@ -99,7 +99,7 @@ using Data;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 49 "C:\Users\hamky\OneDrive\Documents\Dev\CS3750-Project\LMS\Pages\Login.razor"
+#line 47 "C:\Users\hamky\OneDrive\Documents\Dev\CS3750-Project\LMS\Pages\Login.razor"
        
     private AuthModel authModel = new AuthModel();
     private string message = string.Empty;

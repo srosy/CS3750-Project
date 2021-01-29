@@ -23,18 +23,15 @@
                         I wanted to create an alert, but i need to tie it in somewhere*@
                     <div class="form-group has-success">
                         @*<label class="LMS-form-label text-left d-flex" for="fname"><strong>First Name</strong></label>*@
-                        <InputText id="fname" class="form-control LMS-input" type="text" placeholder="First Name" @bind-Value="acctModel.FirstName" 
-                                   style="width:100%"/>
+                        <InputText id="fname" class="form-control LMS-input" type="text" placeholder="First Name" @bind-Value="acctModel.FirstName" />
                     </div>
                     <div class="form-group has-success">
                         @*<label class="LMS-form-label text-left d-flex" for="lname"><strong>Last Name</strong></label>*@
-                        <InputText id="lname" class="form-control LMS-input" type="text" placeholder="Last Name" @bind-Value="acctModel.LastName" 
-                                   style="width:100%"/>
+                        <InputText id="lname" class="form-control LMS-input" type="text" placeholder="Last Name" @bind-Value="acctModel.LastName" />
                     </div>
                     <div class="form-group has-success">
                         @*<label class="LMS-form-label text-left d-flex" for="email"><strong>Email</strong></label>*@
-                        <InputText id="email" class="form-control LMS-input" type="text" placeholder="Email" @bind-Value="acctModel.Email" 
-                                   style="width:100%"/>
+                        <InputText id="email" class="form-control LMS-input" type="text" placeholder="Email" @bind-Value="acctModel.Email" />
                     </div>
                     @*<div>
                         <label class="LMS-form-label text-left" for="birthday"><strong>Birthday</strong></label>
@@ -42,18 +39,16 @@
                     </div>*@
                     <div class="form-group has-success">
                         @*<label class="LMS-form-label text-left d-flex" for="password"><strong>Password</strong></label>*@
-                        <InputText id="password" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="acctModel.Auth.Password" 
-                                   style="width:100%"/>
+                        <InputText id="password" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="acctModel.Auth.Password" />
                     </div>
                     <div class="form-group has-success">
                         @*<label class="LMS-form-label text-left d-flex" for="confirm-password" style="font-weight:100"><strong>Confirm Password</strong></label>*@
-                        <InputText id="confirm-password" class="form-control LMS-input" type="password" placeholder="Re-enter password" @bind-Value="ConfirmPassword" 
-                                   style="width:100%"/>
+                        <InputText id="confirm-password" class="form-control LMS-input" type="password" placeholder="Re-enter password" @bind-Value="ConfirmPassword" />
                     </div>
                     <div class="form-group">
                         @*<label class="LMS-form-label text-left d-flex" for="role"><strong>Role</strong></label>*@
                         <select id="role" class="form-control LMS-Input" @bind="acctModel.Role">
-                            <option value="0" selected>- select a role -</option>
+                            <option value="0" selected>- Select Role -</option>
                             <option value="1">Student</option>
                             <option value="2">Instructor</option>
                         </select>

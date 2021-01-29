@@ -234,3 +234,19 @@ app {
 .btn-primary {
     background-color: indigo;
 }
+
+.card-header {
+    text-align: center;
+}
+
+.login-box {
+    padding-bottom:10px;
+}
+
+.LMS-input {
+    width:100%;
+}
+
+.login-btn {
+    float: right;
+}

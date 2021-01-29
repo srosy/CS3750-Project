@@ -11,7 +11,7 @@
     <div class="col-md-4"></div>
     <div class="col-md-4">
         <div class="card LMS-card">
-            <div class="card-header LMS-title text-center">
+            <div class="card-header LMS-title">
                 <h3>Login</h3>
             </div>
             <div class="card-body">
@@ -19,18 +19,16 @@
                     <DataAnnotationsValidator />
                     <ValidationSummary />
                     <div class="form-group">
-                        <div style="padding-bottom:5px">
+                        <div class="login-box">
                             <label for="LMSusername"><strong>Username</strong></label>
-                            <InputText id="LMSusername" class="form-control LMS-input" type="text" placeholder="Username/Email" @bind-Value="authModel.UserName" 
-                                       style="width:100%"/>
+                            <InputText id="LMSusername" class="form-control LMS-input" type="text" placeholder="Username/Email" @bind-Value="authModel.UserName" />
                         </div>
                         <div>
                             <label for="LMSpassword" style="padding-bottom:-3px"><strong>Password</strong></label>
-                            <InputText id="LMSpassword" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="authModel.Password" 
-                                       style="width:100%"/>
+                            <InputText id="LMSpassword" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="authModel.Password" />
                         </div>
 
-                        <button class="btn btn-primary LMS-btn float-right" type="submit">Submit</button>
+                        <button class="btn btn-primary LMS-btn login-btn" type="submit">Submit</button>
                     </div>
                 </EditForm>
 

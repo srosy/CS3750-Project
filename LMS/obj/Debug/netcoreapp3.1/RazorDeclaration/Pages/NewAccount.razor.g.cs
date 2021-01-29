@@ -99,7 +99,7 @@ using Data;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 76 "C:\Users\hamky\OneDrive\Documents\Dev\CS3750-Project\LMS\Pages\NewAccount.razor"
+#line 71 "C:\Users\hamky\OneDrive\Documents\Dev\CS3750-Project\LMS\Pages\NewAccount.razor"
        
     private AccountModel acctModel = new AccountModel();
     private string message = string.Empty;
