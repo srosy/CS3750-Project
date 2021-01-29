@@ -1,11 +1,11 @@
 ﻿@page "/login";
 @layout UnauthenticatedLayout;
 @using Shared.Models;
-@using Data;
 @inject NavigationManager NavMan;
 @inject IDbService DbService;
 @inject AzureDbContext AzureDb;
 @inject Blazored.LocalStorage.ILocalStorageService Storage;
+@inject IJSRuntime JS;
 
 <div class="row text-center">
     <div class="col-md-4"></div>
@@ -59,6 +59,7 @@
         else
         {
             message = "Login failed.";
+            await JS.InvokeVoidAsync("Toast", new[] { "error", "Login Failed.", "3000" }); // toasttype, message, duration
         }
     }
 }

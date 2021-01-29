@@ -26,9 +26,9 @@ namespace LMS
             services.AddSingleton<IDbService, DbService>();
 
             // add localstorage for cookies/session data
-            services.AddBlazoredLocalStorage();   // local storage
+            services.AddBlazoredLocalStorage();
             services.AddBlazoredLocalStorage(config =>
-                config.JsonSerializerOptions.WriteIndented = true);  // local storage
+                config.JsonSerializerOptions.WriteIndented = true);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
