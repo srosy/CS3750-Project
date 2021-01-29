@@ -234,3 +234,7 @@ app {
 .btn-primary {
     background-color: indigo;
 }
+
+.toast {
+    opacity: 1 !important;
+}
