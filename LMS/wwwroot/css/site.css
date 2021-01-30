@@ -308,3 +308,7 @@ h3.welcome {
     text-align: center;
     bottom: 0;
 }
+
+.toast {
+    opacity: 1 !important;
+}
