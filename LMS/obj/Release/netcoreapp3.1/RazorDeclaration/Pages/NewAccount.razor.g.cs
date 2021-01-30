@@ -13,82 +13,118 @@ namespace LMS.Pages
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Components;
 #nullable restore
-#line 1 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 1 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using System.Net.Http;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using Microsoft.AspNetCore.Authorization;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using Microsoft.AspNetCore.Components.Authorization;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 4 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 4 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using Microsoft.AspNetCore.Components.Forms;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 5 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 5 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using Microsoft.AspNetCore.Components.Routing;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 6 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 6 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using Microsoft.AspNetCore.Components.Web;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 7 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 7 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using Microsoft.JSInterop;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 8 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 8 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using LMS;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 9 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\_Imports.razor"
+#line 9 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Data;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 10 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Pages;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 11 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using LMS.Shared;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\Pages\NewAccount.razor"
+#line 12 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Data.Enum;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 13 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Data.Helper;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 14 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Data.Models;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
 using Shared.Models;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\Pages\NewAccount.razor"
+#line 4 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
 using Data;
 
 #line default
 #line hidden
 #nullable disable
+    [Microsoft.AspNetCore.Components.LayoutAttribute(typeof(UnauthenticatedLayout))]
     [Microsoft.AspNetCore.Components.RouteAttribute("/newaccount")]
     public partial class NewAccount : Microsoft.AspNetCore.Components.ComponentBase
     {
@@ -98,20 +134,48 @@ using Data;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 50 "E:\School\Spring 2021\CS3750\CS3750-Project\A01\Pages\NewAccount.razor"
+#line 61 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
        
-    private AccountModel acctModel = new AccountModel();
+    private AccountViewModel acctModel = new AccountViewModel();
     private string message = string.Empty;
+    private string ConfirmPassword;
+    private DateTime MinDate = DateTime.UtcNow.AddYears(-100);
+    private DateTime MaxDate = DateTime.UtcNow.AddYears(-18);
+    private DateTime today;
+
+    protected async override Task OnInitializedAsync()
+    {
+        acctModel.Birthday = DateTime.UtcNow.AddYears(-18); // must be at least 18
+    }
 
     private async void CreateAccount()
     {
-        message = "Error trying to create account. Account may already exist.";
+        if (acctModel.Role <= 0)
+        {
+            message = "User must select a type";
+            return;
+        }
+
+        if (acctModel.Birthday > MaxDate || acctModel.Birthday < MinDate)
+        {
+            message = $"DOB must be between {MinDate.ToShortDateString()} and {MaxDate.ToShortDateString()}";
+            return;
+        }
+
+        if (!ConfirmPassword.Equals(acctModel.Auth.Password))
+        {
+            message = "Passwords do not match!";
+            return;
+        }
+
         var acctCreated = await DbService.CreateAccount(AzureDb, acctModel);
         if (acctCreated)
         {
             message = "Account Created. Proceed to login page.";
-            NavMan.NavigateTo("/");
+            NavMan.NavigateTo("login");
         }
+
+        message = "Error trying to create account. Account may already exist.";
     }
 
 #line default

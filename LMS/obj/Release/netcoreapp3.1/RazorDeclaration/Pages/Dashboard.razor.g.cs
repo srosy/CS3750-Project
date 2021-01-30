@@ -70,28 +70,42 @@ using LMS;
 #nullable disable
 #nullable restore
 #line 9 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Data;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 10 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Pages;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 11 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
 using LMS.Shared;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
-using Shared.Models;
+#line 12 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Data.Enum;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
-using Data.Helper;
+#line 13 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Data.Helper;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
-#line 4 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
-using Data;
+#line 14 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Data.Models;
 
 #line default
 #line hidden
@@ -105,7 +119,7 @@ using Data;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 13 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
+#line 9 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
        
 
 
@@ -114,7 +128,7 @@ using Data;
         var validSession = await SessionObj.VerifySession(AzureDb, Storage);
         if (!validSession)
         {
-            NavMan.NavigateTo("login");
+            NavMan.NavigateTo("sessionexpired");
         }
     }
 

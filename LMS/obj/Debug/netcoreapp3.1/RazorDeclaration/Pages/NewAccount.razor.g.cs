@@ -134,16 +134,19 @@ using Data;
         }
         #pragma warning restore 1998
 #nullable restore
-<<<<<<< HEAD
-#line 71 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
-=======
-#line 65 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
->>>>>>> master-dev
+#line 61 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
        
-    private AccountModel acctModel = new AccountModel();
+    private AccountViewModel acctModel = new AccountViewModel();
     private string message = string.Empty;
     private string ConfirmPassword;
+    private DateTime MinDate = DateTime.UtcNow.AddYears(-100);
+    private DateTime MaxDate = DateTime.UtcNow.AddYears(-18);
     private DateTime today;
+
+    protected async override Task OnInitializedAsync()
+    {
+        acctModel.Birthday = DateTime.UtcNow.AddYears(-18); // must be at least 18
+    }
 
     private async void CreateAccount()
     {
@@ -153,18 +156,23 @@ using Data;
             return;
         }
 
+        if (acctModel.Birthday > MaxDate || acctModel.Birthday < MinDate)
+        {
+            message = $"DOB must be between {MinDate.ToShortDateString()} and {MaxDate.ToShortDateString()}";
+            return;
+        }
+
         if (!ConfirmPassword.Equals(acctModel.Auth.Password))
         {
             message = "Passwords do not match!";
             return;
         }
 
-
         var acctCreated = await DbService.CreateAccount(AzureDb, acctModel);
         if (acctCreated)
         {
             message = "Account Created. Proceed to login page.";
-            NavMan.NavigateTo("/");
+            NavMan.NavigateTo("login");
         }
 
         message = "Error trying to create account. Account may already exist.";

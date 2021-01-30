@@ -315,3 +315,7 @@ h3.welcome {
 .toast {
     opacity: 1 !important;
 }
+
+.logout-btn {
+    width: 100%;
+}

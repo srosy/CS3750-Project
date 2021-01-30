@@ -110,27 +110,6 @@ using LMS.Data.Models;
 #line default
 #line hidden
 #nullable disable
-#nullable restore
-#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
-using Shared.Models;
-
-#line default
-#line hidden
-#nullable disable
-#nullable restore
-#line 3 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
-using Data.Helper;
-
-#line default
-#line hidden
-#nullable disable
-#nullable restore
-#line 4 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
-using Data;
-
-#line default
-#line hidden
-#nullable disable
     [Microsoft.AspNetCore.Components.RouteAttribute("/dashboard")]
     public partial class Dashboard : Microsoft.AspNetCore.Components.ComponentBase
     {
@@ -140,7 +119,7 @@ using Data;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 13 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
+#line 9 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
        
 
 
@@ -149,7 +128,7 @@ using Data;
         var validSession = await SessionObj.VerifySession(AzureDb, Storage);
         if (!validSession)
         {
-            NavMan.NavigateTo("login");
+            NavMan.NavigateTo("sessionexpired");
         }
     }
 
