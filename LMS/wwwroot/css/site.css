@@ -250,3 +250,7 @@ app {
 .login-btn {
     float: right;
 }
+
+.toast {
+    opacity: 1 !important;
+}

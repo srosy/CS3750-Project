@@ -66,14 +66,57 @@ using LMS;
 #line hidden
 #nullable disable
 #nullable restore
+<<<<<<< HEAD
 #line 9 "C:\Users\hamky\OneDrive\Documents\Dev\CS3750-Project\LMS\_Imports.razor"
+=======
+#line 9 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Data;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 10 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Pages;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 11 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+>>>>>>> origin
 using LMS.Shared;
 
 #line default
 #line hidden
 #nullable disable
 #nullable restore
+<<<<<<< HEAD
 #line 2 "C:\Users\hamky\OneDrive\Documents\Dev\CS3750-Project\LMS\Pages\Dashboard.razor"
+=======
+#line 12 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Data.Enum;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 13 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Data.Helper;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 14 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\_Imports.razor"
+using LMS.Data.Models;
+
+#line default
+#line hidden
+#nullable disable
+#nullable restore
+#line 2 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Dashboard.razor"
+>>>>>>> origin
 using Shared.Models;
 
 #line default
