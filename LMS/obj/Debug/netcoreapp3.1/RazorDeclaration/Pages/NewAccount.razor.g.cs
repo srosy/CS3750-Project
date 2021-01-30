@@ -134,19 +134,27 @@ using Data;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 55 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
+#line 65 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
        
     private AccountModel acctModel = new AccountModel();
     private string message = string.Empty;
     private string ConfirmPassword;
+    private DateTime today;
 
     private async void CreateAccount()
     {
+        if (acctModel.Role <= 0)
+        {
+            message = "User must select a type";
+            return;
+        }
+
         if (!ConfirmPassword.Equals(acctModel.Auth.Password))
         {
             message = "Passwords do not match!";
             return;
         }
+
 
         var acctCreated = await DbService.CreateAccount(AzureDb, acctModel);
         if (acctCreated)

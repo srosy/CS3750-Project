@@ -127,7 +127,7 @@ using Shared.Models;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 45 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Login.razor"
+#line 47 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Login.razor"
        
     private AuthModel authModel = new AuthModel();
     private string message = string.Empty;
