@@ -134,7 +134,11 @@ using Data;
         }
         #pragma warning restore 1998
 #nullable restore
+<<<<<<< HEAD
 #line 71 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
+=======
+#line 65 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\NewAccount.razor"
+>>>>>>> master-dev
        
     private AccountModel acctModel = new AccountModel();
     private string message = string.Empty;
