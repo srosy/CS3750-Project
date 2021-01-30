@@ -1,23 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\hamky\\OneDrive\\Documents\\Dev\\CS3750-Project\\UnitTest\\UnitTest.csproj": {}
+    "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\UnitTest\\UnitTest.csproj": {}
   },
   "projects": {
-    "C:\\Users\\hamky\\OneDrive\\Documents\\Dev\\CS3750-Project\\LMS\\LMS.csproj": {
+    "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\hamky\\OneDrive\\Documents\\Dev\\CS3750-Project\\LMS\\LMS.csproj",
+        "projectUniqueName": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj",
         "projectName": "LMS",
-        "projectPath": "C:\\Users\\hamky\\OneDrive\\Documents\\Dev\\CS3750-Project\\LMS\\LMS.csproj",
-        "packagesPath": "C:\\Users\\hamky\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\hamky\\OneDrive\\Documents\\Dev\\CS3750-Project\\LMS\\obj\\",
+        "projectPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj",
+        "packagesPath": "C:\\Users\\seros\\.nuget\\packages\\",
+        "outputPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Microsoft\\Xamarin\\NuGet\\"
+          "D:\\Microsoft\\Xamarin\\NuGet\\",
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
         ],
         "configFilePaths": [
-          "C:\\Users\\hamky\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\seros\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
         ],
@@ -97,20 +98,21 @@
         }
       }
     },
-    "C:\\Users\\hamky\\OneDrive\\Documents\\Dev\\CS3750-Project\\UnitTest\\UnitTest.csproj": {
+    "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\UnitTest\\UnitTest.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\hamky\\OneDrive\\Documents\\Dev\\CS3750-Project\\UnitTest\\UnitTest.csproj",
+        "projectUniqueName": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\UnitTest\\UnitTest.csproj",
         "projectName": "UnitTest",
-        "projectPath": "C:\\Users\\hamky\\OneDrive\\Documents\\Dev\\CS3750-Project\\UnitTest\\UnitTest.csproj",
-        "packagesPath": "C:\\Users\\hamky\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\hamky\\OneDrive\\Documents\\Dev\\CS3750-Project\\UnitTest\\obj\\",
+        "projectPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\UnitTest\\UnitTest.csproj",
+        "packagesPath": "C:\\Users\\seros\\.nuget\\packages\\",
+        "outputPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\UnitTest\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Microsoft\\Xamarin\\NuGet\\"
+          "D:\\Microsoft\\Xamarin\\NuGet\\",
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
         ],
         "configFilePaths": [
-          "C:\\Users\\hamky\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\seros\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
         ],
@@ -125,8 +127,8 @@
           "netcoreapp3.1": {
             "targetAlias": "netcoreapp3.1",
             "projectReferences": {
-              "C:\\Users\\hamky\\OneDrive\\Documents\\Dev\\CS3750-Project\\LMS\\LMS.csproj": {
-                "projectPath": "C:\\Users\\hamky\\OneDrive\\Documents\\Dev\\CS3750-Project\\LMS\\LMS.csproj"
+              "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj": {
+                "projectPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj"
               }
             }
           }
