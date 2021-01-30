@@ -297,6 +297,8 @@ h3.welcome {
     float: right;
 }
 
+<<<<<<< HEAD
+=======
 .copyright {
     position: fixed;
     left: 0;
@@ -309,6 +311,7 @@ h3.welcome {
     bottom: 0;
 }
 
+>>>>>>> master-dev
 .toast {
     opacity: 1 !important;
 }
