@@ -118,7 +118,7 @@ using LMS.Data.Models;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 28 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Shared\NavMenu.razor"
+#line 63 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Shared\NavMenu.razor"
        
     private bool collapseNavMenu = true;
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
@@ -127,10 +127,19 @@ using LMS.Data.Models;
     {
         collapseNavMenu = !collapseNavMenu;
     }
+    private async void Logout()
+    {
+        await DbService.DeleteSession(AzureDb, Storage);
+        NavMan.NavigateTo("sessionexpired");
+    }
 
 #line default
 #line hidden
 #nullable disable
+        [global::Microsoft.AspNetCore.Components.InjectAttribute] private Blazored.LocalStorage.ILocalStorageService Storage { get; set; }
+        [global::Microsoft.AspNetCore.Components.InjectAttribute] private AzureDbContext AzureDb { get; set; }
+        [global::Microsoft.AspNetCore.Components.InjectAttribute] private IDbService DbService { get; set; }
+        [global::Microsoft.AspNetCore.Components.InjectAttribute] private NavigationManager NavMan { get; set; }
     }
 }
 #pragma warning restore 1591

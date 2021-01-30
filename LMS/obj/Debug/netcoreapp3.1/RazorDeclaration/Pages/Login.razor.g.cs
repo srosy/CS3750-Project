@@ -129,7 +129,7 @@ using Shared.Models;
 #nullable restore
 #line 47 "E:\School\Spring 2021\CS3750\CS3750-Project\LMS\Pages\Login.razor"
        
-    private AuthModel authModel = new AuthModel();
+    private AuthenticationViewModel authModel = new AuthenticationViewModel();
     private string message = string.Empty;
 
     /// <summary>

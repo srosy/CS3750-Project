@@ -1,12 +1,8 @@
 ﻿@page "/dashboard"
-@using Shared.Models;
-@using Data.Helper;
-@using Data;
 @inject NavigationManager NavMan;
 @inject IDbService DbService;
 @inject AzureDbContext AzureDb;
-@inject Blazored.LocalStorage.ILocalStorageService Storage
-
+@inject Blazored.LocalStorage.ILocalStorageService Storage;
 
 <h3>Dashboard</h3>
 
@@ -18,7 +14,7 @@
         var validSession = await SessionObj.VerifySession(AzureDb, Storage);
         if (!validSession)
         {
-            NavMan.NavigateTo("login");
+            NavMan.NavigateTo("sessionexpired");
         }
     }
 
