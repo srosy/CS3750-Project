@@ -1,26 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\UnitTest\\UnitTest.csproj": {}
+    "C:\\Users\\Water\\Documents\\3750\\CS3750-Project\\UnitTest\\UnitTest.csproj": {}
   },
   "projects": {
-    "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj": {
+    "C:\\Users\\Water\\Documents\\3750\\CS3750-Project\\LMS\\LMS.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj",
+        "projectUniqueName": "C:\\Users\\Water\\Documents\\3750\\CS3750-Project\\LMS\\LMS.csproj",
         "projectName": "LMS",
-        "projectPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj",
-        "packagesPath": "C:\\Users\\seros\\.nuget\\packages\\",
-        "outputPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\obj\\",
+        "projectPath": "C:\\Users\\Water\\Documents\\3750\\CS3750-Project\\LMS\\LMS.csproj",
+        "packagesPath": "C:\\Users\\Water\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Water\\Documents\\3750\\CS3750-Project\\LMS\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "D:\\Microsoft\\Xamarin\\NuGet\\",
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
         ],
         "configFilePaths": [
-          "C:\\Users\\seros\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
+          "C:\\Users\\Water\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "netcoreapp3.1"
@@ -31,7 +29,6 @@
         },
         "frameworks": {
           "netcoreapp3.1": {
-            "targetAlias": "netcoreapp3.1",
             "projectReferences": {}
           }
         },
@@ -43,11 +40,14 @@
       },
       "frameworks": {
         "netcoreapp3.1": {
-          "targetAlias": "netcoreapp3.1",
           "dependencies": {
             "Blazored.LocalStorage": {
               "target": "Package",
               "version": "[3.0.0, )"
+            },
+            "MailKit": {
+              "target": "Package",
+              "version": "[2.10.1, )"
             },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
@@ -62,6 +62,10 @@
             "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
               "target": "Package",
               "version": "[3.1.4, )"
+            },
+            "MimeKit": {
+              "target": "Package",
+              "version": "[2.10.1, )"
             },
             "Newtonsoft.Json": {
               "target": "Package",
@@ -86,6 +90,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[3.1.2, 3.1.2]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -94,27 +104,25 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.101\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.300\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\UnitTest\\UnitTest.csproj": {
+    "C:\\Users\\Water\\Documents\\3750\\CS3750-Project\\UnitTest\\UnitTest.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\UnitTest\\UnitTest.csproj",
+        "projectUniqueName": "C:\\Users\\Water\\Documents\\3750\\CS3750-Project\\UnitTest\\UnitTest.csproj",
         "projectName": "UnitTest",
-        "projectPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\UnitTest\\UnitTest.csproj",
-        "packagesPath": "C:\\Users\\seros\\.nuget\\packages\\",
-        "outputPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\UnitTest\\obj\\",
+        "projectPath": "C:\\Users\\Water\\Documents\\3750\\CS3750-Project\\UnitTest\\UnitTest.csproj",
+        "packagesPath": "C:\\Users\\Water\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Water\\Documents\\3750\\CS3750-Project\\UnitTest\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "D:\\Microsoft\\Xamarin\\NuGet\\",
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
         ],
         "configFilePaths": [
-          "C:\\Users\\seros\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
+          "C:\\Users\\Water\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "netcoreapp3.1"
@@ -125,10 +133,9 @@
         },
         "frameworks": {
           "netcoreapp3.1": {
-            "targetAlias": "netcoreapp3.1",
             "projectReferences": {
-              "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj": {
-                "projectPath": "E:\\School\\Spring 2021\\CS3750\\CS3750-Project\\LMS\\LMS.csproj"
+              "C:\\Users\\Water\\Documents\\3750\\CS3750-Project\\LMS\\LMS.csproj": {
+                "projectPath": "C:\\Users\\Water\\Documents\\3750\\CS3750-Project\\LMS\\LMS.csproj"
               }
             }
           }
@@ -141,7 +148,6 @@
       },
       "frameworks": {
         "netcoreapp3.1": {
-          "targetAlias": "netcoreapp3.1",
           "dependencies": {
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
@@ -178,6 +184,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[3.1.2, 3.1.2]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -186,7 +198,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.101\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.300\\RuntimeIdentifierGraph.json"
         }
       }
     }

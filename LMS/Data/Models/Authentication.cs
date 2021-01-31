@@ -12,5 +12,6 @@ namespace LMS.Data.Models
         public string Salt { get; set; }
         public string ResetCode { get; set; }
         public DateTime CreateDate { get; internal set; }
+        public bool EmailVerified { get; internal set; }
     }
 }

@@ -106,7 +106,7 @@ namespace LMS.Data.Helper
         /// Returns a random string of random length: 5 <= length <= 15.
         /// </summary>
         /// <returns></returns>
-        public static string GenSalt() => new string(Enumerable.Repeat(_chars, _rand.Next(5, 15)).Select(s => s[_rand.Next(s.Length)]).ToArray());
+        public static string GenSalt(int length = 15) => new string(Enumerable.Repeat(_chars, _rand.Next(5, length)).Select(s => s[_rand.Next(s.Length)]).ToArray());
 
         /// <summary>
         /// Generates a hashed+salted password.

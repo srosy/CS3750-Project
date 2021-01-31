@@ -14,40 +14,50 @@
                 <h3>New Account</h3>
             </div>
             <div class="card card-body">
-                <EditForm Model="@acctModel" OnValidSubmit="@CreateAccount">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
+                @if (EmailSent)
+                {
                     <div class="form-group has-success">
-                        <InputText id="fname" class="form-control LMS-input" type="text" placeholder="First Name" @bind-Value="acctModel.FirstName" />
+                        <InputText id="resetcode" class="form-control LMS-input" type="text" placeholder="Reset Code" @bind-Value="InputtedResetCode" />
                     </div>
-                    <div class="form-group has-success">
-                        <InputText id="lname" class="form-control LMS-input" type="text" placeholder="Last Name" @bind-Value="acctModel.LastName" />
-                    </div>
-                    <div class="form-group has-success">
-                        <InputText id="email" class="form-control LMS-input" type="text" placeholder="Email" @bind-Value="acctModel.Email" />
-                    </div>
-                    <div class="form-group has-success">
-                        <InputText id="password" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="acctModel.Auth.Password" />
-                    </div>
-                    <div class="form-group has-success">
-                        <InputText id="confirm-password" class="form-control LMS-input" type="password" placeholder="Re-enter password" @bind-Value="ConfirmPassword" />
-                    </div>
-                    <div class="form-group">
-                        <select id="role" class="form-control LMS-Input" @bind="acctModel.Role">
-                            <option value="0" selected>- Select Role -</option>
-                            <option value="1">Student</option>
-                            <option value="2">Instructor</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <div class="text-left" title="Users must be 18+"><strong>Date of Birth</strong></div>
-                        <InputDate id="birthday" class="form-control LMS-input" title="Users must be 18+" type="date" @bind-Value="acctModel.Birthday" />
-                    </div>
-                    <button class="btn btn-primary LMS-btn" type="submit">Create Account</button>
-                </EditForm>
+                    <button class="btn btn-primary LMS-btn" @onclick="VerifyEmail">Verify Code</button>
+                    <button class="btn btn-primary LMS-btn" @onclick="ResendEmail">Resend Code</button>
+                }
+                else
+                {
+                    <EditForm Model="@acctModel" OnValidSubmit="@CreateAccount">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="form-group has-success">
+                            <InputText id="fname" class="form-control LMS-input" type="text" placeholder="First Name" @bind-Value="acctModel.FirstName" />
+                        </div>
+                        <div class="form-group has-success">
+                            <InputText id="lname" class="form-control LMS-input" type="text" placeholder="Last Name" @bind-Value="acctModel.LastName" />
+                        </div>
+                        <div class="form-group has-success">
+                            <InputText id="email" class="form-control LMS-input" type="text" placeholder="Email" @bind-Value="acctModel.Email" />
+                        </div>
+                        <div class="form-group has-success">
+                            <InputText id="password" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="acctModel.Auth.Password" />
+                        </div>
+                        <div class="form-group has-success">
+                            <InputText id="confirm-password" class="form-control LMS-input" type="password" placeholder="Re-enter password" @bind-Value="ConfirmPassword" />
+                        </div>
+                        <div class="form-group">
+                            <select id="role" class="form-control LMS-Input" @bind="acctModel.Role">
+                                <option value="0" selected>- Select Role -</option>
+                                <option value="1">Student</option>
+                                <option value="2">Instructor</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <div class="text-left" title="Users must be 18+"><strong>Date of Birth</strong></div>
+                            <InputDate id="birthday" class="form-control LMS-input" title="Users must be 18+" type="date" @bind-Value="acctModel.Birthday" />
+                        </div>
+                        <button class="btn btn-primary LMS-btn" type="submit">Create Account</button>
+                    </EditForm>
 
-                <a href="/login">Already have an account?</a>
-
+                    <a href="/login">Already have an account?</a>
+                }
                 @if (!string.IsNullOrEmpty(message))
                 {
                     <p class="LMS-message">@message</p>
@@ -60,8 +70,11 @@
 
 @code {
     private AccountViewModel acctModel = new AccountViewModel();
+    private DbService db = new DbService();
     private string message = string.Empty;
     private string ConfirmPassword;
+    private string InputtedResetCode;
+    private bool EmailSent;
     private DateTime MinDate = DateTime.UtcNow.AddYears(-100);
     private DateTime MaxDate = DateTime.UtcNow.AddYears(-18);
     private DateTime today;
@@ -94,10 +107,22 @@
         var acctCreated = await DbService.CreateAccount(AzureDb, acctModel);
         if (acctCreated)
         {
-            message = "Account Created. Proceed to login page.";
-            NavMan.NavigateTo("login");
+            EmailSent = await db.SendEmail(acctModel, AzureDb);
         }
 
         message = "Error trying to create account. Account may already exist.";
+    }
+
+    private async void VerifyEmail()
+    {
+        if (InputtedResetCode == acctModel.Auth.ResetCode)
+        {
+            await db.VerifyEmail(acctModel.Email, AzureDb);
+        }
+    }
+
+    private async void ResendEmail()
+    {
+        await db.SendEmail(acctModel, AzureDb);
     }
 }
