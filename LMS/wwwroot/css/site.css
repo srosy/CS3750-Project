@@ -297,6 +297,41 @@ h3.welcome {
     float: right;
 }
 
+.expired-box {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 5vw);
+    grid-gap: 15px;
+}
+
+.expired-text {
+    grid-column-start: 3;
+    grid-column-end: 7;
+    grid-row-start: 2;
+    grid-row-end: 6;
+    text-align: center;
+    border: groove;
+    border-width: 5px;
+    color: white;
+    padding-top: 20px;
+    padding-bottom: 15px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#expired-session {
+    font-weight: bold;
+    font-size: 40px;
+}
+
+#expired-skull {
+    font-size: 75px;
+}
+
+#expired-home {
+    color: white;
+    text-decoration: underline;
+}
+
 <<<<<<< HEAD
 =======
 .copyright {
