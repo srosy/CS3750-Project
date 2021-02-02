@@ -13,30 +13,36 @@
             <div class="card-header LMS-title">
                 <h3>New Account</h3>
             </div>
-            <div class="card-body">
+            <div class="card card-body">
                 <EditForm Model="@acctModel" OnValidSubmit="@CreateAccount">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
-                    <div>
-                        <label class="LMS-form-label text-left" for="fname"><strong>First Name</strong></label>
-                        <InputText id="fname" class="LMS-input" type="text" placeholder="First Name" @bind-Value="acctModel.FirstName" />
+                    <div class="form-group has-success">
+                        <InputText id="fname" class="form-control LMS-input" type="text" placeholder="First Name" @bind-Value="acctModel.FirstName" />
                     </div>
-                    <div>
-                        <label class="LMS-form-label text-left" for="lname"><strong>Last Name</strong></label>
-                        <InputText id="lname" class="LMS-input" type="text" placeholder="Last Name" @bind-Value="acctModel.LastName" />
+                    <div class="form-group has-success">
+                        <InputText id="lname" class="form-control LMS-input" type="text" placeholder="Last Name" @bind-Value="acctModel.LastName" />
                     </div>
-                    <div>
-                        <label class="LMS-form-label text-left" for="email"><strong>Email</strong></label>
-                        <InputText id="email" class="LMS-input" type="text" placeholder="This will be your username" @bind-Value="acctModel.Email" />
+                    <div class="form-group">
+                        <InputDate id="birthday" class="form-control LMS-input" title="Users must be 18+" type="date" @bind-Value="acctModel.Birthday" />
                     </div>
-                    <div>
-                        <label class="LMS-form-label text-left" for="password"><strong>Password</strong></label>
-                        <InputText id="password" class="LMS-input" type="password" placeholder="Password" @bind-Value="acctModel.Auth.Password" />
+                    <div class="form-group has-success">
+                        <InputText id="email" class="form-control LMS-input" type="text" placeholder="Email" @bind-Value="acctModel.Email" />
                     </div>
-                    <div>
-                        <label class="LMS-form-label text-left" for="confirm-password"><strong>Confirm Password</strong></label>
-                        <InputText id="confirm-password" class="LMS-input" type="password" placeholder="Re-enter password" @bind-Value="ConfirmPassword" />
+                    <div class="form-group has-success">
+                        <InputText id="password" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="acctModel.Auth.Password" />
                     </div>
+                    <div class="form-group has-success">
+                        <InputText id="confirm-password" class="form-control LMS-input" type="password" placeholder="Re-enter password" @bind-Value="ConfirmPassword" />
+                    </div>
+                    <div class="form-group">
+                        <select id="role" class="form-control LMS-Input" @bind="acctModel.Role">
+                            <option value="0" selected>- Select Role -</option>
+                            <option value="1">Student</option>
+                            <option value="2">Instructor</option>
+                        </select>
+                    </div>
+
                     <button class="btn btn-primary LMS-btn" type="submit">Create Account</button>
                 </EditForm>
 
@@ -53,12 +59,32 @@
 </div>
 
 @code {
-    private AccountModel acctModel = new AccountModel();
+    private AccountViewModel acctModel = new AccountViewModel();
     private string message = string.Empty;
     private string ConfirmPassword;
+    private DateTime MinDate = DateTime.UtcNow.AddYears(-100);
+    private DateTime MaxDate = DateTime.UtcNow.AddYears(-18);
+    private DateTime today;
+
+    protected async override Task OnInitializedAsync()
+    {
+        acctModel.Birthday = DateTime.UtcNow.AddYears(-18); // must be at least 18
+    }
 
     private async void CreateAccount()
     {
+        if (acctModel.Role <= 0)
+        {
+            message = "User must select a type";
+            return;
+        }
+
+        if (acctModel.Birthday > MaxDate || acctModel.Birthday < MinDate)
+        {
+            message = $"DOB must be between {MinDate.ToShortDateString()} and {MaxDate.ToShortDateString()}";
+            return;
+        }
+
         if (!ConfirmPassword.Equals(acctModel.Auth.Password))
         {
             message = "Passwords do not match!";
@@ -69,7 +95,7 @@
         if (acctCreated)
         {
             message = "Account Created. Proceed to login page.";
-            NavMan.NavigateTo("/");
+            NavMan.NavigateTo("login");
         }
 
         message = "Error trying to create account. Account may already exist.";

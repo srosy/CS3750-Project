@@ -1,0 +1,20 @@
+﻿@page "/sessionexpired";
+@layout UnauthenticatedLayout;
+@inject NavigationManager NavMan;
+
+<div class="expired-box">
+    <div class="expired-text">
+        <h2 id="expired-skull">&#x2620;</h2>
+        <h3> Uh-Oh...</h3>
+        <h1 id="expired-session">Your session has expired.</h1>
+        <p>You will soon be redirected to the homepage,<br />
+        or you can go there <a id="expired-home" href="/">now.</a></p>
+    </div>
+</div>
+
+    @code {
+        protected async override Task OnInitializedAsync()
+        {
+            await Task.Delay(2000).ContinueWith(t => NavMan.NavigateTo("/"));
+        }
+    }

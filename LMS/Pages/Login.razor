@@ -7,7 +7,7 @@
 @inject Blazored.LocalStorage.ILocalStorageService Storage;
 @inject IJSRuntime JS;
 
-<div class="row text-center">
+<div class="row ">
     <div class="col-md-4"></div>
     <div class="col-md-4">
         <div class="card LMS-card">
@@ -18,16 +18,18 @@
                 <EditForm Model="@authModel" OnValidSubmit="@TryAuthenticate">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
-                    <div>
-                        <label class="LMS-form-label text-left" for="LMSusername"><strong>Username</strong></label>
-                        <InputText id="LMSusername" class="LMS-input" type="text" placeholder="Username (email)" @bind-Value="authModel.UserName" />
-                    </div>
-                    <div>
-                        <label class="LMS-form-label text-left" for="LMSpassword"><strong>Password</strong></label>
-                        <InputText id="LMSpassword" class="LMS-input" type="password" placeholder="Password" @bind-Value="authModel.Password" />
-                    </div>
+                    <div class="form-group">
+                        <div class="login-box">
+                            <label for="LMSusername"><strong>Username</strong></label>
+                            <InputText id="LMSusername" class="form-control LMS-input" type="text" placeholder="Username/Email" @bind-Value="authModel.UserName" />
+                        </div>
+                        <div>
+                            <label for="LMSpassword" style="padding-bottom:-3px"><strong>Password</strong></label>
+                            <InputText id="LMSpassword" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="authModel.Password" />
+                        </div>
 
-                    <button class="btn btn-primary LMS-btn" type="submit">Submit</button>
+                        <button class="btn btn-primary LMS-btn login-btn" type="submit">Submit</button>
+                    </div>
                 </EditForm>
 
                 <a href="/newaccount">Don't have an account?</a>
@@ -43,7 +45,7 @@
 </div>
 
 @code {
-    private AuthModel authModel = new AuthModel();
+    private AuthenticationViewModel authModel = new AuthenticationViewModel();
     private string message = string.Empty;
 
     /// <summary>

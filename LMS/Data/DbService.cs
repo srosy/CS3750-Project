@@ -11,8 +11,9 @@ namespace LMS.Data
 {
     public interface IDbService
     {
-        public Task<bool> Authenticate(ILocalStorageService storage, AzureDbContext db, AuthModel model);
-        public Task<bool> CreateAccount(AzureDbContext db, AccountModel model);
+        public Task<bool> Authenticate(ILocalStorageService storage, AzureDbContext db, AuthenticationViewModel model);
+        public Task<bool> CreateAccount(AzureDbContext db, AccountViewModel model);
+        public Task<bool> DeleteSession(AzureDbContext db, ILocalStorageService storage);
     }
     public class DbService : IDbService
     {
@@ -23,7 +24,7 @@ namespace LMS.Data
         /// <param name="db"></param>
         /// <param name="model"></param>
         /// <returns></returns>
-        public async Task<bool> Authenticate(ILocalStorageService storage, AzureDbContext db, AuthModel model)
+        public async Task<bool> Authenticate(ILocalStorageService storage, AzureDbContext db, AuthenticationViewModel model)
         {
             try
             {
@@ -35,7 +36,7 @@ namespace LMS.Data
 
                 if (!Encryption.GenerateSaltedHash(model.Password, auth.Salt).Equals(auth.Password)) return false; // case-sensitive
 
-                await SessionObj.DeleteSession(db, storage); // delete any existing to renew session
+                await DeleteSession(db, storage);
                 await SessionObj.CreateSession(db, storage); 
 
                 return true;
@@ -53,7 +54,7 @@ namespace LMS.Data
         /// <param name="db"></param>
         /// <param name="model"></param>
         /// <returns></returns>
-        public async Task<bool> CreateAccount(AzureDbContext db, AccountModel model)
+        public async Task<bool> CreateAccount(AzureDbContext db, AccountViewModel model)
         {
             try
             {
@@ -68,7 +69,8 @@ namespace LMS.Data
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     CreateDate = DateTime.UtcNow,
-                    Role = (int)Enum.Role.STUDENT
+                    Role = model.Role,
+                    DOB = model.Birthday
                 };
                 db.Accounts.Add(accountToAdd);
                 savedAcct = db.SaveChanges() > 0;
@@ -95,6 +97,18 @@ namespace LMS.Data
                 Console.WriteLine($"{ex.Message}\n{ex.InnerException.Message}");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Deletes a user's session.
+        /// </summary>
+        /// <param name="storage"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public async Task<bool> DeleteSession(AzureDbContext db, ILocalStorageService storage)
+        {
+            var deleted = await SessionObj.DeleteSession(db, storage); // delete any existing session
+            return deleted;
         }
     }
 }
