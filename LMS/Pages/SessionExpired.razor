@@ -13,8 +13,8 @@
 </div>
 
     @code {
-        //protected async override Task OnInitializedAsync()
-        //{
-        //    await Task.Delay(2000).ContinueWith(t => NavMan.NavigateTo("/"));
-        //}
+        protected async override Task OnInitializedAsync()
+        {
+            await Task.Delay(2000).ContinueWith(t => NavMan.NavigateTo("/"));
+        }
     }
