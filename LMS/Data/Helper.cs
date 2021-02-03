@@ -28,16 +28,31 @@ namespace LMS.Data.Helper
         }
 
         /// <summary>
+        /// Gets the current session.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="storage"></param>
+        /// <returns></returns>
+        public static async Task<Session> GetSession(AzureDbContext db, ILocalStorageService storage)
+        {
+            var session = await storage.GetItemAsync<SessionObj>("session_lms");
+            if (session == null) return null;
+            if (session.ExpireDate == DateTime.MinValue) return null;
+            return db.Sessions.FirstOrDefault(s => s.SessionId == session.SessionId && DateTime.UtcNow <= s.ExpireDate);
+        }
+
+        /// <summary>
         /// Saves a new session in the db.
         /// </summary>
         /// <param name="db"></param>
         /// <returns></returns>
-        public bool Save(AzureDbContext db)
+        public bool Save(AzureDbContext db, int acctId)
         {
             db.Sessions.Add(new Session()
             {
                 SessionId = SessionId,
-                ExpireDate = ExpireDate
+                ExpireDate = ExpireDate,
+                AccountId = acctId
             });
 
             var saved = db.SaveChanges() > 0;
@@ -67,7 +82,7 @@ namespace LMS.Data.Helper
         /// <param name="db"></param>
         /// <param name="storage"></param>
         /// <returns></returns>
-        public static async Task<bool> CreateSession(AzureDbContext db, ILocalStorageService storage)
+        public static async Task<bool> CreateSession(AzureDbContext db, ILocalStorageService storage, int acctId)
         {
             var session = new SessionObj()
             {
@@ -75,7 +90,7 @@ namespace LMS.Data.Helper
                 ExpireDate = DateTime.UtcNow.AddMinutes(30)
             };
             await storage.SetItemAsync("session_lms", session); // create the session
-            return session.Save(db);
+            return session.Save(db, acctId);
         }
 
         /// <summary>

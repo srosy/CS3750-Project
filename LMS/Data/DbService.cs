@@ -18,6 +18,9 @@ namespace LMS.Data
         public Task<bool> DeleteSession(AzureDbContext db, ILocalStorageService storage);
         public Task<List<Course>> GetCourses(AzureDbContext db, int professorId = 0);
         public Task<List<Account>> GetAccounts(AzureDbContext db, Enum.Role role = Enum.Role.STUDENT);
+        public Task<Account> GetAccount(AzureDbContext db, int acctId);
+        public Task<List<Enrollment>> GetEnrollments(AzureDbContext db, int acctId);
+        public Task<bool> UpdateEnrollments(AzureDbContext db, int acctId, List<Enrollment> enrollments);
     }
     public class DbService : IDbService
     {
@@ -41,7 +44,7 @@ namespace LMS.Data
                 if (!Encryption.GenerateSaltedHash(model.Password, auth.Salt).Equals(auth.Password)) return false; // case-sensitive
 
                 await DeleteSession(db, storage);
-                await SessionObj.CreateSession(db, storage);
+                await SessionObj.CreateSession(db, storage, acct.AccountId);
 
                 return true;
             }
@@ -237,6 +240,58 @@ namespace LMS.Data
         /// <param name="role"></param>
         /// <returns></returns>
         public async Task<List<Account>> GetAccounts(AzureDbContext db, Enum.Role role = Enum.Role.STUDENT) => db.Accounts.Where(a => a.DeleteDate == null && a.Role == (int)role).ToList();
+
+        /// <summary>
+        /// Gets an Account by Id.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<Account> GetAccount(AzureDbContext db, int acctId) => db.Accounts.FirstOrDefault(a => a.AccountId == acctId);
+
+        /// <summary>
+        /// Gets the Enrollments an account has.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<List<Enrollment>> GetEnrollments(AzureDbContext db, int acctId) => db.Enrollments.Where(e => e.AccountId == acctId && e.DeleteDate == null).ToList();
+
+        /// <summary>
+        /// Updates the Enrollments affiliated with an acctId.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <param name="enrollments"></param>
+        /// <returns></returns>
+        public async Task<bool> UpdateEnrollments(AzureDbContext db, int acctId, List<Enrollment> enrollments)
+        {
+            var saved = false;
+            try
+            {
+                var enrollmentsForAccount = db.Enrollments.Where(e => e.AccountId == acctId).ToList();
+                enrollmentsForAccount.ForEach(e =>
+                {
+                    if (enrollments.Any(a => a.EnrollmentId == e.EnrollmentId && a.DeleteDate != null))
+                    {
+                        e.DeleteDate = DateTime.UtcNow; // set previously selected to deleted
+                    }
+                });
+
+                enrollments.Where(e => e.EnrollmentId == 0).ToList().ForEach(e =>
+                {
+                    db.Enrollments.Add(e);
+                });
+
+                saved = await db.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return saved;
+        }
     }
 }
 
