@@ -13,7 +13,7 @@ namespace LMS.Data
         public DbSet<Authentication> Authentications { get; set; }
         public DbSet<Session> Sessions { get; set; }
         public DbSet<Course> Courses { get; set; }
-        public DbSet<Enrollment> Enrollements { get; set; }
+        public DbSet<Enrollment> Enrollments { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Submission> Submissions { get; set; }
     }
