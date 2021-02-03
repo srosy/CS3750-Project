@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<parameters>
-  <parameter name="IIS Web Application Name" description="" value="CS3750-A01" tags="IisApp">
-    <parameterEntry kind="ProviderPath" scope="IisApp" match="^E:\\School\\Spring\ 2021\\CS3750\\CS3750\\A01\\obj\\Release\\netcoreapp3\.1\\PubTmp\\Out\\$" />
-  </parameter>
-</parameters>
