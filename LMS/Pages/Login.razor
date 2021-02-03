@@ -1,6 +1,5 @@
 ﻿@page "/login";
 @layout UnauthenticatedLayout;
-@using Shared.Models;
 @inject NavigationManager NavMan;
 @inject IDbService DbService;
 @inject AzureDbContext AzureDb;
@@ -10,36 +9,43 @@
 <div class="row ">
     <div class="col-md-4"></div>
     <div class="col-md-4">
-        <div class="card LMS-card">
-            <div class="card-header LMS-title">
-                <h3>Login</h3>
-            </div>
-            <div class="card-body">
-                <EditForm Model="@authModel" OnValidSubmit="@TryAuthenticate">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
-                    <div class="form-group">
-                        <div class="login-box">
-                            <label for="LMSusername"><strong>Username</strong></label>
-                            <InputText id="LMSusername" class="form-control LMS-input" type="text" placeholder="Username/Email" @bind-Value="authModel.UserName" />
+        @if (_loading)
+        {
+            <h2>Loading...</h2>
+        }
+        else
+        {
+            <div class="card LMS-card">
+                <div class="card-header LMS-title">
+                    <h3>Login</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@authModel" OnValidSubmit="@TryAuthenticate">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="form-group">
+                            <div class="login-box">
+                                <label for="LMSusername"><strong>Username</strong></label>
+                                <InputText id="LMSusername" class="form-control LMS-input" type="text" placeholder="Username/Email" @bind-Value="authModel.UserName" />
+                            </div>
+                            <div>
+                                <label for="LMSpassword" style="padding-bottom:-3px"><strong>Password</strong></label>
+                                <InputText id="LMSpassword" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="authModel.Password" />
+                            </div>
+
+                            <button class="btn btn-primary LMS-btn login-btn" type="submit">Submit</button>
                         </div>
-                        <div>
-                            <label for="LMSpassword" style="padding-bottom:-3px"><strong>Password</strong></label>
-                            <InputText id="LMSpassword" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="authModel.Password" />
-                        </div>
+                    </EditForm>
 
-                        <button class="btn btn-primary LMS-btn login-btn" type="submit">Submit</button>
-                    </div>
-                </EditForm>
+                    <a href="/newaccount">Don't have an account?</a>
 
-                <a href="/newaccount">Don't have an account?</a>
-
-                @if (!string.IsNullOrEmpty(message))
-                {
-                    <p class="LMS-message">@message</p>
-                }
+                    @if (!string.IsNullOrEmpty(message))
+                    {
+                        <p class="LMS-message">@message</p>
+                    }
+                </div>
             </div>
-        </div>
+        }
     </div>
     <div class="col-md-4"></div>
 </div>
@@ -47,6 +53,20 @@
 @code {
     private AuthenticationViewModel authModel = new AuthenticationViewModel();
     private string message = string.Empty;
+    private bool _loading = true;
+
+    protected async override Task OnParametersSetAsync()
+    {
+        // redirect to dashboard if cookie is still valid
+        if (await SessionObj.VerifySession(AzureDb, Storage))
+        {
+            NavMan.NavigateTo("dashboard");
+            return;
+        }
+
+        _loading = false;
+        this.StateHasChanged();
+    }
 
     /// <summary>
     /// Attempt to authenticate a user.
