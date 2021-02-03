@@ -1,0 +1,12 @@
+﻿@page "/sessionexpired";
+@layout UnauthenticatedLayout;
+@inject NavigationManager NavMan;
+
+<h3>SessionExpired</h3>
+
+@code {
+    protected async override Task OnInitializedAsync()
+    {
+        await Task.Delay(2000).ContinueWith(t => NavMan.NavigateTo("/"));
+    }
+}
