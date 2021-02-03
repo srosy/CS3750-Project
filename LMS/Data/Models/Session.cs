@@ -9,5 +9,6 @@ namespace LMS.Data.Models
         public int Id { get; set; }
         public Guid SessionId { get; set; }
         public DateTime ExpireDate { get; set; }
+        public int AccountId { get; set; }
     }
 }
