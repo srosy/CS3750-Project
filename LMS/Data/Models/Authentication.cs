@@ -11,6 +11,8 @@ namespace LMS.Data.Models
         public string Password { get; set; }
         public string Salt { get; set; }
         public string ResetCode { get; set; }
-        public DateTime CreateDate { get; internal set; }
+        public DateTime CreateDate { get; set; }
+        public DateTime? UpdateDate { get; set; }
+        public DateTime? DeleteDate { get; set; }
     }
 }

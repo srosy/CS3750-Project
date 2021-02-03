@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace LMS.Shared.Models
 {
-    public class CourseViewModel
+    public class GradesViewModel
     {
-        public List<Course> Course { get; set; }
+        public List<Submission> StudentGrades { get; set; }
+        public List<Submission> InstructorCourseGrades { get; set; }
     }
 }
