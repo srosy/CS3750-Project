@@ -22,6 +22,7 @@ namespace LMS.Data.Helper
         public static async Task<bool> VerifySession(AzureDbContext db, ILocalStorageService storage)
         {
             var session = await storage.GetItemAsync<SessionObj>("session_lms");
+            if (session == null) return false;
             if (session.ExpireDate == DateTime.MinValue) return false;
             return db.Sessions.Any(s => s.SessionId == session.SessionId && DateTime.UtcNow <= s.ExpireDate);
         }

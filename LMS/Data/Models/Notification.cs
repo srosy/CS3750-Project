@@ -12,6 +12,6 @@ namespace LMS.Data.Models
         public string Message { get; set; }
 
         public DateTime CreateDate { get; set; }
-        public DateTime DeleteDate { get; set; }
+        public DateTime? DeleteDate { get; set; }
     }
 }
