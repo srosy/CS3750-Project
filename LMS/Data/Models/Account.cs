@@ -9,8 +9,10 @@ namespace LMS.Data.Models
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Email { get; set; }
-        public DateTime CreateDate { get; set; }
         public int Role { get; set; }
-        [DataType(DataType.Date)]public DateTime DOB { get; set; }
+        [DataType(DataType.Date)] public DateTime DOB { get; set; }
+        public DateTime CreateDate { get; set; }
+        public DateTime? UpdateDate { get; set; }
+        public DateTime? DeleteDate { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace LMS.Data.Models
 {
@@ -6,8 +7,13 @@ namespace LMS.Data.Models
     {
         [Key]
         public int CourseId { get; set; }
-        public int ProfessorId { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+        [Required] public int ProfessorId { get; set; }
+        [Required] public string Name { get; set; }
+        [Required] public string Description { get; set; }
+        [Required] [DataType(DataType.Date)] public DateTime StartDate { get; set; }
+        [Required] [DataType(DataType.Date)] public DateTime EndDate { get; set; }
+        public DateTime CreateDate { get; set; }
+        public DateTime? UpdateDate { get; set; }
+        public DateTime? DeleteDate { get; set; }
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LMS.Shared.Models
 {
-    public class AssignmentViewModel
+    public class AssignmentsViewModel
     {
         public List<Assignment> Assignments { get; set; }
     }

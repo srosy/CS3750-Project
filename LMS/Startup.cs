@@ -6,6 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MatBlazor;
+using System;
+using Microsoft.AspNetCore.Components;
+using System.Net.Http;
 
 namespace LMS
 {
@@ -24,6 +28,16 @@ namespace LMS
             services.AddServerSideBlazor();
             services.AddDbContext<AzureDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("AzureDbContext")));
             services.AddSingleton<IDbService, DbService>();
+            services.AddMatBlazor();
+
+            services.AddScoped(s =>
+            {
+                var navigationManager = s.GetRequiredService<NavigationManager>();
+                return new HttpClient
+                {
+                    BaseAddress = new Uri(navigationManager.BaseUri)
+                };
+            });
 
             // add localstorage for cookies/session data
             services.AddBlazoredLocalStorage();

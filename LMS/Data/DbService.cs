@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using LMS.Data.Models;
 using Blazored.LocalStorage;
-using System.Dynamic;
 using LMS.Data.Helper;
+using System.Collections.Generic;
 
 namespace LMS.Data
 {
@@ -13,7 +13,10 @@ namespace LMS.Data
     {
         public Task<bool> Authenticate(ILocalStorageService storage, AzureDbContext db, AuthenticationViewModel model);
         public Task<bool> CreateAccount(AzureDbContext db, AccountViewModel model);
+        public Task<bool> SaveCourse(AzureDbContext db, Course model);
         public Task<bool> DeleteSession(AzureDbContext db, ILocalStorageService storage);
+        public Task<List<Course>> GetCourses(AzureDbContext db, int professorId = 0);
+        public Task<List<Account>> GetAccounts(AzureDbContext db, Enum.Role role = Enum.Role.STUDENT);
     }
     public class DbService : IDbService
     {
@@ -37,7 +40,7 @@ namespace LMS.Data
                 if (!Encryption.GenerateSaltedHash(model.Password, auth.Salt).Equals(auth.Password)) return false; // case-sensitive
 
                 await DeleteSession(db, storage);
-                await SessionObj.CreateSession(db, storage); 
+                await SessionObj.CreateSession(db, storage);
 
                 return true;
             }
@@ -110,6 +113,72 @@ namespace LMS.Data
             var deleted = await SessionObj.DeleteSession(db, storage); // delete any existing session
             return deleted;
         }
+
+        /// <summary>
+        /// Gets a list of all courses, or filters courses by provided professorId.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="professorId"></param>
+        /// <returns></returns>
+        public async Task<List<Course>> GetCourses(AzureDbContext db, int professorId = 0)
+        {
+            var courses = db.Courses.Where(c => c.DeleteDate == null);
+            if (professorId > 0)
+            {
+                courses = courses.Where(c => c.ProfessorId == professorId);
+            }
+            return courses.ToList();
+        }
+
+        /// <summary>
+        /// Creates a new Course or updates an existing.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public async Task<bool> SaveCourse(AzureDbContext db, Course model)
+        {
+            var saved = false;
+
+            try
+            {
+                if (model.CourseId <= 0) // new course
+                {
+                    model.CreateDate = DateTime.UtcNow;
+                    db.Courses.Add(model);
+
+                    saved = await db.SaveChangesAsync() > 0;
+                }
+                else // save existing
+                {
+                    var course = db.Courses.FirstOrDefault(c => c.CourseId == model.CourseId);
+                    if (course == null) return false;
+
+                    course.StartDate = model.StartDate;
+                    course.EndDate = model.EndDate;
+                    course.UpdateDate = DateTime.UtcNow;
+                    course.ProfessorId = model.ProfessorId;
+                    course.Name = model.Name;
+                    course.Description = model.Description;
+
+                    saved = await db.SaveChangesAsync() > 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}\n{ex.InnerException.Message}");
+            }
+
+            return saved;
+        }
+
+        /// <summary>
+        /// Gets all accounts; can filter by Role.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="role"></param>
+        /// <returns></returns>
+        public async Task<List<Account>> GetAccounts(AzureDbContext db, Enum.Role role = Enum.Role.STUDENT) => db.Accounts.Where(a => a.DeleteDate == null && a.Role == (int)role).ToList();
     }
 }
 
