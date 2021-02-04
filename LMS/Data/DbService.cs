@@ -20,6 +20,7 @@ namespace LMS.Data
         public Task<Account> GetAccount(AzureDbContext db, int acctId);
         public Task<List<Enrollment>> GetEnrollments(AzureDbContext db, int acctId);
         public Task<bool> UpdateEnrollments(AzureDbContext db, int acctId, List<Enrollment> enrollments);
+        public Task<Settings> GetSettings(AzureDbContext db, int acctId);
     }
     public class DbService : IDbService
     {
@@ -234,6 +235,14 @@ namespace LMS.Data
 
             return saved;
         }
+
+        /// <summary>
+        /// Gets the Account Settings by AccountId.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<Settings> GetSettings(AzureDbContext db, int acctId) => db.Settings.FirstOrDefault(s => s.AccountId == acctId);
     }
 }
 

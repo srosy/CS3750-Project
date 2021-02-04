@@ -1,11 +1,36 @@
-﻿@page "/settings";
+﻿@page "/profile";
 @inject NavigationManager NavMan;
 @inject IDbService DbService;
 @inject AzureDbContext AzureDb;
 @inject Blazored.LocalStorage.ILocalStorageService Storage;
+@using System.Reflection;
 
-<h3 class="header-default">Settings</h3>
+<h3 class="header-default">Profile</h3>
+
+@if (Model.Settings != null)
+{
+    <br />
+    @foreach (PropertyInfo p in Model.Settings.GetType().GetProperties().Skip(1))
+    {
+        <h4 class="header-default">@p.Name: @(p.GetValue(Model.Settings, null) ?? "Not Set")</h4>
+    }
+}
 
 @code {
+    private SettingsViewModel Model = new SettingsViewModel();
+    private bool _showForm;
 
+    protected async override Task OnInitializedAsync()
+    {
+        Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        Model.Settings = await DbService.GetSettings(AzureDb, Model.Account.AccountId);
+
+        if (Model.Settings == null)
+        {
+            Model.Settings = new Data.Models.Settings()
+            {
+                AccountId = Model.Account.AccountId
+            };
+        }
+    }
 }
