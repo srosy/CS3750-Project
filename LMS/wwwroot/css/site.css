@@ -428,3 +428,17 @@ app {
     display: flex;
     align-items: center;
 }
+
+.settings-profile-img {
+    width: auto;
+    height: 40vh;
+}
+
+.settings-card-body {
+    height: 75vh;
+    overflow-y: auto;
+}
+
+.settings-card {
+    width: 55vw;
+}
