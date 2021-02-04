@@ -20,6 +20,6 @@ namespace LMS.Data.Models
         [DataType(DataType.Url)] public string SocialMediaLink3 { get; set; }
         [DataType(DataType.Upload)] public byte[] ProfileImage { get; set; }
 
-        [DataType(DataType.DateTime)] public string UpdateDate { get; set; }
+        [DataType(DataType.DateTime)] public DateTime UpdateDate { get; set; }
     }
 }

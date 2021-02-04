@@ -2,25 +2,155 @@
 @inject NavigationManager NavMan;
 @inject IDbService DbService;
 @inject AzureDbContext AzureDb;
+@inject HttpClient Client;
+@inject IJSRuntime JS;
 @inject Blazored.LocalStorage.ILocalStorageService Storage;
-@using System.Reflection;
 
-<h3 class="header-default">Profile</h3>
-
-@if (Model.Settings != null)
+@if (_loading)
 {
-    <br />
-    @foreach (PropertyInfo p in Model.Settings.GetType().GetProperties().Skip(1))
+    <h1 class="header-default">Loading...</h1>
+}
+else
+{
+    @if (_showForm)
     {
-        <h4 class="header-default">@p.Name: @(p.GetValue(Model.Settings, null) ?? "Not Set")</h4>
+        <div class="row text-center">
+            <div class="col-md-2"></div>
+            <div class="col-md-8">
+                <div class="card settings-card">
+                    <div class="card-header LMS-title">
+                        <h3>Edit Profile</h3>
+                    </div>
+                    <div class="card card-body settings-card-body">
+                        <EditForm Model="Model" OnValidSubmit="@SaveSettings">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <div class="form-group has-success">
+                                <label for="profile-image-upload" class="LMS-form-label">Profile Picture</label>
+                                <InputFile id="profile-image-upload" OnChange="UploadImageOnChange" title="Upload a profile image" />
+                            </div>
+                            <div class="form-group has-success">
+                                <InputText id="fname" class="form-control LMS-input" type="text" placeholder="First Name" @bind-Value="Model.Account.FirstName" />
+                            </div>
+                            <div class="form-group has-success">
+                                <InputText id="lname" class="form-control LMS-input" type="text" placeholder="Last Name" @bind-Value="Model.Account.LastName" />
+                            </div>
+                            <div class="form-group">
+                                <InputDate id="birthday" class="form-control LMS-input" title="Users must be 18+" type="date" @bind-Value="Model.Account.DOB" />
+                            </div>
+                            <div class="form-group has-success">
+                                <InputText id="email" class="form-control LMS-input" type="text" placeholder="Email" disabled @bind-Value="Model.Account.Email" />
+                            </div>
+                            <div class="form-group">
+                                <select id="role" class="form-control LMS-Input" @bind="Model.Account.Role">
+                                    <option value="1">Student</option>
+                                    <option value="2">Professor</option>
+                                </select>
+                            </div>
+                            <div class="form-group has-success">
+                                <InputText id="address" class="form-control LMS-input" type="text" placeholder="Address" @bind-Value="Model.Settings.Address" />
+                            </div>
+                            <div class="form-group has-success">
+                                <InputText id="city" class="form-control LMS-input" type="text" placeholder="City" @bind-Value="Model.Settings.City" />
+                            </div>
+                            <div class="form-group">
+                                <select id="profid" class="form-control LMS-Input" @bind="Model.Settings.State">
+                                    <option value="0">- Select State -</option>
+                                    @foreach (var s in Model.State.States)
+                                    {
+                                        <option value="@s.Abbreviations">@($"{s.Name} - {s.Abbreviations}")</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group has-success">
+                                <InputText id="zipcode" class="form-control LMS-input" type="text" placeholder="ZipCode" @bind-Value="Model.Settings.ZipCode" />
+                            </div>
+                            <div class="form-group has-success">
+                                <InputText id="country" class="form-control LMS-input" type="text" placeholder="Country" @bind-Value="Model.Settings.Country" />
+                            </div>
+                            <div class="form-group has-success">
+                                <InputText id="phone" class="form-control LMS-input" type="text" placeholder="Phone Number" @bind-Value="Model.Settings.Phone" />
+                            </div>
+                            <div class="form-group has-success">
+                                <InputTextArea id="biography" class="form-control LMS-input" type="text" placeholder="Biography" @bind-Value="Model.Settings.Biography" />
+                            </div>
+                            <div class="form-group has-success">
+                                <InputText id="sml1" class="form-control LMS-input" type="text" placeholder="Social Media Link 1" @bind-Value="Model.Settings.SocialMediaLink1" />
+                            </div>
+                            <div class="form-group has-success">
+                                <InputText id="sml2" class="form-control LMS-input" type="text" placeholder="Social Media Link 2" @bind-Value="Model.Settings.SocialMediaLink2" />
+                            </div>
+                            <div class="form-group has-success">
+                                <InputText id="sml3" class="form-control LMS-input" type="text" placeholder="Social Media Link 3" @bind-Value="Model.Settings.SocialMediaLink3" />
+                            </div>
+
+                            <button class="btn btn-primary LMS-btn" type="submit">Save</button>
+                        </EditForm>
+                        <MatButton Class="btn btn-secondary LMS-btn" @onclick="@(() => { _showForm = false; })">Cancel</MatButton>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    }
+    else
+    {
+        <h3 class="header-default courses-header">Profile</h3><MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; })">Edit Profile</MatButton>
+        <br />
+        @if (Model.Settings != null)
+        {
+            <div class="row">
+                <br />
+                @if (!string.IsNullOrEmpty(_profileImageSrc))
+                {
+                    <div class="col-md-6">
+                        <img class="settings-profile-img" src="@_profileImageSrc" />
+                    </div>
+                }
+                <div class="col-md-6">
+                    @foreach (PropertyInfo p in Model.Account.GetType().GetProperties().Where(p => !_ignoreProps.Contains(p.Name)))
+                    {
+                        if (p.Name == "Role")
+                        {
+                            var role = (int)p.GetValue(Model.Account, null) > 0 ? Enum.GetName(typeof(Role), p.GetValue(Model.Account, null)) : "Not Set";
+                            <h4 class="header-default">@p.Name: @role</h4>
+                        }
+                        else
+                        {
+                            <h4 class="header-default">@p.Name: @(p.GetValue(Model.Account, null) ?? "Not Set")</h4>
+                        }
+                    }
+                    @foreach (PropertyInfo p in Model.Settings.GetType().GetProperties().Where(p => !_ignoreProps.Contains(p.Name)))
+                    {
+                        <h4 class="header-default">@p.Name: @(p.GetValue(Model.Settings, null) ?? "Not Set")</h4>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <h1 class="header-default">How TF did you get here?</h1>
+        }
     }
 }
 
 @code {
     private SettingsViewModel Model = new SettingsViewModel();
     private bool _showForm;
+    private bool _loading = true;
+    private string _profileImageSrc;
+    private string[] _ignoreProps = { "SettingId", "ProfileImage", "UpdateDate", "AccountId", "CreateDate", "DeleteDate" };
 
-    protected async override Task OnInitializedAsync()
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Setup();
+        }
+    }
+
+    private async Task Setup()
     {
         Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
         Model.Settings = await DbService.GetSettings(AzureDb, Model.Account.AccountId);
@@ -32,5 +162,49 @@
                 AccountId = Model.Account.AccountId
             };
         }
+
+        await SetProfileImage();
+
+        _loading = false;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Handles when a new Profile Image is uploaded.
+    /// </summary>
+    /// <param name="files"></param>
+    /// <returns></returns>
+    private async Task UploadImageOnChange(IFileListEntry[] files)
+    {
+        Model.ImageUpload = await LMS_Image.ConvertImageUploadToByteArray(files.FirstOrDefault());
+    }
+
+    /// <summary>
+    /// Sets the Profile Image from saved byte[].
+    /// </summary>
+    /// <returns></returns>
+    private async Task SetProfileImage()
+    {
+        _profileImageSrc = Model.Settings.ProfileImage != null && Model.Settings.ProfileImage.Length > 0 ?
+            await LMS_Image.GetImageSrc(Model.Settings.ProfileImage)
+            : null;
+    }
+
+    private async void SaveSettings()
+    {
+        //save account
+        var acctSaved = await DbService.UpdateAccount(AzureDb, Model.Account);
+
+        //save settings
+        Model.Settings.UpdateDate = DateTime.UtcNow;
+        if (Model.ImageUpload != null && Model.ImageUpload.Length > 0)
+        {
+            Model.Settings.ProfileImage = Model.ImageUpload;
+            await SetProfileImage();
+        }
+        var settingsSaved = await DbService.SaveSettings(AzureDb, Model.Settings);
+        _showForm = !settingsSaved;
+        StateHasChanged();
+        await JS.InvokeVoidAsync("Toast", new[] { (acctSaved && settingsSaved ? "success" : "error"), (acctSaved && settingsSaved ? "Saved Profile Settings" : "An Error Occured"), "3000" }); // toasttype, message, duration
     }
 }
