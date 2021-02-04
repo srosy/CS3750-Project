@@ -8,7 +8,7 @@ namespace LMS.Data.Models
         [Key]
         public int AuthId { get; set; }
         public int AccountId { get; set; }
-        public string Password { get; set; }
+        [MinLength(8)] public string Password { get; set; }
         public string Salt { get; set; }
         public string ResetCode { get; set; }
         public DateTime CreateDate { get; set; }

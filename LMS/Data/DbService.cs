@@ -20,6 +20,9 @@ namespace LMS.Data
         public Task<Account> GetAccount(AzureDbContext db, int acctId);
         public Task<List<Enrollment>> GetEnrollments(AzureDbContext db, int acctId);
         public Task<bool> UpdateEnrollments(AzureDbContext db, int acctId, List<Enrollment> enrollments);
+        public Task<Settings> GetSettings(AzureDbContext db, int acctId);
+        public Task<bool> UpdateAccount(AzureDbContext db, Account acct);
+        public Task<bool> SaveSettings(AzureDbContext db, Settings settings);
     }
     public class DbService : IDbService
     {
@@ -226,6 +229,86 @@ namespace LMS.Data
                 });
 
                 saved = await db.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return saved;
+        }
+
+        /// <summary>
+        /// Gets the Account Settings by AccountId.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<Settings> GetSettings(AzureDbContext db, int acctId) => db.Settings.FirstOrDefault(s => s.AccountId == acctId);
+        
+        /// <summary>
+        /// Saves the passed Account to the DB.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acct"></param>
+        /// <returns></returns>
+        public async Task<bool> UpdateAccount(AzureDbContext db, Account acct)
+        {
+            var saved = false;
+            try
+            {
+                var dbAcct = db.Accounts.First(a => a.AccountId == acct.AccountId);
+                dbAcct.UpdateDate = DateTime.UtcNow;
+                dbAcct.FirstName = acct.FirstName;
+                dbAcct.LastName = acct.LastName;
+                dbAcct.Role = acct.Role;
+                dbAcct.DOB = acct.DOB;
+                dbAcct.DeleteDate = acct.DeleteDate;
+
+                saved = await db.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return saved;
+        }
+
+        /// <summary>
+        /// Saves the passed Settings to the Db.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="settings"></param>
+        /// <returns></returns>
+        public async Task<bool> SaveSettings(AzureDbContext db, Settings settings)
+        {
+            var saved = false;
+            try
+            {
+                // new settings
+                if (settings.SettingId == 0)
+                {
+                    db.Settings.Add(settings);
+                    saved = await db.SaveChangesAsync() > 0;
+                }
+                else
+                {
+                    var dbSettings = db.Settings.First(s => s.AccountId == settings.AccountId && settings.SettingId == s.SettingId);
+                    dbSettings.UpdateDate = DateTime.UtcNow;
+                    dbSettings.Address = settings.Address;
+                    dbSettings.City = settings.City;
+                    dbSettings.State = settings.State;
+                    dbSettings.ZipCode = settings.ZipCode;
+                    dbSettings.Country = settings.Country;
+                    dbSettings.Phone = settings.Phone;
+                    dbSettings.SocialMediaLink1 = settings.SocialMediaLink1;
+                    dbSettings.SocialMediaLink2 = settings.SocialMediaLink2;
+                    dbSettings.SocialMediaLink3 = settings.SocialMediaLink3;
+                    dbSettings.Biography = settings.Biography;
+                    dbSettings.ProfileImage = settings.ProfileImage;
+
+                    saved = await db.SaveChangesAsync() > 0;
+                }
             }
             catch (Exception ex)
             {

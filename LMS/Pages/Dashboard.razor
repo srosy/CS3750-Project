@@ -6,16 +6,31 @@
 
 <h3 class="header-default">Dashboard</h3>
 
+@if (_loading)
+{
+    <h4 class="header-default">Loading...</h4>
+}
+
 @code {
 
+    private bool _loading = true;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Setup();
+        }
+    }
+
+    private async Task Setup()
     {
         var validSession = await SessionObj.VerifySession(AzureDb, Storage);
         if (!validSession)
         {
             NavMan.NavigateTo("sessionexpired");
         }
+        _loading = false;
+        StateHasChanged();
     }
-
 }

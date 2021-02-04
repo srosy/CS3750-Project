@@ -7,54 +7,72 @@
 @inject Blazored.LocalStorage.ILocalStorageService Storage;
 
 <h3 class="header-default courses-header">Register for Courses</h3>
-@if (Model.Courses.Any())
+@if (_loading)
 {
-    <br />
-    <MatTable Items="Model.Courses" class="mat-elevation-z5 lms-table"
-              Striped="true" FilterByColumnName="Description" PageLabel="Page:" DebounceMilliseconds="150"
-              AllowSelection="true" SelectionChanged="RowClick" @attributes="Model.TableAttributes">
-        <MatTableHeader>
-            <th>Course ID</th>
-            <th>Name</th>
-            <th>Professor</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Description</th>
-            <th>Enrolled</th>
-        </MatTableHeader>
-        <MatTableRow>
-            <td>@context.CourseId</td>
-            <td>@context.Name</td>
-            <td>
-                @Model.Professors.First(p => p.AccountId == context.ProfessorId).FirstName&nbsp;
-                @Model.Professors.First(p => p.AccountId == context.ProfessorId).LastName
-            </td>
-            <td>@context.StartDate.ToShortDateString()</td>
-            <td>@context.EndDate.ToShortDateString()</td>
-            <td>@context.Description</td>
-
-            @{
-                    var enrolled = Model.Enrollments != null && Model.Enrollments.Any(c => c.CourseId == context.CourseId);
-            }
-            <td class="@(enrolled ? "text-success" : "text-danger")">@enrolled</td>
-        </MatTableRow>
-    </MatTable>
-
+    <h1 class="header-default">Loading...</h1>
 }
 else
 {
-    <p class="text-danger">No courses available to register for.</p>
+    @if (Model.Courses.Any())
+    {
+        <br />
+        <MatTable Items="Model.Courses" class="mat-elevation-z5 lms-table"
+                  Striped="true" FilterByColumnName="Description" PageLabel="Page:" DebounceMilliseconds="150"
+                  AllowSelection="true" SelectionChanged="RowClick" @attributes="Model.TableAttributes">
+            <MatTableHeader>
+                <th>Course ID</th>
+                <th>Name</th>
+                <th>Professor</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Description</th>
+                <th>Enrolled</th>
+            </MatTableHeader>
+            <MatTableRow>
+                <td>@context.CourseId</td>
+                <td>@context.Name</td>
+                <td>
+                    @Model.Professors.First(p => p.AccountId == context.ProfessorId).FirstName&nbsp;
+                    @Model.Professors.First(p => p.AccountId == context.ProfessorId).LastName
+                </td>
+                <td>@context.StartDate.ToShortDateString()</td>
+                <td>@context.EndDate.ToShortDateString()</td>
+                <td>@context.Description</td>
+
+                @{
+                            var enrolled = Model.Enrollments != null && Model.Enrollments.Any(c => c.CourseId == context.CourseId);
+                }
+                <td class="@(enrolled ? "text-success" : "text-danger")">@enrolled</td>
+            </MatTableRow>
+        </MatTable>
+
+    }
+    else
+    {
+        <p class="text-danger">No courses available to register for.</p>
+    }
 }
 
 @code {
     private EnrollmentsViewModel Model = new EnrollmentsViewModel();
+    private bool _loading = true;
 
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Setup();
+        }
+    }
+
+    private async Task Setup()
     {
         Model.Courses = await DbService.GetCourses(AzureDb);
         Model.Professors = await DbService.GetAccounts(AzureDb, Role.PROFESSOR);
         Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
         Model.Enrollments = await DbService.GetEnrollments(AzureDb, Model.Account.AccountId);
+        _loading = false;
+        StateHasChanged();
     }
 
     /// <summary>
