@@ -1,8 +1,4 @@
-﻿@inject IDbService DbService;
-@inject AzureDbContext AzureDb;
-@inject Blazored.LocalStorage.ILocalStorageService Storage;
-
-@if (!_loading)
+﻿@if (!_loading)
 {
     <div class="lead">
         <div class="badge badge-@(_badgeClass)">@_userType</div>

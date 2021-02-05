@@ -391,7 +391,7 @@ app {
     background-color: white !important;
 }
 
-.header-default, .mdc-icon-button, .mdc-paginator-container {
+.header-default, .mdc-icon-button, .mdc-paginator-container, .text-default {
     color: white !important;
 }
 
@@ -441,4 +441,38 @@ app {
 
 .settings-card {
     width: 55vw;
+}
+
+.dashboard-enrollment-table, .ef-th, .ef-td {
+    width: auto !important;
+    height: auto;
+    max-height: 30vh !important;
+    overflow: auto;
+    text-align: center !important;
+}
+
+.dashboard-profile-img {
+    width: auto;
+    height: 7vh;
+}
+
+.img-wrapper {
+    max-width: 5vw;
+    display: block;
+    width: auto;
+}
+
+.header-inline {
+    display: inline-block;
+}
+
+.profile-info-sm {
+    margin: -0.5vh;
+}
+
+.profile-info-container {
+    background-image: url('https://www.weber.edu/ui/images/bg1.png');
+    padding: 15px;
+    width: auto;
+    max-height: 10vh;
 }

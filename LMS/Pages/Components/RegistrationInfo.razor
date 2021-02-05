@@ -1,0 +1,33 @@
+﻿@if (!_loading)
+{
+    <MatTable Items="_enrollments" class="mat-elevation-z5 lms-table dashboard-enrollment-table" Striped="true" ShowPaging="false">
+        <MatTableHeader>
+            <th class="ef-th">@(_enrollments.Any() ? "Registered Courses" : "No Courses Registered")</th>
+        </MatTableHeader>
+        <MatTableRow>
+            @{
+                    var course = _courses.First(c => c.CourseId == context.CourseId);
+                    var info = $"{course.Name} - {course.Description}";
+            }
+            <td class="ef-td">@info</td>
+        </MatTableRow>
+    </MatTable>
+}
+
+@code {
+
+    private bool _loading = true;
+    private List<Enrollment> _enrollments;
+    private List<Course> _courses;
+
+    [Parameter] public Account Account { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _enrollments = await DbService.GetEnrollments(AzureDb, Account.AccountId);
+        _courses = await DbService.GetCourses(AzureDb);
+        _loading = false;
+
+        base.OnParametersSet();
+    }
+}
