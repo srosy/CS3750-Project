@@ -1,17 +1,38 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="sidebar">
-    <NavMenu />
-</div>
+@if (_sessionValid)
+{
+    <div class="sidebar">
+        <NavMenu />
+    </div>
 
-<div class="main">
-    <div class="top-row px-4">
-        <a href="/" target="_self"><img class="main-image" src="https://weber.edu/ui/images/wsu-logo.svg" /></a>
+    <div class="main">
+        <div class="top-row px-4">
+            <UserTypeIndicator />
+            <a href="/" target="_self"><img class="main-image" src="https://weber.edu/ui/images/wsu-logo.svg" /></a>
+        </div>
+        <div class="content px-4">
+            @Body
+        </div>
+        <div class="content footer-div">
+            <footer class="text-center"><img class="footer-image" alt="WSU Home Page" src="https://www.weber.edu/ui/images/footer-logo.svg"><br /><small class="text-white">&copy;Copyright 2021 All Rights Reserved</small></footer>
+        </div>
     </div>
-    <div class="content px-4">
-        @Body
-    </div>
-    <div class="content footer-div">
-        <footer class="text-center"><img class="footer-image" alt="WSU Home Page" src="https://www.weber.edu/ui/images/footer-logo.svg"><br /><small class="text-white">&copy;Copyright 2021 All Rights Reserved</small></footer>
-    </div>
-</div>
+}
+
+@code {
+    private bool _sessionValid;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _sessionValid = await SessionObj.VerifySession(AzureDb, Storage);
+            if (!_sessionValid)
+            {
+                NavMan.NavigateTo("sessionexpired");
+            }
+        }
+        StateHasChanged();
+    }
+}

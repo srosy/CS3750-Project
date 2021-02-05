@@ -1,0 +1,35 @@
+﻿@inject IDbService DbService;
+@inject AzureDbContext AzureDb;
+@inject Blazored.LocalStorage.ILocalStorageService Storage;
+
+@if (!_loading)
+{
+    <div class="lead">
+        <div class="badge badge-@(_badgeClass)">@_userType</div>
+    </div>
+}
+
+@code {
+    private string _userType;
+    private string _badgeClass;
+    private bool _loading = true;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Setup();
+        }
+    }
+
+    private async Task Setup()
+    {
+        var account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        _userType = Enum.GetName(typeof(Role), account.Role);
+        _badgeClass = account.Role == (int)Role.STUDENT ? "secondary" : "info";
+
+        _loading = false;
+        StateHasChanged();
+    }
+}
