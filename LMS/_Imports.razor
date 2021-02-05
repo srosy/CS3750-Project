@@ -21,3 +21,10 @@
 @using MatBlazor;
 @using BlazorInputFile;
 @using System.Drawing;
+
+@inject NavigationManager NavMan;
+@inject IDbService DbService;
+@inject AzureDbContext AzureDb;
+@inject Blazored.LocalStorage.ILocalStorageService Storage;
+@inject HttpClient Client;
+@inject IJSRuntime JS;

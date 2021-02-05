@@ -1,8 +1,5 @@
 ﻿@page "/newaccount";
 @layout UnauthenticatedLayout;
-@inject NavigationManager NavMan;
-@inject IDbService DbService;
-@inject AzureDbContext AzureDb;
 
 <div class="row text-center">
     <div class="col-md-4"></div>
@@ -12,39 +9,39 @@
                 <h3>New Account</h3>
             </div>
             <div class="card card-body">
-                @if (EmailSent)
+                @if (_emailSent)
                 {
                     <div class="form-group has-success">
-                        <InputText id="resetcode" class="form-control LMS-input" type="text" placeholder="Reset Code" @bind-Value="InputtedResetCode" />
+                        <InputText id="resetcode" class="form-control LMS-input" type="text" placeholder="Reset Code" @bind-Value="_inputtedResetCode" />
                     </div>
                     <button class="btn btn-primary LMS-btn" @onclick="VerifyEmail">Verify Code</button>
                     <button class="btn btn-primary LMS-btn" @onclick="ResendEmail">Resend Code</button>
                 }
                 else
                 {
-                    <EditForm Model="@acctModel" OnValidSubmit="@CreateAccount">
+                    <EditForm Model="Model" OnValidSubmit="@CreateAccount">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
                         <div class="form-group has-success">
-                            <InputText id="fname" class="form-control LMS-input" type="text" placeholder="First Name" @bind-Value="acctModel.FirstName" />
+                            <InputText id="fname" class="form-control LMS-input" type="text" placeholder="First Name" @bind-Value="Model.FirstName" />
                         </div>
                         <div class="form-group has-success">
-                            <InputText id="lname" class="form-control LMS-input" type="text" placeholder="Last Name" @bind-Value="acctModel.LastName" />
+                            <InputText id="lname" class="form-control LMS-input" type="text" placeholder="Last Name" @bind-Value="Model.LastName" />
                         </div>
                         <div class="form-group">
-                            <InputDate id="birthday" class="form-control LMS-input" title="Users must be 18+" type="date" @bind-Value="acctModel.Birthday" />
+                            <InputDate id="birthday" class="form-control LMS-input" title="Users must be 18+" type="date" @bind-Value="Model.Birthday" />
                         </div>
                         <div class="form-group has-success">
-                            <InputText id="email" class="form-control LMS-input" type="text" placeholder="Email" @bind-Value="acctModel.Email" />
+                            <InputText id="email" class="form-control LMS-input" type="text" placeholder="Email" @bind-Value="Model.Email" />
                         </div>
                         <div class="form-group has-success">
-                            <InputText id="password" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="acctModel.Auth.Password" />
+                            <InputText id="password" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="Model.Auth.Password" />
                         </div>
                         <div class="form-group has-success">
-                            <InputText id="confirm-password" class="form-control LMS-input" type="password" placeholder="Re-enter password" @bind-Value="ConfirmPassword" />
+                            <InputText id="confirm-password" class="form-control LMS-input" type="password" placeholder="Re-enter password" @bind-Value="_confirmPassword" />
                         </div>
                         <div class="form-group">
-                            <select id="role" class="form-control LMS-Input" @bind="acctModel.Role">
+                            <select id="role" class="form-control LMS-Input" @bind="Model.Role">
                                 <option value="0" selected>- Select Role -</option>
                                 <option value="1">Student</option>
                                 <option value="2">Instructor</option>
@@ -55,9 +52,9 @@
                     </EditForm>
                     <a href="/login">Already have an account?</a>
                 }
-                @if (!string.IsNullOrEmpty(message))
+                @if (!string.IsNullOrEmpty(_message))
                 {
-                    <p class="LMS-message">@message</p>
+                    <p class="LMS-message">@_message</p>
                 }
             </div>
         </div>
@@ -66,60 +63,64 @@
 </div>
 
 @code {
-    private AccountViewModel acctModel = new AccountViewModel();
-    private DbService db = new DbService();
-    private string message = string.Empty;
-    private string ConfirmPassword;
-    private string InputtedResetCode;
-    private bool EmailSent;
-    private DateTime MinDate = DateTime.UtcNow.AddYears(-100);
-    private DateTime MaxDate = DateTime.UtcNow.AddYears(-18);
-    private DateTime today;
+    private AccountViewModel Model = new AccountViewModel();
+    private string _message = string.Empty;
+    private string _confirmPassword;
+    private string _inputtedResetCode;
+    private bool _emailSent;
+    private DateTime _minDate = DateTime.UtcNow.AddYears(-100);
+    private DateTime _maxDate = DateTime.UtcNow.AddYears(-18).AddDays(1);
+    private DateTime _today;
 
     protected async override Task OnInitializedAsync()
     {
-        acctModel.Birthday = DateTime.UtcNow.AddYears(-18); // must be at least 18
+        Model.Birthday = DateTime.UtcNow.AddYears(-18); // must be at least 18
     }
 
+    /// <summary>
+    /// Creates the account from binding on the Edit form Model.
+    /// </summary>
     private async void CreateAccount()
     {
-        if (acctModel.Role <= 0)
+        if (Model.Role <= 0)
         {
-            message = "User must select a type";
+            _message = "User must select a type";
             return;
         }
 
-        if (acctModel.Birthday > MaxDate || acctModel.Birthday < MinDate)
+        if (Model.Birthday > _maxDate || Model.Birthday < _minDate)
         {
-            message = $"DOB must be between {MinDate.ToShortDateString()} and {MaxDate.ToShortDateString()}";
+            _message = $"DOB must be between {_minDate.ToShortDateString()} and {_maxDate.ToShortDateString()}";
             return;
         }
 
-        if (!ConfirmPassword.Equals(acctModel.Auth.Password))
+        if (!_confirmPassword.Equals(Model.Auth.Password))
         {
-            message = "Passwords do not match!";
+            _message = "Passwords do not match!";
             return;
         }
 
-        var acctCreated = await DbService.CreateAccount(AzureDb, acctModel);
+        var acctCreated = await DbService.CreateAccount(AzureDb, Model);
         if (acctCreated)
         {
-            EmailSent = await db.SendEmail(acctModel, AzureDb);
+            _message = "Account Created. Proceed to login page.";
+            NavMan.NavigateTo("login");
+            _emailSent = await DbService.SendEmail(Model, AzureDb);
         }
 
-        message = "Error trying to create account. Account may already exist.";
+        _message = "Error trying to create account. Account may already exist.";
     }
 
     private async void VerifyEmail()
     {
-        if (InputtedResetCode == acctModel.Auth.ResetCode)
+        if (_inputtedResetCode == Model.Auth.ResetCode)
         {
-            await db.VerifyEmail(acctModel.Email, AzureDb);
+            await DbService.VerifyEmail(Model.Email, AzureDb);
         }
     }
 
     private async void ResendEmail()
     {
-        await db.SendEmail(acctModel, AzureDb);
+        await DbService.SendEmail(Model, AzureDb);
     }
 }

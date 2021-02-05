@@ -24,6 +24,9 @@ namespace LMS.Data
         public Task<Settings> GetSettings(AzureDbContext db, int acctId);
         public Task<bool> UpdateAccount(AzureDbContext db, Account acct);
         public Task<bool> SaveSettings(AzureDbContext db, Settings settings);
+        public Task<bool> DoSending(MimeMessage mailMessage);
+        public Task<bool> SendEmail(AccountViewModel account, AzureDbContext db);
+        public Task VerifyEmail(string email, AzureDbContext db);
     }
     public class DbService : IDbService
     {

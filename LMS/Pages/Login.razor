@@ -1,10 +1,5 @@
 ﻿@page "/login";
 @layout UnauthenticatedLayout;
-@inject NavigationManager NavMan;
-@inject IDbService DbService;
-@inject AzureDbContext AzureDb;
-@inject Blazored.LocalStorage.ILocalStorageService Storage;
-@inject IJSRuntime JS;
 
 <div class="row ">
     <div class="col-md-4"></div>
@@ -20,17 +15,17 @@
                     <h3>Login</h3>
                 </div>
                 <div class="card-body">
-                    <EditForm Model="@authModel" OnValidSubmit="@TryAuthenticate">
+                    <EditForm Model="Model" OnValidSubmit="@TryAuthenticate">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
                         <div class="form-group">
                             <div class="login-box">
                                 <label for="LMSusername"><strong>Username</strong></label>
-                                <InputText id="LMSusername" class="form-control LMS-input" type="text" placeholder="Username/Email" @bind-Value="authModel.UserName" />
+                                <InputText id="LMSusername" class="form-control LMS-input" type="text" placeholder="Username/Email" @bind-Value="Model.UserName" />
                             </div>
                             <div>
                                 <label for="LMSpassword" style="padding-bottom:-3px"><strong>Password</strong></label>
-                                <InputText id="LMSpassword" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="authModel.Password" />
+                                <InputText id="LMSpassword" class="form-control LMS-input" type="password" placeholder="Password" @bind-Value="Model.Password" />
                             </div>
 
                             <button class="btn btn-primary LMS-btn login-btn" type="submit">Submit</button>
@@ -39,9 +34,9 @@
 
                     <a href="/newaccount">Don't have an account?</a>
 
-                    @if (!string.IsNullOrEmpty(message))
+                    @if (!string.IsNullOrEmpty(_message))
                     {
-                        <p class="LMS-message">@message</p>
+                        <p class="LMS-message">@_message</p>
                     }
                 </div>
             </div>
@@ -51,8 +46,8 @@
 </div>
 
 @code {
-    private AuthenticationViewModel authModel = new AuthenticationViewModel();
-    private string message = string.Empty;
+    private AuthenticationViewModel Model = new AuthenticationViewModel();
+    private string _message = string.Empty;
     private bool _loading = true;
 
     protected async override Task OnParametersSetAsync()
@@ -73,14 +68,14 @@
     /// </summary>
     private async void TryAuthenticate()
     {
-        var authenticated = await DbService.Authenticate(Storage, AzureDb, authModel);
+        var authenticated = await DbService.Authenticate(Storage, AzureDb, Model);
         if (authenticated)
         {
             NavMan.NavigateTo("dashboard");
         }
         else
         {
-            message = "Login failed.";
+            _message = "Login failed.";
             await JS.InvokeVoidAsync("Toast", new[] { "error", "Login Failed.", "3000" }); // toasttype, message, duration
         }
     }
