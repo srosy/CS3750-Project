@@ -1,10 +1,4 @@
 ﻿@page "/profile";
-@inject NavigationManager NavMan;
-@inject IDbService DbService;
-@inject AzureDbContext AzureDb;
-@inject HttpClient Client;
-@inject IJSRuntime JS;
-@inject Blazored.LocalStorage.ILocalStorageService Storage;
 
 @if (_loading)
 {
@@ -141,7 +135,6 @@ else
     private string _profileImageSrc;
     private string[] _ignoreProps = { "SettingId", "ProfileImage", "UpdateDate", "AccountId", "CreateDate", "DeleteDate" };
 
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -190,6 +183,9 @@ else
             : null;
     }
 
+    /// <summary>
+    /// Saves the settings selected.
+    /// </summary>
     private async void SaveSettings()
     {
         //save account

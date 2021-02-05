@@ -1,8 +1,4 @@
 ﻿@page "/dashboard"
-@inject NavigationManager NavMan;
-@inject IDbService DbService;
-@inject AzureDbContext AzureDb;
-@inject Blazored.LocalStorage.ILocalStorageService Storage;
 
 <h3 class="header-default">Dashboard</h3>
 
@@ -25,11 +21,7 @@
 
     private async Task Setup()
     {
-        var validSession = await SessionObj.VerifySession(AzureDb, Storage);
-        if (!validSession)
-        {
-            NavMan.NavigateTo("sessionexpired");
-        }
+        // do stuff
         _loading = false;
         StateHasChanged();
     }
