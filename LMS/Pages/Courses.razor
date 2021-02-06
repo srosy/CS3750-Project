@@ -1,93 +1,108 @@
 ﻿@page "/courses";
 
-@if (_showCourseForm)
+@if (_loading)
 {
-    <div class="row text-center">
-        <div class="col-md-4"></div>
-        <div class="col-md-6">
-            <div class="card LMS-card">
-                <div class="card-header LMS-form">
-                    <h3>@Model.FormTitle</h3>
-                </div>
-                <div class="card card-body">
-                    <EditForm Model="@_courseModel" OnValidSubmit="@SaveCourse">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
-                        <div class="form-group has-success">
-                            <InputText id="cname" class="form-control LMS-input" type="text" placeholder="Name" @bind-Value="_courseModel.Name" />
-                        </div>
-                        <div class="form-group has-success">
-                            <InputText id="cdesc" class="form-control LMS-input" type="text" placeholder="Description" @bind-Value="_courseModel.Description" />
-                        </div>
-                        <div class="form-group">
-                            <InputDate id="sdate" class="form-control LMS-input" title="Start Date" type="date" @bind-Value="_courseModel.StartDate" />
-                        </div>
-                        <div class="form-group">
-                            <InputDate id="edate" class="form-control LMS-input" title="End Date" type="date" @bind-Value="_courseModel.EndDate" />
-                        </div>
-                        <div class="form-group">
-                            <select id="profid" class="form-control LMS-Input" @bind="_courseModel.ProfessorId">
-                                <option value="0" selected>- Select Professor -</option>
-                                @foreach (var p in Model.Professors)
-                                {
-                                    <option value="@p.AccountId">@($"{p.FirstName} {p.LastName}")</option>
-                                }
-                            </select>
-                        </div>
-                        <MatButton Class="btn btn-primary LMS-btn" type="submit">Save</MatButton>
-                    </EditForm>
-                    <MatButton Class="btn btn-secondary LMS-btn" Type="" OnClick="ResetForm">Cancel</MatButton>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4"></div>
-    </div>
+    <h1 class="header-default">Loading...</h1>
 }
 else
 {
-    <h3 class="header-default courses-header">Courses</h3><MatButton Class="add-new-course" @onclick="@(() => { _showCourseForm = true; _courseModel = new Course(); Model.FormTitle = "Add New Course"; })">Add New Course</MatButton>
-    <br />
-    @if (Model.Courses.Any())
+    @if (_showCourseForm)
     {
-        <MatTable Items="Model.Courses" class="mat-elevation-z5 lms-table"
-                  Striped="true" FilterByColumnName="Description" PageLabel="Page:" DebounceMilliseconds="150"
-                  AllowSelection="true" SelectionChanged="RowClick" @attributes="Model.TableAttributes">
-            <MatTableHeader>
-                <th>Course ID</th>
-                <th>Name</th>
-                <th>Professor</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Description</th>
-            </MatTableHeader>
-            <MatTableRow>
-                <td>@context.CourseId</td>
-                <td>@context.Name</td>
-                <td>
-                    @Model.Professors.First(p => p.AccountId == context.ProfessorId).FirstName&nbsp;
-                    @Model.Professors.First(p => p.AccountId == context.ProfessorId).LastName
-                </td>
-                <td>@context.StartDate.ToShortDateString()</td>
-                <td>@context.EndDate.ToShortDateString()</td>
-                <td>@context.Description</td>
-            </MatTableRow>
-        </MatTable>
+        <div class="row text-center">
+            <div class="col-md-4"></div>
+            <div class="col-md-6">
+                <div class="card LMS-card">
+                    <div class="card-header LMS-form">
+                        <h3>@Model.FormTitle</h3>
+                    </div>
+                    <div class="card card-body">
+                        <EditForm Model="@_courseModel" OnValidSubmit="@SaveCourse">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <div class="form-group has-success">
+                                <InputText id="cname" class="form-control LMS-input" type="text" placeholder="Name (CS3750)" @bind-Value="_courseModel.Name" />
+                            </div>
+                            <div class="form-group has-success">
+                                <InputText id="cdesc" class="form-control LMS-input" type="text" placeholder="Description" @bind-Value="_courseModel.Description" />
+                            </div>
+                            <div class="form-group">
+                                <InputDate id="sdate" class="form-control LMS-input" title="Start Date" type="date" @bind-Value="_courseModel.StartDate" />
+                            </div>
+                            <div class="form-group">
+                                <InputDate id="edate" class="form-control LMS-input" title="End Date" type="date" @bind-Value="_courseModel.EndDate" />
+                            </div>
+                            @if (_courseModel.CourseId > 0)
+                            {
+                                <div class="form-group">
+                                    <MatCheckbox Label="Delete Course" @bind-Value="_deleteCourse" />
+                                </div>
+                            }
+                            <MatButton Class="btn btn-primary LMS-btn" type="submit">Save</MatButton>
+                        </EditForm>
+                        <MatButton Class="btn btn-secondary LMS-btn" Type="" OnClick="ResetForm">Cancel</MatButton>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
     }
     else
     {
-        <p class="text-danger">No courses added.</p>
+        <h3 class="header-default courses-header">Courses</h3>
+        @if (_acctIsProfessor)
+        {
+            <MatButton Class="add-new-course" @onclick="@(() => { _showCourseForm = true; _deleteCourse = false; _courseModel = new Course() { ProfessorId = Model.Account.AccountId,  StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddMonths(3) }; Model.FormTitle = "Add New Course"; })">Add New Course</MatButton>
+        }
+        <br />
+        @if (Model.Courses.Any())
+        {
+            <MatTable Items="Model.Courses" class="mat-elevation-z5 lms-table"
+                      Striped="true" FilterByColumnName="Description" PageLabel="Page:" DebounceMilliseconds="150"
+                      AllowSelection="true" SelectionChanged="RowClick" @attributes="Model.TableAttributes">
+                <MatTableHeader>
+                    <th>Course ID</th>
+                    <th>Name</th>
+                    <th>Professor</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Description</th>
+                </MatTableHeader>
+                <MatTableRow>
+                    <td>@context.CourseId</td>
+                    <td>@context.Name</td>
+                    <td>
+                        @Model.Professors.First(p => p.AccountId == context.ProfessorId).FirstName&nbsp;
+                        @Model.Professors.First(p => p.AccountId == context.ProfessorId).LastName
+                    </td>
+                    <td>@context.StartDate.ToShortDateString()</td>
+                    <td>@context.EndDate.ToShortDateString()</td>
+                    <td>@context.Description</td>
+                </MatTableRow>
+            </MatTable>
+        }
+        else
+        {
+            <p class="text-danger">No courses added.</p>
+        }
     }
 }
+
 
 @code {
     private CoursesViewModel Model = new CoursesViewModel();
     private Course _courseModel = new Course();
     private bool _showCourseForm;
+    private bool _deleteCourse;
+    private bool _loading = true;
+    private bool _acctIsProfessor = false;
 
     protected async override Task OnInitializedAsync()
     {
-        Model.Courses = await DbService.GetCourses(AzureDb);
+        Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        _acctIsProfessor = Model.Account.Role == (int)Role.PROFESSOR;
+        Model.Courses = await DbService.GetCourses(AzureDb, _acctIsProfessor ? Model.Account.AccountId : 0);
         Model.Professors = await DbService.GetAccounts(AzureDb, Role.PROFESSOR);
+        _loading = false;
     }
 
     /// <summary>
@@ -96,6 +111,7 @@ else
     /// <param name="row"></param>
     public void RowClick(object row)
     {
+        if (!_acctIsProfessor) return;
         var course = row as Course;
         if (course != null)
         {
@@ -120,9 +136,15 @@ else
     /// </summary>
     private async void SaveCourse()
     {
+        if (_deleteCourse)
+        {
+            _courseModel.DeleteDate = DateTime.UtcNow;
+            await DbService.UpdateEnrollmentsOnDeletedCourse(AzureDb, _courseModel);
+        }
+
         var courseSaved = await DbService.SaveCourse(AzureDb, _courseModel);
         ResetForm();
-        Model.Courses = await DbService.GetCourses(AzureDb);
+        Model.Courses = await DbService.GetCourses(AzureDb, _acctIsProfessor ? Model.Account.AccountId : 0);
         await JS.InvokeVoidAsync("Toast", new[] { "success", "Saved Course.", "3000" }); // toasttype, message, duration
         this.StateHasChanged();
     }

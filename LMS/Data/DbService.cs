@@ -19,10 +19,12 @@ namespace LMS.Data
         public Task<List<Account>> GetAccounts(AzureDbContext db, Enum.Role role = Enum.Role.STUDENT);
         public Task<Account> GetAccount(AzureDbContext db, int acctId);
         public Task<List<Enrollment>> GetEnrollments(AzureDbContext db, int acctId);
+        public Task<List<Enrollment>> GetProfessorCourseEnrollments(AzureDbContext db, int acctId);
         public Task<bool> UpdateEnrollments(AzureDbContext db, int acctId, List<Enrollment> enrollments);
         public Task<Settings> GetSettings(AzureDbContext db, int acctId);
         public Task<bool> UpdateAccount(AzureDbContext db, Account acct);
         public Task<bool> SaveSettings(AzureDbContext db, Settings settings);
+        public Task<bool> UpdateEnrollmentsOnDeletedCourse(AzureDbContext db, Course model);
     }
     public class DbService : IDbService
     {
@@ -137,6 +139,36 @@ namespace LMS.Data
         }
 
         /// <summary>
+        /// Deletes any Enrollments that are affiliated with the course to be deleted.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public async Task<bool> UpdateEnrollmentsOnDeletedCourse(AzureDbContext db, Course model)
+        {
+            var saved = false;
+            try
+            {
+                // update any enrollments that may have been active first because of foreign key
+                if (model.DeleteDate != null)
+                {
+                    var enrollments = db.Enrollments.Where(e => e.CourseId == model.CourseId && e.DeleteDate == null).ToList();
+                    if (enrollments != null && enrollments.Count > 0)
+                    {
+                        enrollments.ForEach(e => e.DeleteDate = DateTime.UtcNow);
+                        saved = await db.SaveChangesAsync() > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}\n{ex.InnerException.Message}");
+            }
+
+            return saved;
+        }
+
+        /// <summary>
         /// Creates a new Course or updates an existing.
         /// </summary>
         /// <param name="db"></param>
@@ -245,7 +277,7 @@ namespace LMS.Data
         /// <param name="acctId"></param>
         /// <returns></returns>
         public async Task<Settings> GetSettings(AzureDbContext db, int acctId) => db.Settings.FirstOrDefault(s => s.AccountId == acctId);
-        
+
         /// <summary>
         /// Saves the passed Account to the DB.
         /// </summary>
@@ -316,6 +348,36 @@ namespace LMS.Data
             }
 
             return saved;
+        }
+
+        /// <summary>
+        /// Gets all the Enrollments for all the Professor's Courses.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<List<Enrollment>> GetProfessorCourseEnrollments(AzureDbContext db, int acctId)
+        {
+            var enrollments = new List<Enrollment>();
+            try
+            {
+                var courses = await GetCourses(db, acctId);
+                if (courses == null) return enrollments;
+
+                db.Enrollments.Where(e => e.DeleteDate == null).ToList().ForEach(e =>
+                {
+                    if (courses.Any(c => c.CourseId == e.CourseId))
+                    {
+                        enrollments.Add(e);
+                    }
+                });
+                return enrollments.OrderBy(e => e.CourseId).ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return enrollments;
+            }
         }
     }
 }

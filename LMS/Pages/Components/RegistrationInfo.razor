@@ -1,0 +1,61 @@
+﻿@if (!_loading)
+{
+    @if (Account.Role == (int)Role.PROFESSOR)
+    {
+        <MatTable Items="_courses" class="mat-elevation-z5 lms-table dashboard-enrollment-table" Striped="true" ShowPaging="false">
+            <MatTableHeader>
+                <th class="ef-th">Courses You're Instructing</th>
+            </MatTableHeader>
+            <MatTableRow>
+                <td class="ef-td">@($"{context.Name} - {context.Description}")</td>
+            </MatTableRow>
+        </MatTable>
+    }
+    else
+    {
+        <MatTable Items="_enrollments" class="mat-elevation-z5 lms-table dashboard-enrollment-table" Striped="true" ShowPaging="false">
+            <MatTableHeader>
+                @{ var title = _enrollments.Any() ? "Registered Courses" : "No Registered Courses"; }
+                <th class="ef-th">
+                    @if (!_enrollments.Any())
+                    {
+                        @title <br />
+                        <a href="registration">Register Now</a>
+                    }
+                    else
+                    {
+                        @title
+                    }
+                </th>
+            </MatTableHeader>
+            <MatTableRow>
+                @{
+                            var info = "No Course";
+                    @if (_courses.Any())
+                            {
+                                var course = _courses.First(c => c.CourseId == context.CourseId);
+                                info = $"{course.Name} - {course.Description}";
+                            }
+                }
+                <td class="ef-td">@(info ?? "No Course")</td>
+            </MatTableRow>
+        </MatTable>
+    }
+}
+
+@code {
+    private bool _loading = true;
+    private List<Enrollment> _enrollments;
+    private List<Course> _courses;
+
+    [Parameter] public Account Account { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _enrollments = await DbService.GetEnrollments(AzureDb, Account.AccountId);
+        _courses = await DbService.GetCourses(AzureDb, Account.Role == (int)Role.PROFESSOR ? Account.AccountId : 0);
+        _loading = false;
+
+        base.OnParametersSet();
+    }
+}

@@ -66,7 +66,7 @@ app {
 .main .top-row {
     background-color: #f7f7f7;
     border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
+    /*justify-content: flex-end;*/
 }
 
 .main .top-row > a, .main .top-row .btn-link {
@@ -391,7 +391,7 @@ app {
     background-color: white !important;
 }
 
-.header-default, .mdc-icon-button, .mdc-paginator-container {
+.header-default, .mdc-icon-button, .mdc-paginator-container, .text-default {
     color: white !important;
 }
 
@@ -441,4 +441,60 @@ app {
 
 .settings-card {
     width: 55vw;
+}
+
+.dashboard-enrollment-table, .ef-th, .ef-td {
+    width: auto !important;
+    height: auto;
+    max-height: 30vh !important;
+    overflow: auto;
+    text-align: center !important;
+}
+
+.dashboard-profile-img {
+    width: auto;
+    height: 10vh;
+}
+
+.img-wrapper {
+    max-width: 5vw;
+    display: block;
+    width: auto;
+}
+
+.header-inline {
+    display: inline-block;
+}
+
+.profile-info-sm {
+    margin: -0.5vh;
+}
+
+.profile-info-container {
+    background-image: url('https://www.weber.edu/ui/images/bg1.png');
+    padding: 15px;
+    width: auto;
+    max-height: 20vh;
+}
+
+.banner-row {
+    padding-right: inherit;
+}
+
+.mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background {
+    background-color: indigo !important;
+    border-color: indigo !important;
+}
+
+.mdc-form-field > label {
+    font-weight: 500;
+}
+
+.oi-submenu {
+    font-size: x-large;
+    color: white;
+}
+
+.oi.oi-heart.oi-submenu {
+    color: hotpink;
 }
