@@ -1,0 +1,36 @@
+﻿@if (!_loading)
+{
+    <div class="row">
+        <!-- Leaving this here as an example of spacing on the header -->
+        @*<div class="col-md-1">
+            <span class="oi oi-bell oi-submenu"></span>
+        </div>
+        <div class="col-md-1">
+            <span class="oi oi-bell oi-submenu"></span>
+        </div>
+        <div class="col-md-1">
+            <span class="oi oi-bell oi-submenu"></span>
+        </div>*@
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Setup();
+        }
+    }
+
+    private async Task Setup()
+    {
+        var account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+
+        _loading = false;
+        StateHasChanged();
+    }
+}

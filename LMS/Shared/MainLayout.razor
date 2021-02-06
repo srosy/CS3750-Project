@@ -8,8 +8,19 @@
 
     <div class="main">
         <div class="top-row px-4">
-            <UserTypeIndicator />
-            <a href="/" target="_self"><img class="main-image" src="https://weber.edu/ui/images/wsu-logo.svg" /></a>
+            <div class="col-md-7 text-left">
+                <SubMenu />
+            </div>
+            <div class="col-md-5 text-right">
+                <div class="row">
+                    <div class="col-md-6">
+                        <UserTypeIndicator />
+                    </div>
+                    <div class="col-md-6 text-right banner-row">
+                        <a href="/" target="_self"><img class="main-image" src="https://weber.edu/ui/images/wsu-logo.svg" /></a>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="content px-4">
             @Body
