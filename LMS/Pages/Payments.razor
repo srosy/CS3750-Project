@@ -1,0 +1,32 @@
+﻿<h3>Payments</h3>
+
+@code {
+    private PaymentsViewModel Model = new PaymentsViewModel();
+    private bool _showForm;
+    private bool _loading = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Setup();
+        }
+    }
+
+    private async Task Setup()
+    {
+        Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        Model.Payments = await DbService.GetPaymentss(AzureDb, Model.Account.AccountId);
+
+        if (Model.Settings == null)
+        {
+            Model.Settings = new Data.Models.Settings()
+            {
+                AccountId = Model.Account.AccountId
+            };
+        }
+
+        _loading = false;
+        StateHasChanged();
+    }
+}
