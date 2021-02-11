@@ -19,8 +19,8 @@ else
                         <EditForm Model="Model" OnValidSubmit="@SaveSettings">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
-                            <div class="form-group has-success">
-                                <label for="profile-image-upload" class="LMS-form-label">Profile Picture</label>
+                            <div class="form-group has-success" id="profile-image">
+                                <label for="profile-image-upload" id="profile-image-label"class="LMS-form-label">Profile Picture</label>
                                 <InputFile id="profile-image-upload" OnChange="UploadImageOnChange" title="Upload a profile image" />
                             </div>
                             <div class="form-group has-success">
@@ -35,12 +35,12 @@ else
                             <div class="form-group has-success">
                                 <InputText id="email" class="form-control LMS-input" type="text" placeholder="Email" disabled @bind-Value="Model.Account.Email" />
                             </div>
-                            <div class="form-group">
+                            @*<div class="form-group">
                                 <select id="role" class="form-control LMS-Input" @bind="Model.Account.Role">
                                     <option value="1">Student</option>
                                     <option value="2">Professor</option>
                                 </select>
-                            </div>
+                            </div>*@
                             <div class="form-group has-success">
                                 <InputText id="address" class="form-control LMS-input" type="text" placeholder="Address" @bind-Value="Model.Settings.Address" />
                             </div>
@@ -89,35 +89,42 @@ else
     }
     else
     {
-        <h3 class="header-default courses-header">Profile</h3><MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; })">Edit Profile</MatButton>
+        <h3 class="header-default courses-header profileHeader"></h3>
+        <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; })">Edit</MatButton>
         <br />
         @if (Model.Settings != null)
         {
-            <div class="row">
-                <br />
-                @if (!string.IsNullOrEmpty(_profileImageSrc))
-                {
-                    <div class="col-md-6">
-                        <img class="settings-profile-img" src="@_profileImageSrc" />
+            <div class="card">
+                <div class="profile_page row row-cols-1 row-cols-md-3">
+                    <div class="col mb-4">
+                        <br />
+                        @if (!string.IsNullOrEmpty(_profileImageSrc))
+                        {
+                            <div class="col-md-6">
+                                <img class="settings-profile-img" src="@_profileImageSrc" />
+                            </div>
+                        }
                     </div>
-                }
-                <div class="col-md-6">
-                    @foreach (PropertyInfo p in Model.Account.GetType().GetProperties().Where(p => !_ignoreProps.Contains(p.Name)))
-                    {
-                        if (p.Name == "Role")
-                        {
-                            var role = (int)p.GetValue(Model.Account, null) > 0 ? Enum.GetName(typeof(Role), p.GetValue(Model.Account, null)) : "Not Set";
-                            <h4 class="header-default">@p.Name: @role</h4>
-                        }
-                        else
-                        {
-                            <h4 class="header-default">@p.Name: @(p.GetValue(Model.Account, null) ?? "Not Set")</h4>
-                        }
-                    }
-                    @foreach (PropertyInfo p in Model.Settings.GetType().GetProperties().Where(p => !_ignoreProps.Contains(p.Name)))
-                    {
-                        <h4 class="header-default">@p.Name: @(p.GetValue(Model.Settings, null) ?? "Not Set")</h4>
-                    }
+                    <div class="profile-data-grid col mb-4">
+                        <h1 id="profile_name">@Model.Account.FirstName @Model.Account.LastName</h1>
+                        <h3 id="profile_data">Birthday: @Model.Account.DOB</h3>
+                        <h3 id="profile_data">Email: @Model.Account.Email</h3>
+                        <h3 id="profile_data">@Model.Settings.Address</h3>
+                        <h3 id="profile_data">@Model.Settings.City, @Model.Settings.State @Model.Settings.ZipCode</h3>
+                        <h3 id="profile_data">@Model.Settings.Country</h3>
+                        <h3 id="profile_data">Phone # @Model.Settings.Phone</h3>
+                    </div>
+                    <div class="profile-bio-grid col mb-4">
+                        <h3>Bio:</h3>
+                        <p id="profile_bio">@Model.Settings.Biography</p>
+                    </div>
+                    <div class="profile-link-grid col-md-12">
+                        <p id="profile_links">
+                            @Model.Settings.SocialMediaLink1 &nbsp; |
+                            &nbsp; @Model.Settings.SocialMediaLink2 &nbsp; |
+                            &nbsp; @Model.Settings.SocialMediaLink3 &nbsp;
+                        </p>
+                    </div>
                 </div>
             </div>
         }

@@ -429,20 +429,6 @@ app {
     align-items: center;
 }
 
-.settings-profile-img {
-    width: auto;
-    height: 40vh;
-}
-
-.settings-card-body {
-    height: 75vh;
-    overflow-y: auto;
-}
-
-.settings-card {
-    width: 55vw;
-}
-
 .dashboard-enrollment-table, .ef-th, .ef-td {
     width: auto !important;
     height: auto;
@@ -497,4 +483,47 @@ app {
 
 .oi.oi-heart.oi-submenu {
     color: hotpink;
+}
+
+/*profile Styling
+*/
+
+.profileHeader {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.profile-data-grid {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: black;
+    padding-top: 25px;
+}
+
+.profile-bio-grid {
+    padding-top: 25px;
+    padding-right: 50px;
+}
+
+.profile-link-grid {
+    text-align: center;
+}
+
+#profile_name {
+    font-size: 30px;
+}
+#profile_data {
+    font-size: 15px;
+}
+
+.settings-profile-img {
+    width: auto;
+    height: 40vh;
+}
+
+.settings-card-body {
+    height: 75vh;
+    overflow-y: auto;
+}
+
+.settings-card {
+    width: 550px;
 }
