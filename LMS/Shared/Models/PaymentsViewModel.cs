@@ -19,8 +19,8 @@ namespace LMS.Shared.Models
         public int AccountId { get; set; }
 
         [Required]
-        [MaxLength(4, ErrorMessage = "Expected CCV length of 3-4")]
-        [MinLength(3, ErrorMessage = "Expected CCV length of 3-4")]
+        [MaxLength(3, ErrorMessage = "Expected CCV length of 3")]
+        [MinLength(3, ErrorMessage = "Expected CCV length of 3")]
         public string CCV { get; set; }
 
         [Required]

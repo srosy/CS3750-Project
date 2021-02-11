@@ -33,7 +33,7 @@ else
                                 <InputDate id="card-exp-date" class="form-control LMS-input" title="End Date" type="date" @bind-Value="_paymentModel.ExpDate" />
                             </div>
 
-                            <label for="card-ccv" class="form-inline">CCV Code</label>
+                            <label for="card-ccv" class="form-inline">CVC Code</label>
                             <div class="form-group has-success">
                                 <InputText id="card-ccv" class="form-control LMS-input" type="text" placeholder="CCV Code" @bind-Value="_paymentModel.CCV" />
                             </div>
@@ -54,29 +54,31 @@ else
             <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; _paymentModel = new PaymentFormViewModel() { AccountId = Model.Account.AccountId, ExpDate = DateTime.UtcNow.AddDays(1) }; Model.FormTitle = "New Payment"; })">Make A Payment</MatButton>
         }
         <br />
-        <h4 class="header-default">Balance Due: $@(_amountDue > 0 ? _amountDue.ToString("0.00") : "None")</h4>
+        <h4 class="header-default">Balance Due: @(_amountDue > 0 ? $"${ _amountDue.ToString("0.00")}" : _amountDue < 0 ? $"None. Refund sent in mail for ${(_amountDue * -1).ToString("0.00")}." : "None")</h4>
         @if (Model.Payments.Any())
         {
-            <MatTable Items="Model.Payments" class="mat-elevation-z5 lms-table" Striped="true" @attributes="Model.TableAttributes">
+            <MatTable Items="Model.Payments" class="mat-elevation-z5 lms-table" pa Striped="true" ShowPaging="false" @attributes="Model.TableAttributes">
                 <MatTableHeader>
+                    <th>Transaction Id</th>
                     <th>Transaction Date</th>
                     <th>Account Id</th>
                     <th>CC Number</th>
                     <th>Exp Date</th>
-                    <th>CCV</th>
+                    <th>CVC</th>
                     <th>Attempt Amount</th>
                     <th>Auth Amount</th>
                     <th>Payment Amount</th>
                 </MatTableHeader>
                 <MatTableRow>
+                    <td>@context.TransactionId</td>
                     <td>@context.TransactionDate.Value.ToShortDateString()</td>
                     <td>@context.AccountId</td>
                     <td>@context.CardNumber</td>
-                    <td>@context.ExpDate</td>
-                    <td>@context.CCV</td>
-                    <td>@context.AttemptAmount</td>
-                    <td>@context.AuthAmount</td>
-                    <td>@context.PaymentAmount</td>
+                    <td>@context.ExpDate.ToShortDateString()</td>
+                    <td>@context.CVC</td>
+                    <td>@(context.AttemptAmount.ToString("####.00"))</td>
+                    <td>@(context.AuthAmount.ToString("####.00"))</td>
+                    <td>@(context.PaymentAmount.ToString("####.00"))</td>
                 </MatTableRow>
             </MatTable>
         }
@@ -93,7 +95,7 @@ else
     private bool _showForm;
     private bool _loading = true;
     private decimal _amountDue;
-    private const int BASE_PAYMENT_AMOUNT = 100;
+    private const decimal BASE_PAYMENT_AMOUNT = 100.00m;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -106,6 +108,17 @@ else
     private async Task Setup()
     {
         Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        await SetupBalances();
+        _loading = false;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Setups up the balances indication.
+    /// </summary>
+    /// <returns></returns>
+    private async Task SetupBalances()
+    {
         Model.Enrollments = await DbService.GetEnrollments(AzureDb, Model.Account.AccountId);
         Model.Payments = await DbService.GetPayments(AzureDb, Model.Account.AccountId);
 
@@ -117,24 +130,27 @@ else
         var chargedAmount = Model.Enrollments.Count() * BASE_PAYMENT_AMOUNT;
         var paymentAmount = Model.Payments.Sum(p => p.PaymentAmount);
         _amountDue = chargedAmount - paymentAmount;
-
-        _loading = false;
-        StateHasChanged();
     }
 
+    /// <summary>
+    /// Processes a payment from the form input.
+    /// </summary>
+    /// <returns></returns>
     private async Task ProcessPayment()
     {
         var payment = new Payment()
         {
             AccountId = _paymentModel.AccountId,
             CardNumber = _paymentModel.CC_Num,
-            CCV = int.Parse(_paymentModel.CCV),
+            CVC = int.Parse(_paymentModel.CCV),
             ExpDate = _paymentModel.ExpDate,
             AttemptAmount = _amountDue
         };
 
         var success = await DbService.AddPayment(AzureDb, payment);
+        await SetupBalances();
         await JS.InvokeVoidAsync("Toast", new[] { success ? "success" : "error", success ? "Successfully Processed Payment." : "Failed to Process Payment", success ? "3000" : "5000" }); // toasttype, message, duration
+        ResetForm();
         this.StateHasChanged();
     }
 

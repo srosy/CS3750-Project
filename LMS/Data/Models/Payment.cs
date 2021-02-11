@@ -17,9 +17,10 @@ namespace LMS.Data.Models
 
         public DateTime? TransactionDate { get; set; }
 
-        [MaxLength(4)] public int CCV { get; set; }
+        public int CVC { get; set; }
         [DataType(DataType.Currency)] public decimal AttemptAmount { get; set; }
         [DataType(DataType.Currency)] public decimal AuthAmount { get; set; }
         [DataType(DataType.Currency)] public decimal PaymentAmount { get; set; }
+        public string TransactionId { get; set; }
     }
 }

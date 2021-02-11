@@ -401,7 +401,12 @@ namespace LMS.Data
             var saved = false;
             try
             {
-                // Setup for api consumption
+                var charge = await new StripeAPI().ChargeCard(payment);
+                payment.PaymentAmount = (charge.amount_captured / 100);
+                payment.AuthAmount = (charge.amount / 100);
+                payment.TransactionDate = charge.paid == true ? DateTime.UtcNow : (DateTime?)null;
+                payment.TransactionId = charge.id;
+                payment.CardNumber = string.Join("", payment.CardNumber.Take(4)) + "********" + payment.CardNumber.Substring(12);
 
                 db.Payments.Add(payment);
                 saved = await db.SaveChangesAsync() > 0;
