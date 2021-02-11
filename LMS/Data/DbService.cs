@@ -401,6 +401,8 @@ namespace LMS.Data
             var saved = false;
             try
             {
+                // Setup for api consumption
+
                 db.Payments.Add(payment);
                 saved = await db.SaveChangesAsync() > 0;
             }

@@ -8,11 +8,14 @@ namespace LMS.Data.Models
         [Key]
         public int PaymentId { get; set; }
         public int AccountId { get; set; }
-        [DataType(DataType.CreditCard)] public int CardNumber { get; set; }
 
-        [DataType(DataType.Date)] 
-        [Helper.CustomValidation(ErrorMessage = "Expiration Date must be a future date")] 
+        [DataType(DataType.CreditCard)]
+        [MaxLength(16)] public string CardNumber { get; set; }
+
+        [DataType(DataType.Date)]
         public DateTime ExpDate { get; set; }
+
+        public DateTime? TransactionDate { get; set; }
 
         [MaxLength(4)] public int CCV { get; set; }
         [DataType(DataType.Currency)] public decimal AttemptAmount { get; set; }

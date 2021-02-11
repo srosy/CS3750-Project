@@ -1,9 +1,99 @@
-﻿<h3>Payments</h3>
+﻿@page "/payments";
+
+@if (_loading)
+{
+    <h1 class="header-default">Loading...</h1>
+}
+else
+{
+    @if (_showForm)
+    {
+        <div class="row text-center">
+            <div class="col-md-4"></div>
+            <div class="col-md-6">
+                <div class="card LMS-card">
+                    <div class="card-header LMS-form">
+                        <h3>@Model.FormTitle</h3>
+                    </div>
+                    <div class="card card-body">
+                        <EditForm Model="@_paymentModel" OnValidSubmit="@ProcessPayment">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <div class="form-group has-success">
+                                <h4>Payment Amount Due: $@_amountDue.ToString("0.00")</h4>
+                                <small class="text-danger">This amount will be charged to the inputted card</small>
+                            </div>
+                            <label for="card-number" class="form-inline">CC Number</label>
+                            <div class="form-group has-success">
+                                <InputText id="card-number" class="form-control LMS-input" type="text" placeholder="CC Number" @bind-Value="_paymentModel.CC_Num" />
+                            </div>
+
+                            <label for="card-exp-date" class="form-inline">Exp Date</label>
+                            <div class="form-group">
+                                <InputDate id="card-exp-date" class="form-control LMS-input" title="End Date" type="date" @bind-Value="_paymentModel.ExpDate" />
+                            </div>
+
+                            <label for="card-ccv" class="form-inline">CCV Code</label>
+                            <div class="form-group has-success">
+                                <InputText id="card-ccv" class="form-control LMS-input" type="text" placeholder="CCV Code" @bind-Value="_paymentModel.CCV" />
+                            </div>
+                            <MatButton Class="btn btn-primary LMS-btn" type="submit">Process Payment</MatButton>
+                        </EditForm>
+                        <MatButton Class="btn btn-secondary LMS-btn" Type="" OnClick="ResetForm">Cancel</MatButton>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    }
+    else
+    {
+        <h3 class="header-default courses-header">Payments</h3>
+        @if (_amountDue > 0)
+        {
+            <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; _paymentModel = new PaymentFormViewModel() { AccountId = Model.Account.AccountId, ExpDate = DateTime.UtcNow.AddDays(1) }; Model.FormTitle = "New Payment"; })">Make A Payment</MatButton>
+        }
+        <br />
+        <h4 class="header-default">Balance Due: $@(_amountDue > 0 ? _amountDue.ToString("0.00") : "None")</h4>
+        @if (Model.Payments.Any())
+        {
+            <MatTable Items="Model.Payments" class="mat-elevation-z5 lms-table" Striped="true" @attributes="Model.TableAttributes">
+                <MatTableHeader>
+                    <th>Transaction Date</th>
+                    <th>Account Id</th>
+                    <th>CC Number</th>
+                    <th>Exp Date</th>
+                    <th>CCV</th>
+                    <th>Attempt Amount</th>
+                    <th>Auth Amount</th>
+                    <th>Payment Amount</th>
+                </MatTableHeader>
+                <MatTableRow>
+                    <td>@context.TransactionDate.Value.ToShortDateString()</td>
+                    <td>@context.AccountId</td>
+                    <td>@context.CardNumber</td>
+                    <td>@context.ExpDate</td>
+                    <td>@context.CCV</td>
+                    <td>@context.AttemptAmount</td>
+                    <td>@context.AuthAmount</td>
+                    <td>@context.PaymentAmount</td>
+                </MatTableRow>
+            </MatTable>
+        }
+        else
+        {
+            <p class="text-danger">No payments made.</p>
+        }
+    }
+}
 
 @code {
     private PaymentsViewModel Model = new PaymentsViewModel();
+    private PaymentFormViewModel _paymentModel = new PaymentFormViewModel();
     private bool _showForm;
     private bool _loading = true;
+    private decimal _amountDue;
+    private const int BASE_PAYMENT_AMOUNT = 100;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -16,17 +106,47 @@
     private async Task Setup()
     {
         Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
-        Model.Payments = await DbService.GetPaymentss(AzureDb, Model.Account.AccountId);
+        Model.Enrollments = await DbService.GetEnrollments(AzureDb, Model.Account.AccountId);
+        Model.Payments = await DbService.GetPayments(AzureDb, Model.Account.AccountId);
 
-        if (Model.Settings == null)
+        if (Model.Payments == null)
         {
-            Model.Settings = new Data.Models.Settings()
-            {
-                AccountId = Model.Account.AccountId
-            };
+            Model.Payments = new List<Data.Models.Payment>();
         }
+
+        var chargedAmount = Model.Enrollments.Count() * BASE_PAYMENT_AMOUNT;
+        var paymentAmount = Model.Payments.Sum(p => p.PaymentAmount);
+        _amountDue = chargedAmount - paymentAmount;
 
         _loading = false;
         StateHasChanged();
+    }
+
+    private async Task ProcessPayment()
+    {
+        var payment = new Payment()
+        {
+            AccountId = _paymentModel.AccountId,
+            CardNumber = _paymentModel.CC_Num,
+            CCV = int.Parse(_paymentModel.CCV),
+            ExpDate = _paymentModel.ExpDate,
+            AttemptAmount = _amountDue
+        };
+
+        var success = await DbService.AddPayment(AzureDb, payment);
+        await JS.InvokeVoidAsync("Toast", new[] { success ? "success" : "error", success ? "Successfully Processed Payment." : "Failed to Process Payment", success ? "3000" : "5000" }); // toasttype, message, duration
+        this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Resets the edit/create Payment form.
+    /// </summary>
+    private void ResetForm()
+    {
+        _showForm = false;
+        _paymentModel = new PaymentFormViewModel()
+        {
+            AccountId = Model.Account.AccountId
+        };
     }
 }
