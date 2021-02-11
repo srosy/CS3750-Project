@@ -527,3 +527,12 @@ app {
 .settings-card {
     width: 550px;
 }
+
+/*Special Ky Section*/
+@media only screen and (max-height: 650px) {
+
+    .dashboard-profile-img {
+        width: auto;
+        height: 5vh;
+    }
+}
