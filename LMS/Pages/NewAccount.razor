@@ -11,10 +11,14 @@
             <div class="card card-body">
                 @if (_emailSent)
                 {
+                <EditForm Model="_codeModel" OnValidSubmit="@VerifyEmail">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
                     <div class="form-group has-success">
-                        <InputText id="resetcode" class="form-control LMS-input" type="text" placeholder="Reset Code" @bind-Value="_inputtedResetCode" />
+                        <InputText id="validationcode" class="form-control LMS-input" type="text" placeholder="Reset Code" @bind-Value="_codeModel.VerificationCode" />
                     </div>
-                    <button class="btn btn-primary LMS-btn" @onclick="VerifyEmail">Verify Code</button>
+                    <button type="submit" class="btn btn-primary LMS-btn">Verify Code</button>
+                </EditForm>
                     <button class="btn btn-primary LMS-btn" @onclick="ResendEmail">Resend Code</button>
                 }
                 else
@@ -64,9 +68,9 @@
 
 @code {
     private AccountViewModel Model = new AccountViewModel();
+    private CodeVerificationViewModel _codeModel = new CodeVerificationViewModel();
     private string _message = string.Empty;
     private string _confirmPassword;
-    private string _inputtedResetCode;
     private bool _emailSent;
     private DateTime _minDate = DateTime.UtcNow.AddYears(-100);
     private DateTime _maxDate = DateTime.UtcNow.AddYears(-18).AddDays(1);
@@ -103,24 +107,26 @@
         var acctCreated = await DbService.CreateAccount(AzureDb, Model);
         if (acctCreated)
         {
-            _message = "Account Created. Proceed to login page.";
-            NavMan.NavigateTo("login");
+            //_message = "Account Created. Proceed to login page.";
             _emailSent = await DbService.SendEmail(Model, AzureDb);
+            _message = "A validation code has been sent to your email.";
+            StateHasChanged();
         }
-
-        _message = "Error trying to create account. Account may already exist.";
     }
 
     private async void VerifyEmail()
     {
-        if (_inputtedResetCode == Model.Auth.ResetCode)
+        if (_codeModel.VerificationCode.Equals(Model.Auth.ResetCode))
         {
             await DbService.VerifyEmail(Model.Email, AzureDb);
+            NavMan.NavigateTo("login");
         }
+        else _message = "Please provide the correct reset code.";
     }
 
     private async void ResendEmail()
     {
         await DbService.SendEmail(Model, AzureDb);
+        _message = "A new email has been sent.";
     }
 }
