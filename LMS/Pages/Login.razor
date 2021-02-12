@@ -21,7 +21,7 @@
                         <div class="form-group">
                             <div class="login-box">
                                 <label for="LMSusername"><strong>Username</strong></label>
-                                <InputText id="LMSusername" class="form-control LMS-input" type="text" placeholder="Username/Email" @bind-Value="Model.UserName" />
+                                <InputText id="LMSusername" class="form-control LMS-input" type="text" placeholder="Username (Email)" @bind-Value="Model.UserName" />
                             </div>
                             <div>
                                 <label for="LMSpassword" style="padding-bottom:-3px"><strong>Password</strong></label>
@@ -55,7 +55,16 @@
         // redirect to dashboard if cookie is still valid
         if (await SessionObj.VerifySession(AzureDb, Storage))
         {
-            NavMan.NavigateTo("dashboard");
+            var acct = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+
+            if (!await DbService.CheckAccountVerification(AzureDb, acct.Email))
+            {
+                NavMan.NavigateTo("verifyaccount");
+            }
+            else
+            {
+                NavMan.NavigateTo("dashboard");
+            }
             return;
         }
 
@@ -68,6 +77,10 @@
     /// </summary>
     private async void TryAuthenticate()
     {
+        if (!await DbService.CheckAccountVerification(AzureDb, Model.UserName))
+        {
+            NavMan.NavigateTo("verifyaccount");
+        }
         var authenticated = await DbService.Authenticate(Storage, AzureDb, Model);
         if (authenticated)
         {

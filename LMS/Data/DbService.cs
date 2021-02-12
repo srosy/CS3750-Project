@@ -6,6 +6,7 @@ using LMS.Data.Models;
 using Blazored.LocalStorage;
 using LMS.Data.Helper;
 using System.Collections.Generic;
+using MimeKit;
 
 namespace LMS.Data
 {
@@ -22,9 +23,16 @@ namespace LMS.Data
         public Task<List<Enrollment>> GetProfessorCourseEnrollments(AzureDbContext db, int acctId);
         public Task<bool> UpdateEnrollments(AzureDbContext db, int acctId, List<Enrollment> enrollments);
         public Task<Settings> GetSettings(AzureDbContext db, int acctId);
+        public Task<List<Payment>> GetPayments(AzureDbContext db, int acctId);
         public Task<bool> UpdateAccount(AzureDbContext db, Account acct);
         public Task<bool> SaveSettings(AzureDbContext db, Settings settings);
+        public Task<bool> DoSending(MimeMessage mailMessage);
+        public Task<bool> SendEmail(string email, AzureDbContext db);
+        public Task VerifyEmail(string email, AzureDbContext db);
+        public Task<bool> CheckAccountVerification(AzureDbContext azureDb, string email);
+        public Task<string> GetVerificationCode(AzureDbContext db, string email);
         public Task<bool> UpdateEnrollmentsOnDeletedCourse(AzureDbContext db, Course model);
+        public Task<bool> AddPayment(AzureDbContext db, Payment payment);
     }
     public class DbService : IDbService
     {
@@ -50,7 +58,16 @@ namespace LMS.Data
                 await DeleteSession(db, storage);
                 await SessionObj.CreateSession(db, storage, acct.AccountId);
 
-                return true;
+                if (auth.EmailVerified)
+                {
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine("Account has not been validated.");
+                    return false;
+                }
+
             }
             catch (Exception ex)
             {
@@ -91,14 +108,18 @@ namespace LMS.Data
                     model.Auth.UserName = model.Email.ToLower();
 
                     var salt = Encryption.GenSalt();
+                    var resetCode = Encryption.GenSalt(6);
                     db.Authentications.Add(new Authentication()
                     {
                         AccountId = accountToAdd.AccountId,
                         CreateDate = DateTime.UtcNow,
                         Salt = salt,
-                        Password = Encryption.GenerateSaltedHash(model.Auth.Password, salt)
+                        Password = Encryption.GenerateSaltedHash(model.Auth.Password, salt),
+                        ResetCode = resetCode
                     });
                     savedAuth = db.SaveChanges() > 0;
+
+                    model.Auth.ResetCode = resetCode;
                 }
 
                 return savedAcct && savedAuth;
@@ -108,6 +129,116 @@ namespace LMS.Data
                 Console.WriteLine($"{ex.Message}\n{ex.InnerException.Message}");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Sends an email containing the verification code.
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public async Task<bool> SendEmail(string email, AzureDbContext db)
+        {
+            var acct = db.Accounts.FirstOrDefault(a => a.Email == email);
+            var matchingAuth = db.Authentications.FirstOrDefault(a => a.AccountId == acct.AccountId);
+
+            var code = matchingAuth.ResetCode;
+
+            try
+            {
+                var mailMessage = new MimeMessage();
+                mailMessage.From.Add(new MailboxAddress("Team Git'r Dun", "LMS.GitrDun@gmail.com"));
+                mailMessage.To.Add(new MailboxAddress("User", email));
+
+                var textpart = new TextPart("plain");
+
+                if (!string.IsNullOrEmpty(code))
+                {
+                    mailMessage.Subject = "LMS Verification Code";
+                    textpart.Text = $"Your LMS verification code is: \n\n" + code;
+                }
+                mailMessage.Body = textpart;
+                var success = await DoSending(mailMessage);
+                return success;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+        }
+
+        public async Task<bool> DoSending(MimeMessage mailMessage)
+        {
+            using (var client = new MailKit.Net.Smtp.SmtpClient())
+            {
+                await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable);
+                await client.AuthenticateAsync("CS3750LMS@gmail.com", "GaviSpe64!");
+                await client.SendAsync(mailMessage);
+                await client.DisconnectAsync(true);
+                return true;
+            }
+        }
+
+        public async Task VerifyEmail(string email, AzureDbContext db)
+        {
+            var acct = db.Accounts.FirstOrDefault(a => a.Email == email);
+            var matchingAuth = db.Authentications.FirstOrDefault(a => a.AccountId == acct.AccountId);
+
+            matchingAuth.EmailVerified = true;
+            await db.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Checks the verification status of an account from the provided email.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="email"></param>
+        /// <returns></returns>
+        public async Task<bool> CheckAccountVerification(AzureDbContext db, string email)
+        {
+            var verified = false;
+            try
+            {
+                var acct = db.Accounts.FirstOrDefault(a => a.Email.ToLower().Equals(email.ToLower()));
+                if (acct == null) return verified;
+
+                var auth = db.Authentications.FirstOrDefault(a => a.AccountId == acct.AccountId);
+                if (auth == null) return verified;
+
+                verified = auth.EmailVerified;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return verified;
+        }
+
+        /// <summary>
+        /// Returns the verification code tied to the email account.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="email"></param>
+        /// <returns></returns>
+        public async Task<string> GetVerificationCode(AzureDbContext db, string email)
+        {
+            var code = string.Empty;
+            try
+            {
+                var acct = db.Accounts.FirstOrDefault(a => a.Email.ToLower().Equals(email.ToLower()));
+                if (acct == null) return code;
+
+                var auth = db.Authentications.FirstOrDefault(a => a.AccountId == acct.AccountId);
+                if (auth == null) return code;
+
+                code = auth.ResetCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return code;
         }
 
         /// <summary>
@@ -378,6 +509,42 @@ namespace LMS.Data
                 Console.WriteLine(ex.Message);
                 return enrollments;
             }
+        }
+
+        /// <summary>
+        /// Gets the Account Payments by AccountId.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<List<Payment>> GetPayments(AzureDbContext db, int acctId) => db.Payments.Where(p => p.AccountId == acctId).ToList();
+
+        /// <summary>
+        /// Adds a new Payment to the db.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="payment"></param>
+        /// <returns></returns>
+        public async Task<bool> AddPayment(AzureDbContext db, Payment payment)
+        {
+            var saved = false;
+            try
+            {
+                var charge = await new StripeAPI().ChargeCard(payment);
+                payment.PaymentAmount = (charge.amount_captured / 100);
+                payment.AuthAmount = (charge.amount / 100);
+                payment.TransactionDate = charge.paid == true ? DateTime.UtcNow : (DateTime?)null;
+                payment.TransactionId = charge.id;
+                payment.CardNumber = string.Join("", payment.CardNumber.Take(4)) + "********" + payment.CardNumber.Substring(12);
+
+                db.Payments.Add(payment);
+                saved = await db.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return saved;
         }
     }
 }
