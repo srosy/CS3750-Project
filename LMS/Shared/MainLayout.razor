@@ -3,21 +3,21 @@
 @if (_sessionValid)
 {
     <div class="sidebar">
-        <NavMenu />
+        <NavMenu Role="Role" />
     </div>
 
     <div class="main">
-        <div class="top-row px-4">
+        <div class="top-row px-4 banner-row">
             <div class="col-md-7 text-left">
                 <SubMenu />
             </div>
             <div class="col-md-5 text-right">
                 <div class="row">
                     <div class="col-md-6">
-                        <UserTypeIndicator />
+                        &nbsp;
                     </div>
-                    <div class="col-md-6 text-right banner-row">
-                        <a href="/" target="_self"><img class="main-image" src="https://weber.edu/ui/images/wsu-logo.svg" /></a>
+                    <div class="col-md-6 text-right">
+                        <UserTypeIndicator />
                     </div>
                 </div>
             </div>
@@ -25,14 +25,15 @@
         <div class="content px-4">
             @Body
         </div>
-        <div class="content footer-div">
-            <footer class="text-center"><img class="footer-image" alt="WSU Home Page" src="https://www.weber.edu/ui/images/footer-logo.svg"><br /><small class="text-white">&copy;Copyright 2021 All Rights Reserved</small></footer>
-        </div>
+        @*<div class="content footer-div">
+                <footer class="text-center"><img class="footer-image" alt="WSU Home Page" src="https://www.weber.edu/ui/images/footer-logo.svg"><br /><small class="text-white">&copy;Copyright 2021 All Rights Reserved</small></footer>
+            </div>*@
     </div>
 }
 
 @code {
     private bool _sessionValid;
+    private Role Role;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -42,6 +43,11 @@
             if (!_sessionValid)
             {
                 NavMan.NavigateTo("sessionexpired");
+            }
+            else
+            {
+                var acct = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+                Role = (Role)acct.Role;
             }
         }
         StateHasChanged();

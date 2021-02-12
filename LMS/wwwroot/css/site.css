@@ -64,9 +64,8 @@ app {
 }
 
 .main .top-row {
-    background-color: #f7f7f7;
+    background-color: black;
     border-bottom: 1px solid #d6d5d5;
-    /*justify-content: flex-end;*/
 }
 
 .main .top-row > a, .main .top-row .btn-link {
@@ -270,7 +269,7 @@ app {
 }
 
 .main-image {
-    height: 40px;
+    height: 5vh;
     width: auto;
 }
 
@@ -464,7 +463,7 @@ app {
 }
 
 .banner-row {
-    padding-right: inherit;
+    background-color: black;
 }
 
 .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background {
@@ -535,4 +534,10 @@ app {
         width: auto;
         height: 5vh;
     }
+}
+
+.dashboard-balance-due {
+    width: 11.5vw;
+    float: right;
+    background-color: white;
 }
