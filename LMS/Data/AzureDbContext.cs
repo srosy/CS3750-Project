@@ -17,5 +17,6 @@ namespace LMS.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Submission> Submissions { get; set; }
         public DbSet<Settings> Settings { get; set; }
+        public DbSet<Payment> Payments { get; set; }
     }
 }
