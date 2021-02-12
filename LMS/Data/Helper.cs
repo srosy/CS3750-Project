@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -261,6 +262,16 @@ namespace LMS.Data.Helper
         /// <param name="imgBytes"></param>
         /// <returns></returns>
         public static async Task<string> GetImageSrc(byte[] imgBytes) => "data:image/png;base64," + Convert.ToBase64String(imgBytes, Base64FormattingOptions.None);
+    }
 
+    public class CustomValidationAttribute : ValidationAttribute
+    {
+        /// <summary>
+        /// Tests the the value (datetime) is a future date.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public override bool IsValid(object value) => Convert.ToDateTime(value) >= DateTime.Now.AddDays(1); // test cc requires a future exp date
     }
 }
+

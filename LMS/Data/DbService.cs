@@ -23,12 +23,14 @@ namespace LMS.Data
         public Task<List<Enrollment>> GetProfessorCourseEnrollments(AzureDbContext db, int acctId);
         public Task<bool> UpdateEnrollments(AzureDbContext db, int acctId, List<Enrollment> enrollments);
         public Task<Settings> GetSettings(AzureDbContext db, int acctId);
+        public Task<List<Payment>> GetPayments(AzureDbContext db, int acctId);
         public Task<bool> UpdateAccount(AzureDbContext db, Account acct);
         public Task<bool> SaveSettings(AzureDbContext db, Settings settings);
         public Task<bool> DoSending(MimeMessage mailMessage);
         public Task<bool> SendEmail(AccountViewModel account, AzureDbContext db);
         public Task VerifyEmail(string email, AzureDbContext db);
         public Task<bool> UpdateEnrollmentsOnDeletedCourse(AzureDbContext db, Course model);
+        public Task<bool> AddPayment(AzureDbContext db, Payment payment);
     }
     public class DbService : IDbService
     {
@@ -439,6 +441,42 @@ namespace LMS.Data
                 Console.WriteLine(ex.Message);
                 return enrollments;
             }
+        }
+
+        /// <summary>
+        /// Gets the Account Payments by AccountId.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<List<Payment>> GetPayments(AzureDbContext db, int acctId) => db.Payments.Where(p => p.AccountId == acctId).ToList();
+
+        /// <summary>
+        /// Adds a new Payment to the db.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="payment"></param>
+        /// <returns></returns>
+        public async Task<bool> AddPayment(AzureDbContext db, Payment payment)
+        {
+            var saved = false;
+            try
+            {
+                var charge = await new StripeAPI().ChargeCard(payment);
+                payment.PaymentAmount = (charge.amount_captured / 100);
+                payment.AuthAmount = (charge.amount / 100);
+                payment.TransactionDate = charge.paid == true ? DateTime.UtcNow : (DateTime?)null;
+                payment.TransactionId = charge.id;
+                payment.CardNumber = string.Join("", payment.CardNumber.Take(4)) + "********" + payment.CardNumber.Substring(12);
+
+                db.Payments.Add(payment);
+                saved = await db.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return saved;
         }
     }
 }
