@@ -497,3 +497,9 @@ app {
 .oi.oi-heart.oi-submenu {
     color: hotpink;
 }
+
+.dashboard-balance-due {
+    width: 11.5vw;
+    float: right;
+    background-color: white;
+}

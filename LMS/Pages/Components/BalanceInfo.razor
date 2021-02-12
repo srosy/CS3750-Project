@@ -1,0 +1,39 @@
+﻿@if (!_loading)
+{
+    <div class="card dashboard-balance-due text-center">
+        <h5 class="card-header">Tuition Balance Due</h5>
+        <div class="card-body">
+            <span>@(_amountDue > 0 ? $"${ _amountDue.ToString("0.00")}" : _amountDue < 0 ? $"None. Refund sent in mail for ${(_amountDue * -1).ToString("0.00")}." : "None")</span>
+        </div>
+    </div>
+}
+
+@code {
+
+    private bool _loading = true;
+    private decimal _amountDue;
+
+    [Parameter] public Account Account { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var enrollments = await DbService.GetEnrollments(AzureDb, Account.AccountId);
+        _loading = false;
+
+        base.OnParametersSet();
+    }
+
+    /// <summary>
+    /// Setups up the balances indication.
+    /// </summary>
+    /// <returns></returns>
+    private async Task SetupBalances()
+    {
+        var enrollments = await DbService.GetEnrollments(AzureDb, Account.AccountId);
+        var payments = await DbService.GetPayments(AzureDb, Account.AccountId);
+
+        var chargedAmount = enrollments.Count() * 100.00m;
+        var paymentAmount = payments.Sum(p => p.PaymentAmount);
+        _amountDue = chargedAmount - paymentAmount;
+    }
+}
