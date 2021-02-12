@@ -7,5 +7,6 @@ namespace LMS.Shared.Models
         public string UserName { get; set; }
         [DataType(DataType.Password)] public string Password { get; set; }
         public string ResetCode { get; set; }
+        public bool IsVerified { get; set; }
     }
 }

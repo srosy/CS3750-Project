@@ -1,0 +1,86 @@
+﻿@page "/verifyaccount";
+@layout UnauthenticatedLayout;
+
+<div class="row text-center">
+    <div class="col-md-4"></div>
+    <div class="col-md-6">
+        <div class="card LMS-card">
+            <div class="card-header LMS-title">
+                <h3>Email Verification</h3>
+            </div>
+            <div class="card card-body">
+                @if (string.IsNullOrEmpty(_resetCode))
+                {
+                    <p class="text-danger">Enter your email.</p>
+                    <EditForm Model="Model" OnValidSubmit="@SetResetCode">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="form-group has-success">
+                            <InputText id="email" class="form-control LMS-input" type="text" placeholder="Email" @bind-Value="Model.Email" />
+                        </div>
+                        <button type="submit" class="btn btn-primary LMS-btn">Submit</button>
+                    </EditForm>
+                }
+                else
+                {
+                    <p class="text-danger">Enter the verification code sent to your email.</p>
+                    <EditForm Model="Model" OnValidSubmit="@VerifyEmail">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="form-group has-success">
+                            <InputText id="validationcode" class="form-control LMS-input" type="text" placeholder="Reset Code" @bind-Value="Model.VerificationCode" />
+                        </div>
+                        <button type="submit" class="btn btn-primary LMS-btn">Verify Code</button>
+                        <button type="button" class="btn btn-secondary LMS-btn" @onclick="ResendEmail">Resend Code</button>
+                    </EditForm>
+                }
+                @if (!string.IsNullOrEmpty(_message))
+                {
+                    <p class="LMS-message">@_message</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4"></div>
+</div>
+
+@code {
+
+    private CodeVerificationViewModel Model = new CodeVerificationViewModel();
+    private string _message = string.Empty;
+    private string _resetCode;
+    private bool _resetCodeSent;
+
+    protected async override Task OnInitializedAsync()
+    {
+    }
+
+    private async void VerifyEmail()
+    {
+        if(string.IsNullOrEmpty(Model.VerificationCode))
+        {
+            _message = "Verification code cannot be empty";
+            return;
+        }
+        if (Model.VerificationCode.ToLower().Equals(_resetCode.ToLower()))
+        {
+            await DbService.VerifyEmail(Model.Email, AzureDb);
+            NavMan.NavigateTo("login");
+        }
+        else _message = "Invalid Reset Code";
+    }
+
+    private async void ResendEmail()
+    {
+        await DbService.SendEmail(Model.Email, AzureDb);
+        _resetCodeSent = true;
+        await JS.InvokeVoidAsync("Toast", new[] { "success", "Verification Email Sent", "3000" }); // toasttype, message, duration
+    }
+
+    private async void SetResetCode()
+    {
+        _resetCode = await DbService.GetVerificationCode(AzureDb, Model.Email);
+        ResendEmail();
+    }
+}
+

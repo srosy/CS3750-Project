@@ -27,8 +27,10 @@ namespace LMS.Data
         public Task<bool> UpdateAccount(AzureDbContext db, Account acct);
         public Task<bool> SaveSettings(AzureDbContext db, Settings settings);
         public Task<bool> DoSending(MimeMessage mailMessage);
-        public Task<bool> SendEmail(AccountViewModel account, AzureDbContext db);
+        public Task<bool> SendEmail(string email, AzureDbContext db);
         public Task VerifyEmail(string email, AzureDbContext db);
+        public Task<bool> CheckAccountVerification(AzureDbContext azureDb, string email);
+        public Task<string> GetVerificationCode(AzureDbContext db, string email);
         public Task<bool> UpdateEnrollmentsOnDeletedCourse(AzureDbContext db, Course model);
         public Task<bool> AddPayment(AzureDbContext db, Payment payment);
     }
@@ -56,7 +58,16 @@ namespace LMS.Data
                 await DeleteSession(db, storage);
                 await SessionObj.CreateSession(db, storage, acct.AccountId);
 
-                return true;
+                if (auth.EmailVerified)
+                {
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine("Account has not been validated.");
+                    return false;
+                }
+
             }
             catch (Exception ex)
             {
@@ -120,12 +131,17 @@ namespace LMS.Data
             }
         }
 
-        public async Task<bool> SendEmail(AccountViewModel account, AzureDbContext db)
+        /// <summary>
+        /// Sends an email containing the verification code.
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public async Task<bool> SendEmail(string email, AzureDbContext db)
         {
-            var acct = db.Accounts.FirstOrDefault(a => a.Email == account.Email);
+            var acct = db.Accounts.FirstOrDefault(a => a.Email == email);
             var matchingAuth = db.Authentications.FirstOrDefault(a => a.AccountId == acct.AccountId);
 
-            var email = account.Email;
             var code = matchingAuth.ResetCode;
 
             try
@@ -171,6 +187,58 @@ namespace LMS.Data
 
             matchingAuth.EmailVerified = true;
             await db.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Checks the verification status of an account from the provided email.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="email"></param>
+        /// <returns></returns>
+        public async Task<bool> CheckAccountVerification(AzureDbContext db, string email)
+        {
+            var verified = false;
+            try
+            {
+                var acct = db.Accounts.FirstOrDefault(a => a.Email.ToLower().Equals(email.ToLower()));
+                if (acct == null) return verified;
+
+                var auth = db.Authentications.FirstOrDefault(a => a.AccountId == acct.AccountId);
+                if (auth == null) return verified;
+
+                verified = auth.EmailVerified;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return verified;
+        }
+
+        /// <summary>
+        /// Returns the verification code tied to the email account.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="email"></param>
+        /// <returns></returns>
+        public async Task<string> GetVerificationCode(AzureDbContext db, string email)
+        {
+            var code = string.Empty;
+            try
+            {
+                var acct = db.Accounts.FirstOrDefault(a => a.Email.ToLower().Equals(email.ToLower()));
+                if (acct == null) return code;
+
+                var auth = db.Authentications.FirstOrDefault(a => a.AccountId == acct.AccountId);
+                if (auth == null) return code;
+
+                code = auth.ResetCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return code;
         }
 
         /// <summary>

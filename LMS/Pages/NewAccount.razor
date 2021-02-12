@@ -18,8 +18,8 @@
                         <InputText id="validationcode" class="form-control LMS-input" type="text" placeholder="Reset Code" @bind-Value="_codeModel.VerificationCode" />
                     </div>
                     <button type="submit" class="btn btn-primary LMS-btn">Verify Code</button>
+                    <button type="button" class="btn btn-secondary LMS-btn" @onclick="ResendEmail">Resend Code</button>
                 </EditForm>
-                    <button class="btn btn-primary LMS-btn" @onclick="ResendEmail">Resend Code</button>
                 }
                 else
                 {
@@ -107,8 +107,7 @@
         var acctCreated = await DbService.CreateAccount(AzureDb, Model);
         if (acctCreated)
         {
-            //_message = "Account Created. Proceed to login page.";
-            _emailSent = await DbService.SendEmail(Model, AzureDb);
+            _emailSent = await DbService.SendEmail(Model.Email, AzureDb);
             _message = "A validation code has been sent to your email.";
             StateHasChanged();
         }
@@ -121,12 +120,12 @@
             await DbService.VerifyEmail(Model.Email, AzureDb);
             NavMan.NavigateTo("login");
         }
-        else _message = "Please provide the correct reset code.";
+        else _message = "Invalid Reset Code";
     }
 
     private async void ResendEmail()
     {
-        await DbService.SendEmail(Model, AzureDb);
-        _message = "A new email has been sent.";
+        await DbService.SendEmail(Model.Email, AzureDb);
+        _message = "Verification Email Sent";
     }
 }
