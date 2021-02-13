@@ -19,12 +19,12 @@ else
                         <EditForm Model="@_paymentModel" OnValidSubmit="@ProcessPayment">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <h4>Payment Amount Due: $@_amountDue.ToString("0.00")</h4>
                                 <small class="text-danger">This amount will be charged to the inputted card</small>
                             </div>
                             <label for="card-number" class="form-inline">CC Number</label>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="card-number" class="form-control LMS-input" type="text" placeholder="CC Number" @bind-Value="_paymentModel.CC_Num" />
                             </div>
 
@@ -34,7 +34,7 @@ else
                             </div>
 
                             <label for="card-ccv" class="form-inline">CVC Code</label>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="card-ccv" class="form-control LMS-input" type="text" placeholder="CCV Code" @bind-Value="_paymentModel.CCV" />
                             </div>
                             <MatButton Class="btn btn-primary LMS-btn" type="submit">Process Payment</MatButton>

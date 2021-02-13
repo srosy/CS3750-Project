@@ -26,7 +26,7 @@ namespace LMS
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddDbContext<AzureDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("AzureDbContext")));
+            services.AddDbContext<AzureDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("AzureDbContext")), ServiceLifetime.Transient);
             services.AddSingleton<IDbService, DbService>();
             services.AddMatBlazor();
 

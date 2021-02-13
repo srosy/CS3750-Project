@@ -1,7 +1,269 @@
 ﻿@page "/assignments";
 
-<h3 class="header-default">Assignments</h3>
+@if (_loading)
+{
+    <h1 class="header-default">Loading...</h1>
+}
+else
+{
+    @if (_showForm)
+    {
+        <div class="row text-center">
+            <div class="col-md-4"></div>
+            <div class="col-md-6">
+                <div class="card LMS-card">
+                    <div class="card-header LMS-form">
+                        <h3>@Model.FormTitle</h3>
+                    </div>
+                    <div class="card card-body">
+                        <EditForm Model="@_assignmentModel" OnValidSubmit="@SaveAssignment">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <div class="form-group">
+                                <label for="type" class="form-inline">Assignment Type</label>
+                                <select id="type" class="form-control LMS-Input" title="Select an Assignment Type" @bind="_assignmentModel.Type">
+                                    @foreach (var t in Enum.GetNames(typeof(AssignmentType)))
+                                    {
+                                        <option value="@((int)Enum.Parse(typeof(AssignmentType), t))">@t</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="type" class="form-inline">Course</label>
+                                <select id="course" class="form-control LMS-Input" title="Select a course you're instructing" @bind="_assignmentModel.CourseId">
+                                    @foreach (var c in Model.Courses)
+                                    {
+                                        <option value="@c.CourseId">@c.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group ">
+                                <InputText id="name" class="form-control LMS-input" title="Assignment Name" type="text" placeholder="Name (CS3750)" @bind-Value="_assignmentModel.Name" />
+                            </div>
+                            <div class="form-group">
+                                <label for="maxscore" class="form-inline">Max Score</label>
+                                <InputNumber id="maxscore" class="form-control LMS-input" title="Assignment Max Score (defaults to 100)" type="number" @bind-Value="_assignmentModel.MaxScore" />
+                            </div>
+                            <div class="form-group">
+                                <InputDate id="duedate" class="form-control LMS-input" title="Assignment Due Date" type="date" @bind-Value="_assignmentModel.DueDate" />
+                            </div>
+                        </EditForm>
+                        <BlazoredTextEditor @ref="@_richTextEditor">
+                            <ToolbarContent>
+                                <select class="ql-header">
+                                    <option selected=""></option>
+                                    <option value="1"></option>
+                                    <option value="2"></option>
+                                    <option value="3"></option>
+                                    <option value="4"></option>
+                                    <option value="5"></option>
+                                </select>
+                                <span class="ql-formats">
+                                    <button class="ql-bold"></button>
+                                    <button class="ql-italic"></button>
+                                    <button class="ql-underline"></button>
+                                    <button class="ql-strike"></button>
+                                </span>
+                                <span class="ql-formats">
+                                    <select class="ql-color"></select>
+                                    <select class="ql-background"></select>
+                                </span>
+                                <span class="ql-formats">
+                                    <button class="ql-list" value="ordered"></button>
+                                    <button class="ql-list" value="bullet"></button>
+                                </span>
+                                <span class="ql-formats">
+                                    <button class="ql-link"></button>
+                                </span>
+                            </ToolbarContent>
+                            <EditorContent>@((MarkupString)@_editorContent)</EditorContent>
+                        </BlazoredTextEditor>
+                        @if (_assignmentModel.AssignmentId > 0)
+                        {
+                            <div class="form-group">
+                                <MatCheckbox Label="Delete Assignment" @bind-Value="_deleteAssignment" />
+                            </div>
+                        }
+                        <MatButton Class="btn btn-primary LMS-btn" Type="button" OnClick="SaveAssignment">Save</MatButton>
+                        <MatButton Class="btn btn-secondary LMS-btn" Type="button" OnClick="ResetForm">Cancel</MatButton>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    }
+    else
+    {
+        <h3 class="header-default courses-header">@(_acctIsProfessor ? "Assignments for the Courses you Teach" : "Assignments")</h3>
+        @if (_acctIsProfessor)
+        {
+            <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; _deleteAssignment = false; _assignmentModel = new Assignment() { CreateDate = DateTime.UtcNow, MaxScore = DEFAULT_MAX_SCORE, DueDate = DEFAULT_DUE_DATE }; Model.FormTitle = "Add New Assignment"; })">New Assignment</MatButton>
+            <br />
+            @if (Model.Assignments.Any())
+            {
+                <MatTable Items="Model.Assignments" class="mat-elevation-z5 lms-table"
+                          Striped="true" FilterByColumnName="Description" PageLabel="Page:" DebounceMilliseconds="150"
+                          AllowSelection="true" SelectionChanged="RowClick" @attributes="Model.TableAttributes">
+                    <MatTableHeader>
+                        <th>Type</th>
+                        <th>Assignment Id</th>
+                        <th>Course Id</th>
+                        <th>Name</th>
+                        <th>Max Score</th>
+                        <th>Due Date</th>
+                    </MatTableHeader>
+                    <MatTableRow>
+                        <td>@(Enum.GetName(typeof(AssignmentType), context.Type))</td>
+                        <td>@context.AssignmentId</td>
+                        <td>@context.CourseId</td>
+                        <td>@context.Name</td>
+                        <td>@context.MaxScore</td>
+                        <td>@context.DueDate?.ToShortDateString()</td>
+                    </MatTableRow>
+                </MatTable>
+            }
+            else
+            {
+                <p class="text-danger">No assignments added for any of your courses.</p>
+            }
+        }
+        else
+        {
+            @if (Model.Assignments.Any())
+            {
+                <br />
+                foreach (var course in Model.Courses)
+                {
+                    var assignments = Model.Assignments.Where(a => a.CourseId == course.CourseId).ToList();
+                    if (assignments.Any())
+                    {
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>@course.Name Assignments</h3>
+                            </div>
+                            <div class="card-body text-center">
+                                <small>Click on any assignment to go to proceed to submit.</small>
+                                <MatTable Items="assignments" class="mat-elevation-z5 lms-table" Striped="true" ShowPaging="false">
+                                    <MatTableHeader>
+                                        <th class="text-center" style="min-width: @COL_SIZE;">Type</th>
+                                        <th class="text-center" style="min-width: @COL_SIZE;">Assignment Name</th>
+                                        <th class="text-center" style="min-width: @COL_SIZE;">Max Score</th>
+                                        <th class="text-center" style="min-width: @COL_SIZE;">Due Date</th>
+                                    </MatTableHeader>
+                                    <MatTableRow>
+                                        <td>@(Enum.GetName(typeof(AssignmentType), context.Type))</td>
+                                        <td><a href="/submission/@context.AssignmentId" title="Goto submit assignment page">@context.Name</a></td>
+                                        <td>@context.MaxScore</td>
+                                        <td>@context.DueDate?.ToShortDateString()</td>
+                                    </MatTableRow>
+                                </MatTable>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-success">No assignments due.</p>
+                    }
+                }
+            }
+            else
+            {
+                <p class="text-danger">No assignments added for any of your courses.</p>
+            }
+        }
+
+    }
+}
+
 
 @code {
+    private AssignmentsViewModel Model = new AssignmentsViewModel();
+    private Assignment _assignmentModel = new Assignment();
+    private bool _showForm;
+    private bool _deleteAssignment;
+    private bool _loading = true;
+    private bool _acctIsProfessor = false;
+    private const int DEFAULT_MAX_SCORE = 100;
+    private const string COL_SIZE = "300px";
+    private DateTime DEFAULT_DUE_DATE = DateTime.UtcNow.AddDays(14);
 
+    private BlazoredTextEditor _richTextEditor = new BlazoredTextEditor();
+    private string _editorContent;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        _acctIsProfessor = Model.Account.Role == (int)Role.PROFESSOR;
+        Model.Courses = await DbService.GetCourses(AzureDb, _acctIsProfessor ? Model.Account.AccountId : 0);
+
+        if (!_acctIsProfessor)
+        {
+            var enrolledCourses = new List<Course>();
+            Model.Enrollments = _acctIsProfessor ? null : await DbService.GetEnrollments(AzureDb, Model.Account.AccountId);
+            Model.Courses.ForEach(c =>
+            {
+                if (Model.Enrollments.Any(e => c.CourseId == e.CourseId))
+                {
+                    enrolledCourses.Add(c);
+                }
+            });
+            Model.Courses = enrolledCourses;
+        }
+
+        Model.Assignments = DbService.GetAssignments(AzureDb, Model.Courses);
+        _loading = false;
+    }
+
+    /// <summary>
+    /// Handles the row click event.
+    /// </summary>
+    /// <param name="row"></param>
+    public void RowClick(object row)
+    {
+        var ass = row as Assignment;
+        if (!_acctIsProfessor)
+        {
+            NavMan.NavigateTo($"assignments/{ass.AssignmentId}");
+        }
+        if (ass != null)
+        {
+            Model.FormTitle = "Edit Assignment";
+            _assignmentModel = ass;
+            _editorContent = _assignmentModel.Description;
+            _showForm = true;
+        }
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Resets the edit/create Assignment form.
+    /// </summary>
+    private void ResetForm()
+    {
+        _showForm = false;
+        _assignmentModel = new Assignment() { CreateDate = DateTime.UtcNow, MaxScore = DEFAULT_MAX_SCORE, DueDate = DEFAULT_DUE_DATE };
+    }
+
+    /// <summary>
+    /// Saves the new/existing Assignment.
+    /// </summary>
+    private async void SaveAssignment()
+    {
+        var assUpdated = true;
+        if (_deleteAssignment)
+        {
+            // delete grades (submissions) associated with the assignment
+            assUpdated = await DbService.UpdateSubmissionsOnDeletedAssignment(AzureDb, _assignmentModel);
+        }
+
+        _editorContent = await _richTextEditor.GetHTML();
+        _assignmentModel.Description = _editorContent;
+
+        var assignmentSaved = await DbService.SaveAssignment(AzureDb, _assignmentModel) && assUpdated;
+        ResetForm();
+        Model.Courses = await DbService.GetCourses(AzureDb, _acctIsProfessor ? Model.Account.AccountId : 0);
+        Model.Assignments = DbService.GetAssignments(AzureDb, Model.Courses);
+        await JS.InvokeVoidAsync("Toast", new[] { assignmentSaved ? "success" : "error", assignmentSaved ? "Saved Assignment." : "Failed to save Assignment.", assignmentSaved ? "3000" : "5000" }); // toasttype, message, duration
+        this.StateHasChanged();
+    }
 }

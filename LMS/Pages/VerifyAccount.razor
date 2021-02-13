@@ -15,7 +15,7 @@
                     <EditForm Model="Model" OnValidSubmit="@SetResetCode">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
-                        <div class="form-group has-success">
+                        <div class="form-group ">
                             <InputText id="email" class="form-control LMS-input" type="text" placeholder="Email" @bind-Value="Model.Email" />
                         </div>
                         <button type="submit" class="btn btn-primary LMS-btn">Submit</button>
@@ -27,7 +27,7 @@
                     <EditForm Model="Model" OnValidSubmit="@VerifyEmail">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
-                        <div class="form-group has-success">
+                        <div class="form-group ">
                             <InputText id="validationcode" class="form-control LMS-input" type="text" placeholder="Reset Code" @bind-Value="Model.VerificationCode" />
                         </div>
                         <button type="submit" class="btn btn-primary LMS-btn">Verify Code</button>
@@ -49,11 +49,6 @@
     private CodeVerificationViewModel Model = new CodeVerificationViewModel();
     private string _message = string.Empty;
     private string _resetCode;
-    private bool _resetCodeSent;
-
-    protected async override Task OnInitializedAsync()
-    {
-    }
 
     private async void VerifyEmail()
     {
@@ -73,7 +68,6 @@
     private async void ResendEmail()
     {
         await DbService.SendEmail(Model.Email, AzureDb);
-        _resetCodeSent = true;
         await JS.InvokeVoidAsync("Toast", new[] { "success", "Verification Email Sent", "3000" }); // toasttype, message, duration
     }
 
