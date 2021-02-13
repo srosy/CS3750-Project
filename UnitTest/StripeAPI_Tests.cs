@@ -1,18 +1,16 @@
 ﻿using LMS.Data;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Xunit;
-using Shouldly;
 using LMS.Data.Models;
-using static LMS.Data.StripeAPI;
+using Shouldly;
+using System;
 using System.Threading.Tasks;
+using Xunit;
+using static LMS.Data.StripeAPI;
 
 namespace UnitTest
 {
     public class StripeAPI_Tests
     {
-        StripeAPI API = new StripeAPI();
+        readonly StripeAPI API = new StripeAPI();
 
         [Fact]
         public async Task Stripe_Token_IsValid()

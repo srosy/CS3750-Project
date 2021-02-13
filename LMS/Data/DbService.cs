@@ -638,8 +638,8 @@ namespace LMS.Data
                     sub.DeleteDate = submission.DeleteDate;
                     sub.Comments = submission.Comments;
                     sub.Score = submission.Score;
-                    sub.UploadFile = submission.UploadFile;
                     sub.UploadFileName = submission.UploadFileName;
+                    sub.UploadFilePath = submission.UploadFilePath;
                     sub.AccountId = submission.AccountId;
                 }
                 else
