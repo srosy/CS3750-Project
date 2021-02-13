@@ -38,13 +38,15 @@ else
                                 </select>
                             </div>
                             <div class="form-group ">
-                                <InputText id="name" class="form-control LMS-input" title="Assignment Name" type="text" placeholder="Name (CS3750)" @bind-Value="_assignmentModel.Name" />
+                                <label for="name" class="form-inline">Name</label>
+                                <InputText id="name" class="form-control LMS-input" title="Assignment Name" type="text" placeholder="Name" @bind-Value="_assignmentModel.Name" />
                             </div>
                             <div class="form-group">
                                 <label for="maxscore" class="form-inline">Max Score</label>
                                 <InputNumber id="maxscore" class="form-control LMS-input" title="Assignment Max Score (defaults to 100)" type="number" @bind-Value="_assignmentModel.MaxScore" />
                             </div>
                             <div class="form-group">
+                                <label for="duedate" class="form-inline">Due Date</label>
                                 <InputDate id="duedate" class="form-control LMS-input" title="Assignment Due Date" type="date" @bind-Value="_assignmentModel.DueDate" />
                             </div>
                         </EditForm>

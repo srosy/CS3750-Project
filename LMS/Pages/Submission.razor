@@ -50,7 +50,7 @@ else
                             {
                                 <div class="form-group">
                                     <label for="download">Previous File Submission</label>
-                                    <MatButton Class="btn btn-secondary LMS-btn zoom" Type="button" @onclick="DownloadFile">Download</MatButton>
+                                    <a href="@_submissionModel.UploadFilePath" target="_self" class="btn btn-secondary LMS-btn zoom" title="click to download submission">Download</a>
                                 </div>
                             }
                             <button class="btn btn-primary LMS-btn zoom" type="button" @onclick="@(() => { Task.Run(() => Submit()); NavMan.NavigateTo("assignments"); })">Submit</button>
@@ -126,17 +126,9 @@ else
         var file = files.First();
         _fileMessage = file.Name;
         _submissionModel.UploadFileName = file.Name;
-        _submissionModel.UploadFile = await LMS_Image.ConvertFileToByteArray(file);
-    }
-
-    /// <summary>
-    /// Downloads the previously submitted file.
-    /// </summary>
-    /// <returns></returns>
-    private async Task DownloadFile()
-    {
-        File.WriteAllBytes(KnownFolders.GetPath(KnownFolder.Downloads) + $"\\{_submissionModel.UploadFileName}", _submissionModel.UploadFile);
-        await JS.InvokeVoidAsync("Toast", new[] { "success", $"Downloaded file {_submissionModel.UploadFileName }", "3000" }); // toasttype, message, duration
+        var fileBytes = await LMS_Image.ConvertFileToByteArray(file);
+        var azureStorage = new AzureStorage();
+        _submissionModel.UploadFilePath = await azureStorage.UploadFile(file.Name, fileBytes, Model.Account.AccountId);
     }
 
     /// <summary>
@@ -144,7 +136,8 @@ else
     /// </summary>
     private async void Submit()
     {
-        await JS.InvokeVoidAsync("Toast", new[] { "warning", "Submitting Assignment...", "28000" }); // toasttype, message, duration
+        await JS.InvokeVoidAsync("Toast", new[] { "warning", "Processing Assignment Submission...", "5000" }); // toasttype, message, duration
+
         var submissionSuccessfull = await DbService.SaveSubmission(AzureDb, _submissionModel);
         await JS.InvokeVoidAsync("Toast", new[] { submissionSuccessfull ? "success" : "error", submissionSuccessfull ? "Assignment Succesfully Submitted!" : "An Error Occured", "3000" }); // toasttype, message, duration
     }
