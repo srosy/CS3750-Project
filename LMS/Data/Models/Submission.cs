@@ -15,6 +15,6 @@ namespace LMS.Data.Models
         public DateTime? DeleteDate { get; set; }
         public string Comments { get; set; }
         public string UploadFileName { get; set; }
-        public byte[] UploadFile { get; set; }
+        public string UploadFilePath { get; set; }
     }
 }
