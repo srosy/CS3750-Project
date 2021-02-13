@@ -6,6 +6,8 @@ using LMS.Data.Models;
 using Blazored.LocalStorage;
 using LMS.Data.Helper;
 using System.Collections.Generic;
+using MimeKit;
+using Microsoft.EntityFrameworkCore;
 
 namespace LMS.Data
 {
@@ -25,8 +27,20 @@ namespace LMS.Data
         public Task<List<Payment>> GetPayments(AzureDbContext db, int acctId);
         public Task<bool> UpdateAccount(AzureDbContext db, Account acct);
         public Task<bool> SaveSettings(AzureDbContext db, Settings settings);
+        public Task<bool> DoSending(MimeMessage mailMessage);
+        public Task<bool> SendEmail(string email, AzureDbContext db);
+        public Task VerifyEmail(string email, AzureDbContext db);
+        public Task<bool> CheckAccountVerification(AzureDbContext azureDb, string email);
+        public Task<string> GetVerificationCode(AzureDbContext db, string email);
         public Task<bool> UpdateEnrollmentsOnDeletedCourse(AzureDbContext db, Course model);
         public Task<bool> AddPayment(AzureDbContext db, Payment payment);
+        public Task<bool> SaveAssignment(AzureDbContext db, Assignment assignment);
+        public List<Assignment> GetAssignments(AzureDbContext db, List<Course> courses);
+        public Task<Assignment> GetAssignment(AzureDbContext db, int assId);
+        public Task<bool> SaveSubmission(AzureDbContext db, Submission submission);
+        public Task<List<Submission>> GetSubmissions(AzureDbContext db, int acctId);
+        public Task<bool> UpdateSubmissionsOnDeletedAssignment(AzureDbContext db, Assignment model);
+        public Task<bool> UpdateSubmissionsOnDeletedCourse(AzureDbContext db, Course model);
     }
     public class DbService : IDbService
     {
@@ -41,10 +55,10 @@ namespace LMS.Data
         {
             try
             {
-                var acct = db.Accounts.FirstOrDefault(a => a.Email.ToLower().Equals(model.UserName.ToLower()));
+                var acct = await db.Accounts.FirstOrDefaultAsync(a => a.Email.ToLower().Equals(model.UserName.ToLower()));
                 if (acct == null) return false;
 
-                var auth = db.Authentications.FirstOrDefault(a => a.AccountId == acct.AccountId);
+                var auth = await db.Authentications.FirstOrDefaultAsync(a => a.AccountId == acct.AccountId);
                 if (auth == null) return false;
 
                 if (!Encryption.GenerateSaltedHash(model.Password, auth.Salt).Equals(auth.Password)) return false; // case-sensitive
@@ -52,7 +66,16 @@ namespace LMS.Data
                 await DeleteSession(db, storage);
                 await SessionObj.CreateSession(db, storage, acct.AccountId);
 
-                return true;
+                if (auth.EmailVerified)
+                {
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine("Account has not been validated.");
+                    return false;
+                }
+
             }
             catch (Exception ex)
             {
@@ -71,7 +94,7 @@ namespace LMS.Data
         {
             try
             {
-                var acctExists = db.Accounts.Any(a => a.Email.ToLower().Equals(model.Email.ToLower()));
+                var acctExists = await db.Accounts.AnyAsync(a => a.Email.ToLower().Equals(model.Email.ToLower()));
                 if (acctExists) return false;
 
                 bool savedAcct = false, savedAuth = false;
@@ -93,14 +116,18 @@ namespace LMS.Data
                     model.Auth.UserName = model.Email.ToLower();
 
                     var salt = Encryption.GenSalt();
+                    var resetCode = Encryption.GenSalt(6);
                     db.Authentications.Add(new Authentication()
                     {
                         AccountId = accountToAdd.AccountId,
                         CreateDate = DateTime.UtcNow,
                         Salt = salt,
-                        Password = Encryption.GenerateSaltedHash(model.Auth.Password, salt)
+                        Password = Encryption.GenerateSaltedHash(model.Auth.Password, salt),
+                        ResetCode = resetCode
                     });
                     savedAuth = db.SaveChanges() > 0;
+
+                    model.Auth.ResetCode = resetCode;
                 }
 
                 return savedAcct && savedAuth;
@@ -113,6 +140,125 @@ namespace LMS.Data
         }
 
         /// <summary>
+        /// Sends an email containing the verification code.
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public async Task<bool> SendEmail(string email, AzureDbContext db)
+        {
+            var acct = await db.Accounts.FirstOrDefaultAsync(a => a.Email == email);
+            var matchingAuth = await db.Authentications.FirstOrDefaultAsync(a => a.AccountId == acct.AccountId);
+
+            var code = matchingAuth.ResetCode;
+
+            try
+            {
+                var mailMessage = new MimeMessage();
+                mailMessage.From.Add(new MailboxAddress("Team Git'r Dun", "LMS.GitrDun@gmail.com"));
+                mailMessage.To.Add(new MailboxAddress("User", email));
+
+                var textpart = new TextPart("plain");
+
+                if (!string.IsNullOrEmpty(code))
+                {
+                    mailMessage.Subject = "LMS Verification Code";
+                    textpart.Text = $"Your LMS verification code is: \n\n" + code;
+                }
+                mailMessage.Body = textpart;
+                var success = await DoSending(mailMessage);
+                return success;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Sends an email.
+        /// </summary>
+        /// <param name="mailMessage"></param>
+        /// <returns></returns>
+        public async Task<bool> DoSending(MimeMessage mailMessage)
+        {
+            using var client = new MailKit.Net.Smtp.SmtpClient();
+            await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable);
+            await client.AuthenticateAsync("CS3750LMS@gmail.com", "GaviSpe64!");
+            await client.SendAsync(mailMessage);
+            await client.DisconnectAsync(true);
+            return true;
+        }
+
+        /// <summary>
+        /// Verifies the Email of an account in the Db.
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public async Task VerifyEmail(string email, AzureDbContext db)
+        {
+            var acct = await db.Accounts.FirstOrDefaultAsync(a => a.Email == email);
+            var matchingAuth = await db.Authentications.FirstOrDefaultAsync(a => a.AccountId == acct.AccountId);
+
+            matchingAuth.EmailVerified = true;
+            await db.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Checks the verification status of an account from the provided email.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="email"></param>
+        /// <returns></returns>
+        public async Task<bool> CheckAccountVerification(AzureDbContext db, string email)
+        {
+            var verified = false;
+            try
+            {
+                var acct = await db.Accounts.FirstOrDefaultAsync(a => a.Email.ToLower().Equals(email.ToLower()));
+                if (acct == null) return verified;
+
+                var auth = await db.Authentications.FirstOrDefaultAsync(a => a.AccountId == acct.AccountId);
+                if (auth == null) return verified;
+
+                verified = auth.EmailVerified;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return verified;
+        }
+
+        /// <summary>
+        /// Returns the verification code tied to the email account.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="email"></param>
+        /// <returns></returns>
+        public async Task<string> GetVerificationCode(AzureDbContext db, string email)
+        {
+            var code = string.Empty;
+            try
+            {
+                var acct = await db.Accounts.FirstOrDefaultAsync(a => a.Email.ToLower().Equals(email.ToLower()));
+                if (acct == null) return code;
+
+                var auth = await db.Authentications.FirstOrDefaultAsync(a => a.AccountId == acct.AccountId);
+                if (auth == null) return code;
+
+                code = auth.ResetCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return code;
+        }
+
+        /// <summary>
         /// Deletes a user's session.
         /// </summary>
         /// <param name="storage"></param>
@@ -120,7 +266,7 @@ namespace LMS.Data
         /// <returns></returns>
         public async Task<bool> DeleteSession(AzureDbContext db, ILocalStorageService storage)
         {
-            var deleted = await SessionObj.DeleteSession(db, storage); // delete any existing session
+            var deleted = await SessionObj.DeleteSession(db, storage); // delete AnyAsync existing session
             return deleted;
         }
 
@@ -137,11 +283,11 @@ namespace LMS.Data
             {
                 courses = courses.Where(c => c.ProfessorId == professorId);
             }
-            return courses.ToList();
+            return await courses.ToListAsync();
         }
 
         /// <summary>
-        /// Deletes any Enrollments that are affiliated with the course to be deleted.
+        /// Deletes AnyAsync Enrollments that are affiliated with the course to be deleted.
         /// </summary>
         /// <param name="db"></param>
         /// <param name="model"></param>
@@ -151,10 +297,10 @@ namespace LMS.Data
             var saved = false;
             try
             {
-                // update any enrollments that may have been active first because of foreign key
+                // update AnyAsync enrollments that may have been active first because of foreign key
                 if (model.DeleteDate != null)
                 {
-                    var enrollments = db.Enrollments.Where(e => e.CourseId == model.CourseId && e.DeleteDate == null).ToList();
+                    var enrollments = await db.Enrollments.Where(e => e.CourseId == model.CourseId && e.DeleteDate == null).ToListAsync();
                     if (enrollments != null && enrollments.Count > 0)
                     {
                         enrollments.ForEach(e => e.DeleteDate = DateTime.UtcNow);
@@ -191,7 +337,7 @@ namespace LMS.Data
                 }
                 else // save existing
                 {
-                    var course = db.Courses.FirstOrDefault(c => c.CourseId == model.CourseId);
+                    var course = await db.Courses.FirstOrDefaultAsync(c => c.CourseId == model.CourseId);
                     if (course == null) return false;
 
                     course.StartDate = model.StartDate;
@@ -218,7 +364,7 @@ namespace LMS.Data
         /// <param name="db"></param>
         /// <param name="role"></param>
         /// <returns></returns>
-        public async Task<List<Account>> GetAccounts(AzureDbContext db, Enum.Role role = Enum.Role.STUDENT) => db.Accounts.Where(a => a.DeleteDate == null && a.Role == (int)role).ToList();
+        public async Task<List<Account>> GetAccounts(AzureDbContext db, Enum.Role role = Enum.Role.STUDENT) => await db.Accounts.Where(a => a.DeleteDate == null && a.Role == (int)role).ToListAsync();
 
         /// <summary>
         /// Gets an Account by Id.
@@ -226,7 +372,7 @@ namespace LMS.Data
         /// <param name="db"></param>
         /// <param name="acctId"></param>
         /// <returns></returns>
-        public async Task<Account> GetAccount(AzureDbContext db, int acctId) => db.Accounts.FirstOrDefault(a => a.AccountId == acctId);
+        public async Task<Account> GetAccount(AzureDbContext db, int acctId) => await db.Accounts.FirstOrDefaultAsync(a => a.AccountId == acctId);
 
         /// <summary>
         /// Gets the Enrollments an account has.
@@ -234,7 +380,7 @@ namespace LMS.Data
         /// <param name="db"></param>
         /// <param name="acctId"></param>
         /// <returns></returns>
-        public async Task<List<Enrollment>> GetEnrollments(AzureDbContext db, int acctId) => db.Enrollments.Where(e => e.AccountId == acctId && e.DeleteDate == null).ToList();
+        public async Task<List<Enrollment>> GetEnrollments(AzureDbContext db, int acctId) => await db.Enrollments.Where(e => e.AccountId == acctId && e.DeleteDate == null).ToListAsync();
 
         /// <summary>
         /// Updates the Enrollments affiliated with an acctId.
@@ -278,7 +424,7 @@ namespace LMS.Data
         /// <param name="db"></param>
         /// <param name="acctId"></param>
         /// <returns></returns>
-        public async Task<Settings> GetSettings(AzureDbContext db, int acctId) => db.Settings.FirstOrDefault(s => s.AccountId == acctId);
+        public async Task<Settings> GetSettings(AzureDbContext db, int acctId) => await db.Settings.FirstOrDefaultAsync(s => s.AccountId == acctId);
 
         /// <summary>
         /// Saves the passed Account to the DB.
@@ -388,7 +534,7 @@ namespace LMS.Data
         /// <param name="db"></param>
         /// <param name="acctId"></param>
         /// <returns></returns>
-        public async Task<List<Payment>> GetPayments(AzureDbContext db, int acctId) => db.Payments.Where(p => p.AccountId == acctId).ToList();
+        public async Task<List<Payment>> GetPayments(AzureDbContext db, int acctId) => await db.Payments.Where(p => p.AccountId == acctId).ToListAsync();
 
         /// <summary>
         /// Adds a new Payment to the db.
@@ -406,7 +552,7 @@ namespace LMS.Data
                 payment.AuthAmount = (charge.amount / 100);
                 payment.TransactionDate = charge.paid == true ? DateTime.UtcNow : (DateTime?)null;
                 payment.TransactionId = charge.id;
-                payment.CardNumber = string.Join("", payment.CardNumber.Take(4)) + "********" + payment.CardNumber.Substring(12);
+                payment.CardNumber = string.Join("", payment.CardNumber.Take(4)) + "********" + payment.CardNumber[12..];
 
                 db.Payments.Add(payment);
                 saved = await db.SaveChangesAsync() > 0;
@@ -417,6 +563,182 @@ namespace LMS.Data
             }
             return saved;
         }
+
+        /// <summary>
+        /// Saves an existing or creates a new Assignment in the Db.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="assignment"></param>
+        /// <returns></returns>
+        public async Task<bool> SaveAssignment(AzureDbContext db, Assignment assignment)
+        {
+            var saved = false;
+            try
+            {
+                if (assignment.AssignmentId > 0)
+                {
+                    var ass = db.Assignments.First(a => a.AssignmentId == assignment.AssignmentId);
+                    ass.UpdateDate = DateTime.UtcNow;
+                    ass.DueDate = assignment.DueDate;
+                    ass.DeleteDate = assignment.DeleteDate;
+                    ass.MaxScore = assignment.MaxScore;
+                    ass.Name = assignment.Name;
+                    ass.Type = assignment.Type;
+                    ass.Description = assignment.Description;
+                }
+                else
+                {
+                    db.Assignments.Add(assignment);
+                }
+
+                saved = await db.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return saved;
+        }
+
+        /// <summary>
+        /// Gets Assignments for the passed courses.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="courses"></param>
+        /// <returns></returns>
+        public List<Assignment> GetAssignments(AzureDbContext db, List<Course> courses)
+        {
+            var assignments = new List<Assignment>();
+            db.Assignments.Where(a => a.DeleteDate == null).ToList().ForEach(a =>
+            {
+                if (courses.Any(c => c.CourseId == a.CourseId))
+                {
+                    assignments.Add(a);
+                }
+            });
+
+            return assignments;
+        }
+
+        /// <summary>
+        /// Saves an existing or creates a new Assignment Submission in the Db.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="submission"></param>
+        /// <returns></returns>
+        public async Task<bool> SaveSubmission(AzureDbContext db, Submission submission)
+        {
+            var saved = false;
+            try
+            {
+                if (submission.SubmissionId > 0)
+                {
+                    var sub = db.Submissions.First(a => a.SubmissionId == submission.SubmissionId);
+                    sub.UpdateDate = DateTime.UtcNow;
+                    sub.DeleteDate = submission.DeleteDate;
+                    sub.Comments = submission.Comments;
+                    sub.Score = submission.Score;
+                    sub.UploadFile = submission.UploadFile;
+                    sub.UploadFileName = submission.UploadFileName;
+                    sub.AccountId = submission.AccountId;
+                }
+                else
+                {
+                    db.Submissions.Add(submission);
+                }
+
+                saved = await db.SaveChangesAsync() > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return saved;
+        }
+
+        /// <summary>
+        /// Gets Submissions for the passed AccountId.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<List<Submission>> GetSubmissions(AzureDbContext db, int acctId) => await db.Submissions.Where(s => s.AccountId == acctId && s.DeleteDate == null).ToListAsync();
+
+        /// <summary>
+        /// Updates records in the Db if an assignment with submissons, TODO: grades, etc is deleted. 
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public async Task<bool> UpdateSubmissionsOnDeletedAssignment(AzureDbContext db, Assignment model)
+        {
+            var updated = false;
+            try
+            {
+                var ass = db.Assignments.First(a => a.AssignmentId == model.AssignmentId);
+                ass.DeleteDate = DateTime.UtcNow;
+                var assUpdated = await SaveAssignment(db, ass);
+
+                // TODO: update the submissions related to the assignment
+                var submissionsUpdated = true;
+                var submissions = await db.Submissions.Where(s => s.AssignmentId == ass.AssignmentId && s.DeleteDate == null).ToListAsync();
+                if (submissions.Any())
+                {
+                    submissions.ForEach(s => { s.DeleteDate = DateTime.UtcNow; });
+                    submissionsUpdated = await db.SaveChangesAsync() < 0;
+                }
+
+                // TODO: Update the grades
+                var gradesUpdated = true; // for now
+
+                updated = assUpdated && submissionsUpdated && gradesUpdated;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return updated;
+        }
+
+        /// <summary>
+        /// Updates records in the Db if a course that has assignments with submissons, TODO: grades, etc is deleted. 
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public async Task<bool> UpdateSubmissionsOnDeletedCourse(AzureDbContext db, Course model)
+        {
+            var updated = false;
+            if (model.DeleteDate == null) return updated;
+
+            var course = await db.Courses.FirstAsync(c => c.CourseId == model.CourseId && c.DeleteDate == null);
+            if (course == null) return updated;
+
+            var assignments = GetAssignments(db, new List<Course>() { model });
+
+            if (assignments != null && assignments.Any())
+            {
+                var allUpdated = new bool[assignments.Count];
+                var index = 0;
+                assignments.ForEach(async a =>
+                {
+                    allUpdated[index] = await UpdateSubmissionsOnDeletedAssignment(db, a);
+                    index++;
+                });
+
+                updated = allUpdated.All(x => x == true);
+            }
+
+            return updated;
+        }
+
+        /// <summary>
+        /// Return the Assignment with the matching AssignmentId.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="assId"></param>
+        /// <returns></returns>
+        public async Task<Assignment> GetAssignment(AzureDbContext db, int assId) => await db.Assignments.FirstOrDefaultAsync(a => a.AssignmentId == assId);
     }
 }
 

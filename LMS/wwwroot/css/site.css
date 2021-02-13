@@ -407,6 +407,7 @@ app {
 
 .add-new-course.mdc-button.mdc-ripple-upgraded:hover {
     background-color: darkslateblue;
+    background-color: darkslateblue;
 }
 
 .courses-header {
@@ -540,4 +541,26 @@ app {
     width: 11.5vw;
     float: right;
     background-color: white;
+}
+
+.zoom {
+    transition: transform .2s;
+}
+
+.zoom:hover {
+    transform: scale(1.25);
+}
+
+input[type='file'] {
+    color: white;
+}
+
+.input-file-message {
+    left: -10vw;
+    position: relative;
+}
+
+.jumbo-submission {
+    max-height: 59vh;
+    overflow-y: auto;
 }

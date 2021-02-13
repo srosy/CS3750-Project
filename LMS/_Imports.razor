@@ -1,31 +1,35 @@
 ﻿@using System.Net.Http
-@using System.IO;
-@using System.Reflection;
+@using System.IO
+@using System.Reflection
+@using System.Linq
+@using System.Net
 
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.EntityFrameworkCore
 @using Microsoft.JSInterop
 
 @using LMS
 @using LMS.Data
 @using LMS.Pages
 @using LMS.Shared
-@using LMS.Shared.Models;
+@using LMS.Shared.Models
 @using LMS.Data.Enum
 @using LMS.Data.Helper
 @using LMS.Data.Models
-@using LMS.Pages.Components;
+@using LMS.Pages.Components
 
-@using MatBlazor;
-@using BlazorInputFile;
-@using System.Drawing;
+@using MatBlazor
+@using BlazorInputFile
+@using System.Drawing
+@using Blazored.TextEditor
 
-@inject NavigationManager NavMan;
-@inject IDbService DbService;
-@inject AzureDbContext AzureDb;
-@inject Blazored.LocalStorage.ILocalStorageService Storage;
-@inject HttpClient Client;
-@inject IJSRuntime JS;
+@inject NavigationManager NavMan
+@inject IDbService DbService
+@inject AzureDbContext AzureDb
+@inject Blazored.LocalStorage.ILocalStorageService Storage
+@inject HttpClient Client
+@inject IJSRuntime JS
