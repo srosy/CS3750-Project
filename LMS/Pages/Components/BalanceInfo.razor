@@ -3,7 +3,12 @@
     <div class="card dashboard-balance-due text-center">
         <h5 class="card-header">Tuition Balance Due</h5>
         <div class="card-body">
-            <span>@(_amountDue > 0 ? $"${ _amountDue.ToString("0.00")}" : _amountDue < 0 ? $"None. Refund sent in mail for ${(_amountDue * -1).ToString("0.00")}." : "None")</span>
+            <span class="@(_amountDue > 0 ? "text-danger" : "text-success")">@(_amountDue > 0 ? $"${ _amountDue.ToString("0.00")}" : _amountDue < 0 ? $"None. Refund sent in mail for ${(_amountDue * -1).ToString("0.00")}." : "None")</span>
+            @if(_amountDue > 0)
+            {
+                <br />
+                <a class="zoom" href="/payments"><p class="zoom">Pay Now</p></a>
+            }
         </div>
     </div>
 }
@@ -18,9 +23,9 @@
     protected override async Task OnParametersSetAsync()
     {
         var enrollments = await DbService.GetEnrollments(AzureDb, Account.AccountId);
-        _loading = false;
-
+        await SetupBalances();
         base.OnParametersSet();
+        _loading = false;
     }
 
     /// <summary>

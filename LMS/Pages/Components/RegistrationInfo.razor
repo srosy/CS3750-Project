@@ -7,7 +7,7 @@
                 <th class="ef-th">Courses You're Instructing</th>
             </MatTableHeader>
             <MatTableRow>
-                <td class="ef-td">@($"{context.Name} - {context.Description}")</td>
+                <td class="ef-td"><a href="/courses">@($"{context.Name} - {context.Description}")</a></td>
             </MatTableRow>
         </MatTable>
     }

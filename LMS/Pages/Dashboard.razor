@@ -27,11 +27,15 @@ else
         <div class="col-md-8 text-center">
             &nbsp;
         </div>
-        <div class="col-md-4 text-right">
-            <BalanceInfo Account="@_account" />
-        </div>
+
+        @if (_account.Role == (int)Role.STUDENT)
+        {
+            <div class="col-md-4 text-right">
+                <BalanceInfo Account="@_account" />
+            </div>
+        }
     </div>
-    
+
 }
 
 
