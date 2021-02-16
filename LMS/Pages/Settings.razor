@@ -19,20 +19,20 @@ else
                         <EditForm Model="Model" OnValidSubmit="@SaveSettings">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <label for="profile-image-upload" class="LMS-form-label">Profile Picture</label>
                                 <InputFile id="profile-image-upload" OnChange="UploadImageOnChange" title="Upload a profile image" />
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="fname" class="form-control LMS-input" type="text" placeholder="First Name" @bind-Value="Model.Account.FirstName" />
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="lname" class="form-control LMS-input" type="text" placeholder="Last Name" @bind-Value="Model.Account.LastName" />
                             </div>
                             <div class="form-group">
                                 <InputDate id="birthday" class="form-control LMS-input" title="Users must be 18+" type="date" @bind-Value="Model.Account.DOB" />
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="email" class="form-control LMS-input" type="text" placeholder="Email" disabled @bind-Value="Model.Account.Email" />
                             </div>
                             <div class="form-group">
@@ -41,10 +41,10 @@ else
                                     <option value="2">Professor</option>
                                 </select>
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="address" class="form-control LMS-input" type="text" placeholder="Address" @bind-Value="Model.Settings.Address" />
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="city" class="form-control LMS-input" type="text" placeholder="City" @bind-Value="Model.Settings.City" />
                             </div>
                             <div class="form-group">
@@ -56,25 +56,25 @@ else
                                     }
                                 </select>
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="zipcode" class="form-control LMS-input" type="text" placeholder="ZipCode" @bind-Value="Model.Settings.ZipCode" />
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="country" class="form-control LMS-input" type="text" placeholder="Country" @bind-Value="Model.Settings.Country" />
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="phone" class="form-control LMS-input" type="text" placeholder="Phone Number" @bind-Value="Model.Settings.Phone" />
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputTextArea id="biography" class="form-control LMS-input" type="text" placeholder="Biography" @bind-Value="Model.Settings.Biography" />
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="sml1" class="form-control LMS-input" type="text" placeholder="Social Media Link 1" @bind-Value="Model.Settings.SocialMediaLink1" />
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="sml2" class="form-control LMS-input" type="text" placeholder="Social Media Link 2" @bind-Value="Model.Settings.SocialMediaLink2" />
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="sml3" class="form-control LMS-input" type="text" placeholder="Social Media Link 3" @bind-Value="Model.Settings.SocialMediaLink3" />
                             </div>
 
@@ -98,7 +98,7 @@ else
                 @if (!string.IsNullOrEmpty(_profileImageSrc))
                 {
                     <div class="col-md-6">
-                        <img class="settings-profile-img" src="@_profileImageSrc" />
+                        <img class="settings-profile-img" src="@_profileImageSrc" alt="Setting profile image"/>
                     </div>
                 }
                 <div class="col-md-6">
@@ -156,7 +156,7 @@ else
             };
         }
 
-        await SetProfileImage();
+        SetProfileImage();
 
         _loading = false;
         StateHasChanged();
@@ -169,17 +169,17 @@ else
     /// <returns></returns>
     private async Task UploadImageOnChange(IFileListEntry[] files)
     {
-        Model.ImageUpload = await LMS_Image.ConvertImageUploadToByteArray(files.FirstOrDefault());
+        Model.ImageUpload = await LMS_Image.ConvertFileToByteArray(files.FirstOrDefault());
     }
 
     /// <summary>
     /// Sets the Profile Image from saved byte[].
     /// </summary>
     /// <returns></returns>
-    private async Task SetProfileImage()
+    private void SetProfileImage()
     {
         _profileImageSrc = Model.Settings.ProfileImage != null && Model.Settings.ProfileImage.Length > 0 ?
-            await LMS_Image.GetImageSrc(Model.Settings.ProfileImage)
+            LMS_Image.GetImageSrc(Model.Settings.ProfileImage)
             : null;
     }
 
@@ -196,9 +196,10 @@ else
         if (Model.ImageUpload != null && Model.ImageUpload.Length > 0)
         {
             Model.Settings.ProfileImage = Model.ImageUpload;
-            await SetProfileImage();
+            SetProfileImage();
         }
         var settingsSaved = await DbService.SaveSettings(AzureDb, Model.Settings);
+
         _showForm = !settingsSaved;
         StateHasChanged();
         await JS.InvokeVoidAsync("Toast", new[] { (acctSaved && settingsSaved ? "success" : "error"), (acctSaved && settingsSaved ? "Saved Profile Settings" : "An Error Occured"), "3000" }); // toasttype, message, duration

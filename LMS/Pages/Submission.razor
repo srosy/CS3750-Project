@@ -1,0 +1,144 @@
+﻿@page "/submission/{assignmentid}"
+
+@if (_loading)
+{
+    <h1 class="header-default header-inline">Loading...&nbsp;</h1><small class="text-light">(Files take a while to process)</small>
+}
+else
+{
+    @if (!_validAssignmentId)
+    {
+        <h1 class="header-default">Stop tryna break stuffz.</h1>
+    }
+    else
+    {
+        <div class="row text-center">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body text-center">
+                        @if (_submissionModel.Score > 0)
+                        {
+                            <div class="text-right">
+                                <small class="text-success">Grade: @_submissionModel.Score / @Model.Assignment.MaxScore</small>
+                            </div>
+                        }
+                        else if (_submissionModel.SubmissionId > 0)
+                        {
+                            <div class="text-right">
+                                <small class="text-warning">Assignment not yet graded. Optionally, you can resubmit the assignment.</small>
+                            </div>
+                        }
+                        <EditForm Model="_submissionModel" OnValidSubmit="@Submit">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <div class="jumbotron jumbo-submission">
+                                <h1 class="display-4">@Model.Assignment.Name</h1>
+                                <p class="lead">Assignment Instructions Below</p>
+                                <hr class="my-4">
+                                <div class="text-left">@((MarkupString)Model.Assignment.Description)</div>
+                            </div>
+                            <div class="form-group text-left">
+                                <label for="file-upload" class="LMS-form-label">File Upload</label>
+                                <InputFile id="file-upload" OnChange="UploadFileOnChange" title="Upload a file" />
+                                <small class="input-file-message @(_fileMessage.ToLower().Contains("select") ? "text-danger" : "text-success")">@_fileMessage</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="comments" class="form-inline">Submission Comments</label>
+                                <InputTextArea id="comments" class="form-control LMS-input" type="text" placeholder="Input any submission comments" @bind-Value="_submissionModel.Comments" />
+                            </div>
+                            @if (_hasPreviousFileSubmission)
+                            {
+                                <div class="form-group">
+                                    <label for="download">Previous File Submission</label>
+                                    <a href="@_submissionModel.UploadFilePath" target="_self" class="btn btn-secondary LMS-btn zoom" title="click to download submission">Download</a>
+                                </div>
+                            }
+                            <button class="btn btn-primary LMS-btn zoom" type="button" @onclick="@(() => { Task.Run(() => Submit()); NavMan.NavigateTo("assignments"); })">Submit</button>
+                            <MatButton Class="btn btn-secondary LMS-btn zoom" Type="button" @onclick="@(() => { NavMan.NavigateTo("assignments"); })">Back</MatButton>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+}
+
+@code {
+
+    [Parameter]
+    public string assignmentid { get; set; }
+
+    private AssignmentSubmissionViewModel Model = new AssignmentSubmissionViewModel();
+    private Data.Models.Submission _submissionModel;
+    private bool _validAssignmentId;
+    private bool _loading = true;
+    private string _fileMessage = "No file selected";
+    private bool _hasPreviousFileSubmission;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        Model.Submissions = await DbService.GetSubmissions(AzureDb, Model.Account.AccountId);
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        int.TryParse(assignmentid, out int assId);
+        _validAssignmentId = assId > 0;
+
+        if (_validAssignmentId)
+        {
+            Model.Assignment = await DbService.GetAssignment(AzureDb, assId);
+            SetupSubmission();
+        }
+
+        _loading = false;
+    }
+
+    /// <summary>
+    /// Setups up the Submission Model for the form.
+    /// </summary>
+    /// <returns></returns>
+    private void SetupSubmission()
+    {
+        _submissionModel = Model.Submissions.FirstOrDefault(s => s.AssignmentId == Model.Assignment.AssignmentId);
+        _hasPreviousFileSubmission = !string.IsNullOrEmpty(_submissionModel?.UploadFileName);
+
+        if (_submissionModel == null)
+        {
+            _submissionModel = new Data.Models.Submission()
+            {
+                AssignmentId = Model.Assignment.AssignmentId,
+                AccountId = Model.Account.AccountId,
+                CreateDate = DateTime.UtcNow
+            };
+        }
+    }
+
+    /// <summary>
+    /// Handles when a new file is uploaded.
+    /// </summary>
+    /// <param name="files"></param>
+    /// <returns></returns>
+    private async Task UploadFileOnChange(IFileListEntry[] files)
+    {
+        var file = files.First();
+        _fileMessage = file.Name;
+        _submissionModel.UploadFileName = file.Name;
+        var fileBytes = await LMS_Image.ConvertFileToByteArray(file);
+        var azureStorage = new AzureStorage();
+        _submissionModel.UploadFilePath = await azureStorage.UploadFile(file.Name, fileBytes, Model.Account.AccountId);
+    }
+
+    /// <summary>
+    /// Save the Assignment Submission.
+    /// </summary>
+    private async void Submit()
+    {
+        await JS.InvokeVoidAsync("Toast", new[] { "warning", "Processing Assignment Submission...", "5000" }); // toasttype, message, duration
+
+        var submissionSuccessfull = await DbService.SaveSubmission(AzureDb, _submissionModel);
+        await JS.InvokeVoidAsync("Toast", new[] { submissionSuccessfull ? "success" : "error", submissionSuccessfull ? "Assignment Succesfully Submitted!" : "An Error Occured", "3000" }); // toasttype, message, duration
+    }
+}

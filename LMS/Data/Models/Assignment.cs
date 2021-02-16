@@ -11,11 +11,11 @@ namespace LMS.Data.Models
         public int CourseId { get; set; }
         [Range(0, 100)] public int MaxScore { get; set; }
         public string Name { get; set; }
-        public string Description { get; set; }
-        public AssignmentType Type { get; set; }
+        public int Type { get; set; }
         public DateTime? DueDate { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime? UpdateDate { get; set; }
         public DateTime? DeleteDate { get; set; }
+        public string Description { get; set; }
     }
 }

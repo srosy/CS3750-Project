@@ -19,10 +19,10 @@ else
                         <EditForm Model="@_courseModel" OnValidSubmit="@SaveCourse">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="cname" class="form-control LMS-input" type="text" placeholder="Name (CS3750)" @bind-Value="_courseModel.Name" />
                             </div>
-                            <div class="form-group has-success">
+                            <div class="form-group ">
                                 <InputText id="cdesc" class="form-control LMS-input" type="text" placeholder="Description" @bind-Value="_courseModel.Description" />
                             </div>
                             <div class="form-group">

@@ -6,7 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.8.0" />
+    <PackageReference Include="Azure.Storage.Common" Version="12.7.0" />
     <PackageReference Include="Blazored.LocalStorage" Version="3.0.0" />
+    <PackageReference Include="Blazored.TextEditor" Version="1.0.3" />
     <PackageReference Include="BlazorInputFile" Version="0.2.0" />
     <PackageReference Include="MailKit" Version="2.10.1" />
     <PackageReference Include="MatBlazor" Version="2.8.0" />

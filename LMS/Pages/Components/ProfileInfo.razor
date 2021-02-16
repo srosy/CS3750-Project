@@ -17,13 +17,13 @@
         <div class="row p-2">&nbsp;</div>
         <div class="row text-left">
             <div class="col-md-2">
-                <a href="announcements"><span class="oi oi-bell oi-submenu"></span></a>
+                <a href="announcements"><span class="oi oi-bell oi-submenu zoom"></span></a>
             </div>
             <div class="col-md-2">
-                <a href="https://gmail.com/" target="_blank"><span class="oi oi-envelope-closed oi-submenu"></span></a>
+                <a href="https://gmail.com/" target="_blank"><span class="oi oi-envelope-closed oi-submenu zoom"></span></a>
             </div>
             <div class="col-md-2">
-                <a href="https://tinder.com/" target="_blank"><span class="oi oi-heart oi-submenu"></span></a>
+                <a href="https://tinder.com/" target="_blank"><span class="oi oi-heart oi-submenu zoom"></span></a>
             </div>
         </div>
     </div>
@@ -40,7 +40,7 @@
     protected override async Task OnParametersSetAsync()
     {
         _settings = await DbService.GetSettings(AzureDb, Account.AccountId);
-        await SetProfileImage();
+        SetProfileImage();
         _loading = false;
 
         base.OnParametersSet();
@@ -50,10 +50,10 @@
     /// Sets the Profile Image from saved byte[].
     /// </summary>
     /// <returns></returns>
-    private async Task SetProfileImage()
+    private void SetProfileImage()
     {
         _profileImageSrc = _settings?.ProfileImage != null && _settings?.ProfileImage.Length > 0 ?
-            await LMS_Image.GetImageSrc(_settings.ProfileImage)
+            LMS_Image.GetImageSrc(_settings.ProfileImage)
             : null;
     }
 }

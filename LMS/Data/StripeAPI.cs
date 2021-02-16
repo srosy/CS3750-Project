@@ -69,8 +69,10 @@ namespace LMS.Data
 
         public StripeAPI()
         {
-            Client = new RestClient($"{BASE_URL}");
-            Client.Authenticator = new HttpBasicAuthenticator(API_KEY, string.Empty);
+            Client = new RestClient($"{BASE_URL}")
+            {
+                Authenticator = new HttpBasicAuthenticator(API_KEY, string.Empty)
+            };
         }
 
         /// <summary>
