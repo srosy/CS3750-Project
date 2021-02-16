@@ -22,6 +22,7 @@ else
                             <div class="form-group ">
                                 <label for="profile-image-upload" class="LMS-form-label">Profile Picture</label>
                                 <InputFile id="profile-image-upload" OnChange="UploadImageOnChange" title="Upload a profile image" />
+                                <small class="input-file-message @(_fileMessage.ToLower().Contains("select") ? "text-danger" : "text-success")">@_fileMessage</small>
                             </div>
                             <div class="form-group ">
                                 <InputText id="fname" class="form-control LMS-input" type="text" placeholder="First Name" @bind-Value="Model.Account.FirstName" />
@@ -94,11 +95,12 @@ else
         <br />
         @if (Model.Settings != null)
         {
+         
             <div class="card">
                 <div class="profile_page row">
                     <div class="col-md-4">
                         <br />
-                        @if (!string.IsNullOrEmpty(_profileImageSrc))
+                        @if (!string.IsNullOrEmpty(Model.Settings.ProfileImageUrl))
                         {
                             <div class="col-md-6">
                                 <img class="settings-profile-img" src="@_profileImageSrc" />
@@ -135,10 +137,6 @@ else
                 </div>
             </div>
         }
-        else
-        {
-            <h1 class="header-default">How TF did you get here?</h1>
-        }
     }
 }
 
@@ -146,8 +144,8 @@ else
     private SettingsViewModel Model = new SettingsViewModel();
     private bool _showForm;
     private bool _loading = true;
-    private string _profileImageSrc;
     private string[] _ignoreProps = { "SettingId", "ProfileImage", "UpdateDate", "AccountId", "CreateDate", "DeleteDate" };
+    private string _fileMessage = "No file selected";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -170,8 +168,6 @@ else
             };
         }
 
-        SetProfileImage();
-
         _loading = false;
         StateHasChanged();
     }
@@ -183,18 +179,11 @@ else
     /// <returns></returns>
     private async Task UploadImageOnChange(IFileListEntry[] files)
     {
-        Model.ImageUpload = await LMS_Image.ConvertFileToByteArray(files.FirstOrDefault());
-    }
-
-    /// <summary>
-    /// Sets the Profile Image from saved byte[].
-    /// </summary>
-    /// <returns></returns>
-    private void SetProfileImage()
-    {
-        _profileImageSrc = Model.Settings.ProfileImage != null && Model.Settings.ProfileImage.Length > 0 ?
-            LMS_Image.GetImageSrc(Model.Settings.ProfileImage)
-            : null;
+        var file = files.FirstOrDefault();
+        _fileMessage = file.Name;
+        var fileBytes = await LMS_Image.ConvertFileToByteArray(file);
+        var azureStorage = new AzureStorage();
+        Model.Settings.ProfileImageUrl = await azureStorage.UploadFile(file.Name, fileBytes, Model.Account.AccountId);
     }
 
     /// <summary>
@@ -207,11 +196,6 @@ else
 
         //save settings
         Model.Settings.UpdateDate = DateTime.UtcNow;
-        if (Model.ImageUpload != null && Model.ImageUpload.Length > 0)
-        {
-            Model.Settings.ProfileImage = Model.ImageUpload;
-            SetProfileImage();
-        }
         var settingsSaved = await DbService.SaveSettings(AzureDb, Model.Settings);
 
         _showForm = !settingsSaved;

@@ -494,7 +494,7 @@ namespace LMS.Data
                     dbSettings.SocialMediaLink2 = settings.SocialMediaLink2;
                     dbSettings.SocialMediaLink3 = settings.SocialMediaLink3;
                     dbSettings.Biography = settings.Biography;
-                    dbSettings.ProfileImage = settings.ProfileImage;
+                    dbSettings.ProfileImageUrl = settings.ProfileImageUrl;
 
                     saved = await db.SaveChangesAsync() > 0;
                 }
