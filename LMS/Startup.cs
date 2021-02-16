@@ -10,6 +10,8 @@ using MatBlazor;
 using System;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Net.Http.Headers;
 
 namespace LMS
 {
@@ -66,6 +68,17 @@ namespace LMS
             {
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
+            });
+
+            // Use static files which caches importal src and link html to speed up pages
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = ctx =>
+                {
+                    const int durationInSeconds = 60 * 60 * 24;
+                    ctx.Context.Response.Headers[HeaderNames.CacheControl] =
+                        "public,max-age=" + durationInSeconds;
+                }
             });
         }
     }

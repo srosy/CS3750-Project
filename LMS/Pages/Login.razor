@@ -50,26 +50,30 @@
     private string _message = string.Empty;
     private bool _loading = true;
 
-    protected async override Task OnParametersSetAsync()
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        // redirect to dashboard if cookie is still valid
-        if (await SessionObj.VerifySession(AzureDb, Storage))
+        if (firstRender)
         {
-            var acct = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+            // redirect to dashboard if cookie is still valid
+            if (await SessionObj.VerifySession(AzureDb, Storage))
+            {
+                var acct = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
 
-            if (!await DbService.CheckAccountVerification(AzureDb, acct.Email))
-            {
-                NavMan.NavigateTo("verifyaccount");
+                if (!await DbService.CheckAccountVerification(AzureDb, acct.Email))
+                {
+                    NavMan.NavigateTo("verifyaccount");
+                }
+                else
+                {
+                    NavMan.NavigateTo("dashboard");
+                }
+                return;
             }
-            else
-            {
-                NavMan.NavigateTo("dashboard");
-            }
-            return;
+
+            _loading = false;
+            this.StateHasChanged();
         }
-
-        _loading = false;
-        this.StateHasChanged();
     }
 
     /// <summary>
