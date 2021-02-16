@@ -78,6 +78,6 @@
     private async void Logout()
     {
         await DbService.DeleteSession(AzureDb, Storage);
-        NavMan.NavigateTo("/");
+        NavMan.NavigateTo("sessionexpired");
     }
 }

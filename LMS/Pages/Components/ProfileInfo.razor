@@ -52,8 +52,6 @@
     /// <returns></returns>
     private void SetProfileImage()
     {
-        _profileImageSrc = _settings?.ProfileImage != null && _settings?.ProfileImage.Length > 0 ?
-            LMS_Image.GetImageSrc(_settings.ProfileImage)
-            : null;
+        _profileImageSrc = _settings?.ProfileImageUrl;
     }
 }
