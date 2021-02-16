@@ -103,7 +103,7 @@ else
                         @if (!string.IsNullOrEmpty(Model.Settings.ProfileImageUrl))
                         {
                             <div class="col-md-6">
-                                <img class="settings-profile-img" src="@_profileImageSrc" />
+                                <img class="settings-profile-img" src="@Model.Settings.ProfileImageUrl" />
                             </div>
                         }
                     </div>
