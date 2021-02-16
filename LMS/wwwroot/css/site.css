@@ -64,7 +64,7 @@ app {
 }
 
 .main .top-row {
-    background-color: black;
+    background-color: white;
     border-bottom: 1px solid #d6d5d5;
 }
 
@@ -269,7 +269,7 @@ app {
 }
 
 .main-image {
-    height: 5vh;
+    height: 4vh;
     width: auto;
 }
 
@@ -464,7 +464,7 @@ app {
 }
 
 .banner-row {
-    background-color: black;
+    background-color: white;
 }
 
 .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background {

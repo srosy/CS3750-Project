@@ -303,7 +303,10 @@ namespace LMS.Data
                     var enrollments = await db.Enrollments.Where(e => e.CourseId == model.CourseId && e.DeleteDate == null).ToListAsync();
                     if (enrollments != null && enrollments.Count > 0)
                     {
-                        enrollments.ForEach(e => e.DeleteDate = DateTime.UtcNow);
+                        for (int i = 0; i < enrollments.Count; i++)
+                        {
+                            enrollments[i].DeleteDate = DateTime.UtcNow;
+                        }
                         saved = await db.SaveChangesAsync() > 0;
                     }
                 }
@@ -395,18 +398,24 @@ namespace LMS.Data
             try
             {
                 var enrollmentsForAccount = db.Enrollments.Where(e => e.AccountId == acctId).ToList();
-                enrollmentsForAccount.ForEach(e =>
+                for (int i = 0; i < enrollmentsForAccount.Count; i++)
                 {
+                    var e = enrollmentsForAccount[i];
+                    // set previously selected to deleted
                     if (enrollments.Any(a => a.EnrollmentId == e.EnrollmentId && a.DeleteDate != null))
                     {
-                        e.DeleteDate = DateTime.UtcNow; // set previously selected to deleted
+                        e.DeleteDate = DateTime.UtcNow;
                     }
-                });
+                }
 
-                enrollments.Where(e => e.EnrollmentId == 0).ToList().ForEach(e =>
+                for (int i = 0; i < enrollments.Count; i++)
                 {
-                    db.Enrollments.Add(e);
-                });
+                    var e = enrollments[i];
+                    if (e.DeleteDate != null && e.EnrollmentId == 0)
+                    {
+                        db.Enrollments.Add(e);
+                    }
+                }
 
                 saved = await db.SaveChangesAsync() > 0;
             }
@@ -511,14 +520,15 @@ namespace LMS.Data
             {
                 var courses = await GetCourses(db, acctId);
                 if (courses == null) return enrollments;
-
-                db.Enrollments.Where(e => e.DeleteDate == null).ToList().ForEach(e =>
+                var dbEnrollments = db.Enrollments.Where(e => e.DeleteDate == null).ToArray();
+                for (int i = 0; i < dbEnrollments.Length - 1; i++)
                 {
+                    var e = dbEnrollments[i];
                     if (courses.Any(c => c.CourseId == e.CourseId))
                     {
                         enrollments.Add(e);
                     }
-                });
+                }
                 return enrollments.OrderBy(e => e.CourseId).ToList();
             }
             catch (Exception ex)
@@ -609,14 +619,15 @@ namespace LMS.Data
         public List<Assignment> GetAssignments(AzureDbContext db, List<Course> courses)
         {
             var assignments = new List<Assignment>();
-            db.Assignments.Where(a => a.DeleteDate == null).ToList().ForEach(a =>
+            var dbAssignments = db.Assignments.Where(a => a.DeleteDate == null).ToArray();
+            for (int i = 0; i < dbAssignments.Length - 1; i++)
             {
-                if (courses.Any(c => c.CourseId == a.CourseId))
+                var ass = dbAssignments[i];
+                if (courses.Any(c => c.CourseId == ass.CourseId))
                 {
-                    assignments.Add(a);
+                    assignments.Add(ass);
                 }
-            });
-
+            }
             return assignments;
         }
 
@@ -684,7 +695,10 @@ namespace LMS.Data
                 var submissions = await db.Submissions.Where(s => s.AssignmentId == ass.AssignmentId && s.DeleteDate == null).ToListAsync();
                 if (submissions.Any())
                 {
-                    submissions.ForEach(s => { s.DeleteDate = DateTime.UtcNow; });
+                    for (int i = 0; i < submissions.Count; i++)
+                    {
+                        submissions[i].DeleteDate = DateTime.UtcNow;
+                    }
                     submissionsUpdated = await db.SaveChangesAsync() < 0;
                 }
 
@@ -720,12 +734,12 @@ namespace LMS.Data
             {
                 var allUpdated = new bool[assignments.Count];
                 var index = 0;
-                assignments.ForEach(async a =>
-                {
-                    allUpdated[index] = await UpdateSubmissionsOnDeletedAssignment(db, a);
-                    index++;
-                });
 
+                for (int i = 0; i < assignments.Count; i++)
+                {
+                    allUpdated[index] = await UpdateSubmissionsOnDeletedAssignment(db, assignments[i]);
+                    index++;
+                }
                 updated = allUpdated.All(x => x == true);
             }
 
