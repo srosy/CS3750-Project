@@ -490,7 +490,7 @@ app {
 /*profile Styling
 */
 
-.profileHeader {
+.profile-header {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -506,16 +506,24 @@ app {
 }
 
 .profile-link-grid {
-    text-align: center;
+    text-align: left;
 }
 
 .profile-link {
-    text-align: center;
+    max-height: 8vh;
+    width: auto;
+    margin: .75vw;
+}
+
+.edit-profile-container {
+    overflow-y: auto;
+    max-height: 90vh;
 }
 
 #profile_name {
     font-size: 30px;
 }
+
 #profile_data {
     font-size: 15px;
 }
@@ -534,13 +542,13 @@ app {
     width: 550px;
 }
 
-/*Special Ky Section*/
-@media only screen and (min-height: 625px) {
-
+/* Special Ky Section */
+@media only screen and (max-height: 625px) {
     .dashboard-profile-img {
         width: auto;
-        height: 5vh;
+        height: 14vh;
     }
+
     .gallery__img {
         width: 100%;
         height: 50%;
@@ -549,13 +557,7 @@ app {
 
     .profile-info-container {
         max-height: 30vh;
-        width: 100%;
-    }
-
-    .profile-link-grid {
-        max-height: 50px;
         width: auto;
-        text-align: center;
     }
 
     .gallery__img {

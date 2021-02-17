@@ -9,13 +9,13 @@ else
     @if (_showForm)
     {
         <div class="row text-center">
-            <div class="col-md-2"></div>
+            <div class="col-md-2">&nbsp;</div>
             <div class="col-md-8">
-                <div class="card settings-card">
+                <div class="card edit-profile-container">
                     <div class="card-header LMS-title">
                         <h3>Edit Profile</h3>
                     </div>
-                    <div class="card card-body settings-card-body">
+                    <div class="card card-body">
                         <EditForm Model="Model" OnValidSubmit="@SaveSettings">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
@@ -85,20 +85,20 @@ else
                     </div>
                 </div>
             </div>
-            <div class="col-md-4"></div>
+            <div class="col-md-2">&nbsp;</div>
         </div>
     }
     else
     {
-        <h3 class="header-default courses-header profileHeader"></h3>
+        <h3 class="header-default courses-header profile-header"></h3>
 
         <br />
         @if (Model.Settings != null)
         {
 
             <div class="card">
-                <div class="profile_page row">
-                    <div class="col-md-4">
+                <div class="row">
+                    <div class="col-md-3">
                         <br />
                         @if (!string.IsNullOrEmpty(Model.Settings.ProfileImageUrl))
                         {
@@ -107,40 +107,30 @@ else
                             </div>
                         }
                     </div>
-                    <div class="profile-data-grid col-md-4">
-                        <h1 id="profile_name">@Model.Account.FirstName @Model.Account.LastName</h1>
-                        <h3 id="profile_data">Birthday: @Model.Account.DOB</h3>
-                        <h3 id="profile_data">Email: @Model.Account.Email</h3>
-                        <h3 id="profile_data">@Model.Settings.Address</h3>
-                        <h3 id="profile_data">@Model.Settings.City, @Model.Settings.State @Model.Settings.ZipCode</h3>
-                        <h3 id="profile_data">@Model.Settings.Country</h3>
-                        <h3 id="profile_data">Phone # @Model.Settings.Phone</h3>
+                    <div class="profile-data-grid col-md-3">
+                        <h1 id="profile-name">@Model.Account.FirstName @Model.Account.LastName</h1>
+                        <h4 id="profile-dob">Birthday: @Model.Account.DOB</h4>
+                        <h4 id="profile-email">Email: @Model.Account.Email</h4>
+                        <h4 id="profile-address">Address: @Model.Settings.Address</h4>
+                        <h4 id="profile-city">City: @Model.Settings.City, @Model.Settings.State @Model.Settings.ZipCode</h4>
+                        <h4 id="profile-country">Country: @Model.Settings.Country</h4>
+                        <h4 id="profile-phone">Phone: @Model.Settings.Phone</h4>
                     </div>
-                    <div class="profile-bio-grid col-md-4">
-                        <h3>Bio:</h3>
-                        <p id="profile_bio">@Model.Settings.Biography</p>
+                    <div class="profile-bio-grid col-md-6">
+                        <h3>About Me:</h3>
+                        <p id="profile-bio">@Model.Settings.Biography</p>
+                        <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; })">Edit</MatButton>
                     </div>
                 </div>
                 <div class="row profile-link-grid">
-                    <div class="col-md-3"></div>
-                    <div class="col-md-3"><img src="https://louisville.edu/philosophy/images/icons-for-footer/twittericon2.png/image" style="max-height: 50px; width: auto;" /></div>
-                    <div class="col-md-3"><img src="https://louisville.edu/philosophy/images/icons-for-footer/twittericon2.png/image" style="max-height: 50px; width: auto;" /></div>
-                    <div class="col-md-3"><img src="https://louisville.edu/philosophy/images/icons-for-footer/twittericon2.png/image" style="max-height: 50px; width: auto;" /></div>
-                    <div class="col-md-0"></div>
-                </div>
-                <div class="row profile-link">
-                    <div class="col-md-3"></div>
-                    <div class="col-md-3"><a href="@Model.Settings.SocialMediaLink1">@Model.Settings.SocialMediaLink1</a></div>
-                    <div class="col-md-3"><a href="@Model.Settings.SocialMediaLink1">@Model.Settings.SocialMediaLink1</a></div>
-                    <div class="col-md-3"><a href="@Model.Settings.SocialMediaLink1">@Model.Settings.SocialMediaLink1</a></div>
-                    <div class="col-md-0"></div>
+                    <div class="col-md-3">
+                        <a href="@Model.Settings.SocialMediaLink1" target="_blank" title="Click to go to"><img src="https://cs3750lms.blob.core.windows.net/images/insta.webp" class="profile-link" /></a>
+                        <a href="@Model.Settings.SocialMediaLink2" target="_blank" title="Click to go to"><img src="https://cs3750lms.blob.core.windows.net/images/twitter.webp" class="profile-link" /></a>
+                        <a href="@Model.Settings.SocialMediaLink3" target="_blank" title="Click to go to"><img src="https://www.flaticon.com/svg/vstatic/svg/25/25231.svg?token=exp=1613595903~hmac=c6c597a06cad35cd6b60947ba2472bc2" class="profile-link" /></a>
+                    </div>
                 </div>
             </div>
         }
-        <div class="add-new-course-container">
-            <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; })">Edit</MatButton>
-        </div>
-        
     }
 }
 
