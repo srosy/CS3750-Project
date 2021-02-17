@@ -13,5 +13,6 @@ namespace LMS.Data.Models
 
         public DateTime CreateDate { get; set; }
         public DateTime? DeleteDate { get; set; }
+        public string Title { get; set; }
     }
 }

@@ -6,24 +6,24 @@
                 <div class="profile-info-sm"><small class="text-default"><strong>@Account.FirstName @Account.LastName</strong></small></div>
                 <div class="profile-info-sm"><small class="text-default"><strong>@Account.Email</strong></small></div>
                 <div class="profile-info-sm"><small class="text-default"><strong>@(Enum.GetName(typeof(Role), Account.Role))</strong></small></div>
+                <div class="row p-2">&nbsp;</div>
+                <div class="row text-left">
+                    <div class="col-md-2">
+                        <a href="announcements" title="Go to announcements"><span class="oi oi-bell oi-submenu zoom @(_announcements.Any() ? "alert-has-announcements" : string.Empty)"></span></a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="https://gmail.com/" target="_blank" title="Go to mail"><span class="oi oi-envelope-closed oi-submenu zoom"></span></a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="https://tinder.com/" target="_blank" title="Go to tinder"><span class="oi oi-heart oi-submenu zoom"></span></a>
+                    </div>
+                </div>
             </div>
             <div class="col-md-6 text-right">
                 @if (!string.IsNullOrEmpty(_profileImageSrc))
                 {
                     <div class="img-wrapper"><img class="dashboard-profile-img" src="@_profileImageSrc" /></div>
                 }
-            </div>
-        </div>
-        <div class="row p-2">&nbsp;</div>
-        <div class="row text-left">
-            <div class="col-md-2">
-                <a href="announcements"><span class="oi oi-bell oi-submenu zoom"></span></a>
-            </div>
-            <div class="col-md-2">
-                <a href="https://gmail.com/" target="_blank"><span class="oi oi-envelope-closed oi-submenu zoom"></span></a>
-            </div>
-            <div class="col-md-2">
-                <a href="https://tinder.com/" target="_blank"><span class="oi oi-heart oi-submenu zoom"></span></a>
             </div>
         </div>
     </div>
@@ -34,16 +34,16 @@
     private bool _loading = true;
     private string _profileImageSrc;
     private LMS.Data.Models.Settings _settings;
+    private List<AnnouncementViewModel> _announcements;
 
     [Parameter] public Account Account { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
         _settings = await DbService.GetSettings(AzureDb, Account.AccountId);
+        _announcements = await DbService.GetAnnouncements(AzureDb, Account.AccountId);
         SetProfileImage();
         _loading = false;
-
-        base.OnParametersSet();
     }
 
     /// <summary>
@@ -52,8 +52,6 @@
     /// <returns></returns>
     private void SetProfileImage()
     {
-        _profileImageSrc = _settings?.ProfileImage != null && _settings?.ProfileImage.Length > 0 ?
-            LMS_Image.GetImageSrc(_settings.ProfileImage)
-            : null;
+        _profileImageSrc = _settings?.ProfileImageUrl;
     }
 }

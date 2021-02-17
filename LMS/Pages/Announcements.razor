@@ -1,7 +1,140 @@
 ﻿@page "/announcements";
 
-<h3 class="header-default">Announcements</h3>
+@if (_loading)
+{
+    <h1 class="header-default">Loading...</h1>
+}
+else
+{
+    @if (_acctIsProfessor)
+    {
+        <div class="row text-center">
+            <div class="col-md-4"></div>
+            <div class="col-md-6">
+                <div class="card LMS-card">
+                    <div class="card-header LMS-form">
+                        <h3>Add New Announcement</h3>
+                    </div>
+                    <div class="card card-body">
+                        <EditForm Model="@_announcementModel" OnValidSubmit="@Save">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <div class="form-group">
+                                <label for="title" class="form-inline">Title</label>
+                                <InputText id="title" class="form-control LMS-input" type="text" placeholder="Title" @bind-Value="_announcementModel.Title" />
+                            </div>
+                            <div class="form-group">
+                                <label for="message" class="form-inline">Message</label>
+                                <InputText id="message" class="form-control LMS-input" type="text" placeholder="Message" @bind-Value="_announcementModel.Message" />
+                            </div>
+                            <div class="form-group">
+                                <label for="type" class="form-inline">Announcement Type</label>
+                                <select id="type" class="form-control LMS-Input" title="Select an Assignment Type" @bind="_announcementModel.Type">
+                                    <option value="0" selected>- SELECT A TYPE -</option>
+                                    @foreach (var t in Enum.GetNames(typeof(NotificationType)))
+                                    {
+                                        <option value="@((int)Enum.Parse(typeof(NotificationType), t))">@t</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="type" class="form-inline">Course</label>
+                                <select id="type" class="form-control LMS-Input" title="Select a Course" @bind="_announcementModel.CourseId">
+                                    <option value="0" selected>- SELECT A COURSE -</option>
+                                    @foreach (var c in Model.Courses)
+                                    {
+                                        <option value="@c.CourseId">@c.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <MatButton Class="btn btn-primary LMS-btn" type="submit" title="announce to the world!">Save</MatButton>
+                        </EditForm>
+                        <MatButton Class="btn btn-secondary LMS-btn" Type="" OnClick="ResetForm">Reset</MatButton>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+        <br />
+        <h4 class="header-default">Past Announcements</h4>
+    }
+    @if (Model.Announcements.Any())
+    {
+        <MatTable Items="Model.Announcements" class="mat-elevation-z5 lms-table" Striped="true" AllowSelection="false">
+            <MatTableHeader>
+                <th style="min-width: @COL_SIZE;">Announcement Date</th>
+                <th style="min-width: @COL_SIZE;">Title</th>
+                <th style="min-width: @COL_SIZE;">Course Name</th>
+                <th style="min-width: @COL_SIZE;">Professor</th>
+                <th>Content</th>
+            </MatTableHeader>
+            <MatTableRow>
+                <td>
+                    @{if (context.AnnouncementDate.ToShortDateString() == DateTime.UtcNow.ToShortDateString())
+                                {<i class="oi oi-bell shake alert-has-announcements" title="There's a new announcement today.">&nbsp;&nbsp;</i>}}
+                    @context.AnnouncementDate.ToShortDateString()
+                </td>
+                <td>@context.Title</td>
+                <td>@context.CourseName</td>
+                <td>@context.ProfessorName</td>
+                <td>@context.Message</td>
+            </MatTableRow>
+        </MatTable>
+    }
+    else
+    {
+        <div class="text-center">
+            <p class="text-danger">No posted Announcements.</p>
+        </div>
+    }
+}
 
 @code {
 
+    private AnnouncementsViewModel Model = new AnnouncementsViewModel();
+    private AnnouncementViewModel _announcementModel = new AnnouncementViewModel();
+    private bool _loading = true;
+    private bool _acctIsProfessor = false;
+    private const string COL_SIZE = "250px";
+
+    protected async override Task OnInitializedAsync()
+    {
+        Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        _acctIsProfessor = Model.Account.Role == (int)Role.PROFESSOR;
+        if (_acctIsProfessor)
+        {
+            Model.Courses = await DbService.GetCourses(AzureDb, Model.Account.AccountId);
+        }
+        Model.Announcements = await DbService.GetAnnouncements(AzureDb, Model.Account.AccountId, _acctIsProfessor);
+        ResetForm();
+        _loading = false;
+    }
+
+    /// <summary>
+    /// Resets the edit/create Course form.
+    /// </summary>
+    private void ResetForm()
+    {
+        _announcementModel = new AnnouncementViewModel()
+        {
+            ProfessorAccountId = Model.Account.AccountId,
+            Type = 0,
+            CourseId = 0
+        };
+    }
+
+    /// <summary>
+    /// Saves the new Announcement.
+    /// </summary>
+    private async void Save()
+    {
+        _loading = true;
+        var announcementSaved = await DbService.SaveAnnouncement(AzureDb, _announcementModel);
+        ResetForm();
+        Model.Announcements = await DbService.GetAnnouncements(AzureDb, Model.Account.AccountId, _acctIsProfessor);
+        await JS.InvokeVoidAsync("Toast", new[] { "success", "Announcement Posted.", "3000" }); // toasttype, message, duration
+        _loading = false;
+        this.StateHasChanged();
+    }
 }
+
