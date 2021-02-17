@@ -407,7 +407,6 @@ app {
 
 .add-new-course.mdc-button.mdc-ripple-upgraded:hover {
     background-color: darkslateblue;
-    background-color: darkslateblue;
 }
 
 .courses-header {
@@ -453,12 +452,11 @@ app {
 
 .dashboard-profile-img {
     width: auto;
-    height: 10vh;
+    height: 14vh;
 }
 
 .img-wrapper {
-    max-width: 5vw;
-    display: block;
+    display: inline-block;
     width: auto;
 }
 
@@ -513,6 +511,18 @@ app {
     transform: scale(1.25);
 }
 
+.shake {
+    transition: transform .2s;
+}
+
+.shake:hover {
+    animation-name: shake;
+    animation-timing-function: ease-in-out;
+    animation-duration: 1s;
+    animation-iteration-count: 2;
+    animation-delay: .1s;
+}
+
 input[type='file'] {
     color: white;
 }
@@ -525,4 +535,22 @@ input[type='file'] {
 .jumbo-submission {
     max-height: 59vh;
     overflow-y: auto;
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+
+    20%, 60% {
+        transform: rotate(15deg);
+    }
+
+    40%, 80% {
+        transform: rotate(-15deg);
+    }
+}
+
+.alert-has-announcements {
+    color: red;
 }
