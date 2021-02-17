@@ -91,11 +91,11 @@ else
     else
     {
         <h3 class="header-default courses-header profileHeader"></h3>
-        <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; })">Edit</MatButton>
+
         <br />
         @if (Model.Settings != null)
         {
-         
+
             <div class="card">
                 <div class="profile_page row">
                     <div class="col-md-4">
@@ -122,21 +122,25 @@ else
                     </div>
                 </div>
                 <div class="row profile-link-grid">
-                    <div class="col-md-1"></div>
+                    <div class="col-md-3"></div>
                     <div class="col-md-3"><img src="https://louisville.edu/philosophy/images/icons-for-footer/twittericon2.png/image" style="max-height: 50px; width: auto;" /></div>
                     <div class="col-md-3"><img src="https://louisville.edu/philosophy/images/icons-for-footer/twittericon2.png/image" style="max-height: 50px; width: auto;" /></div>
                     <div class="col-md-3"><img src="https://louisville.edu/philosophy/images/icons-for-footer/twittericon2.png/image" style="max-height: 50px; width: auto;" /></div>
-                    <div class="col-md-1"></div>
+                    <div class="col-md-0"></div>
                 </div>
-                <div class="row">
-                    <div class="col-md-1"></div>
+                <div class="row profile-link">
+                    <div class="col-md-3"></div>
                     <div class="col-md-3"><a href="@Model.Settings.SocialMediaLink1">@Model.Settings.SocialMediaLink1</a></div>
                     <div class="col-md-3"><a href="@Model.Settings.SocialMediaLink1">@Model.Settings.SocialMediaLink1</a></div>
                     <div class="col-md-3"><a href="@Model.Settings.SocialMediaLink1">@Model.Settings.SocialMediaLink1</a></div>
-                    <div class="col-md-1"></div>
+                    <div class="col-md-0"></div>
                 </div>
             </div>
         }
+        <div class="add-new-course-container">
+            <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; })">Edit</MatButton>
+        </div>
+        
     }
 }
 

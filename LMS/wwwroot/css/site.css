@@ -409,6 +409,10 @@ app {
     background-color: darkslateblue;
 }
 
+.add-new-course-container {
+    padding-top: 15px;
+}
+
 .courses-header {
     display: inline-block;
 }
@@ -505,6 +509,10 @@ app {
     text-align: center;
 }
 
+.profile-link {
+    text-align: center;
+}
+
 #profile_name {
     font-size: 30px;
 }
@@ -527,11 +535,53 @@ app {
 }
 
 /*Special Ky Section*/
-@media only screen and (max-height: 650px) {
+@media only screen and (min-height: 625px) {
 
     .dashboard-profile-img {
         width: auto;
         height: 5vh;
+    }
+    .gallery__img {
+        width: 100%;
+        height: 50%;
+        object-fit: cover;
+    }
+
+    .profile-info-container {
+        max-height: 30vh;
+        width: 100%;
+    }
+
+    .profile-link-grid {
+        max-height: 50px;
+        width: auto;
+        text-align: center;
+    }
+
+    .gallery__img {
+        width: 100%;
+        height: 100%;
+    }
+
+    .gallery__item--1 {
+        grid-column-start: 1;
+        grid-column-end: 4;
+        grid-row-start: 1;
+        grid-row-end: 5;
+    }
+
+    .gallery__item--2 {
+        grid-column-start: 4;
+        grid-column-end: 6;
+        grid-row-start: 1;
+        grid-row-end: 5;
+    }
+
+    .gallery__item--3 {
+        grid-column-start: 6;
+        grid-column-end: 9;
+        grid-row-start: 1;
+        grid-row-end: 5;
     }
 }
 
