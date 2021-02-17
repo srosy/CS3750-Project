@@ -409,6 +409,10 @@ app {
     background-color: darkslateblue;
 }
 
+.add-new-course-container {
+    padding-top: 15px;
+}
+
 .courses-header {
     display: inline-block;
 }
@@ -426,20 +430,6 @@ app {
     height: 15vh;
     display: flex;
     align-items: center;
-}
-
-.settings-profile-img {
-    width: auto;
-    height: 40vh;
-}
-
-.settings-card-body {
-    height: 75vh;
-    overflow-y: auto;
-}
-
-.settings-card {
-    width: 55vw;
 }
 
 .dashboard-enrollment-table, .ef-th, .ef-td {
@@ -495,6 +485,106 @@ app {
 
 .oi.oi-heart.oi-submenu {
     color: hotpink;
+}
+
+/*profile Styling
+*/
+
+.profile-header {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.profile-data-grid {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: black;
+    padding-top: 25px;
+}
+
+.profile-bio-grid {
+    padding-top: 25px;
+    padding-right: 50px;
+}
+
+.profile-link-grid {
+    text-align: left;
+}
+
+.profile-link {
+    max-height: 8vh;
+    width: auto;
+    margin: .75vw;
+}
+
+.edit-profile-container {
+    overflow-y: auto;
+    max-height: 90vh;
+}
+
+#profile_name {
+    font-size: 30px;
+}
+
+#profile_data {
+    font-size: 15px;
+}
+
+.settings-profile-img {
+    width: auto;
+    height: 40vh;
+}
+
+.settings-card-body {
+    height: 75vh;
+    overflow-y: auto;
+}
+
+.settings-card {
+    width: 550px;
+}
+
+/* Special Ky Section */
+@media only screen and (max-height: 625px) {
+    .dashboard-profile-img {
+        width: auto;
+        height: 14vh;
+    }
+
+    .gallery__img {
+        width: 100%;
+        height: 50%;
+        object-fit: cover;
+    }
+
+    .profile-info-container {
+        max-height: 30vh;
+        width: auto;
+    }
+
+    .gallery__img {
+        width: 100%;
+        height: 100%;
+    }
+
+    .gallery__item--1 {
+        grid-column-start: 1;
+        grid-column-end: 4;
+        grid-row-start: 1;
+        grid-row-end: 5;
+    }
+
+    .gallery__item--2 {
+        grid-column-start: 4;
+        grid-column-end: 6;
+        grid-row-start: 1;
+        grid-row-end: 5;
+    }
+
+    .gallery__item--3 {
+        grid-column-start: 6;
+        grid-column-end: 9;
+        grid-row-start: 1;
+        grid-row-end: 5;
+    }
 }
 
 .dashboard-balance-due {

@@ -6,36 +6,27 @@
 }
 else
 {
-    <div class="row">
-        <div class="col-md-9">
-            <h3 class="header-default header-inline">Dashboard</h3>
-        </div>
-        <div class="col-md-3">
+    //https://getbootstrap.com/docs/4.4/utilities/flex/
+    <div class="d-flex justify-content-end">
+        <div class="flex-row">
             <ProfileInfo Account="@_account" />
         </div>
     </div>
-    <div class="row">&nbsp;</div>
-    <div class="row">
-        <div class="col-md-8 text-center">
-            &nbsp;
-        </div>
-        <div class="col-md-4 text-right">
+    <div class="d-flex justify-content-end">
+        <div class="flex-row">
             <RegistrationInfo Account="@_account" />
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-8 text-center">
-            &nbsp;
+    <div class="d-flex justify-content-end">
+        <div class="flex-row">
+            @if (_account.Role == (int)Role.STUDENT)
+            {
+                <div class="col-md-4 text-right">
+                    <BalanceInfo Account="@_account" />
+                </div>
+            }
         </div>
-
-        @if (_account.Role == (int)Role.STUDENT)
-        {
-            <div class="col-md-4 text-right">
-                <BalanceInfo Account="@_account" />
-            </div>
-        }
     </div>
-
 }
 
 
