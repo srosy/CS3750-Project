@@ -41,6 +41,8 @@ namespace LMS.Data
         public Task<List<Submission>> GetSubmissions(AzureDbContext db, int acctId);
         public Task<bool> UpdateSubmissionsOnDeletedAssignment(AzureDbContext db, Assignment model);
         public Task<bool> UpdateSubmissionsOnDeletedCourse(AzureDbContext db, Course model);
+        public Task<List<AnnouncementViewModel>> GetAnnouncements(AzureDbContext db, int acctId, bool isProfessor = false);
+        public Task<bool> SaveAnnouncement(AzureDbContext db, AnnouncementViewModel model);
     }
     public class DbService : IDbService
     {
@@ -521,7 +523,7 @@ namespace LMS.Data
                 var courses = await GetCourses(db, acctId);
                 if (courses == null) return enrollments;
                 var dbEnrollments = db.Enrollments.Where(e => e.DeleteDate == null).ToArray();
-                for (int i = 0; i < dbEnrollments.Length - 1; i++)
+                for (int i = 0; i < dbEnrollments.Length; i++)
                 {
                     var e = dbEnrollments[i];
                     if (courses.Any(c => c.CourseId == e.CourseId))
@@ -620,7 +622,7 @@ namespace LMS.Data
         {
             var assignments = new List<Assignment>();
             var dbAssignments = db.Assignments.Where(a => a.DeleteDate == null).ToArray();
-            for (int i = 0; i < dbAssignments.Length - 1; i++)
+            for (int i = 0; i < dbAssignments.Length; i++)
             {
                 var ass = dbAssignments[i];
                 if (courses.Any(c => c.CourseId == ass.CourseId))
@@ -753,6 +755,101 @@ namespace LMS.Data
         /// <param name="assId"></param>
         /// <returns></returns>
         public async Task<Assignment> GetAssignment(AzureDbContext db, int assId) => await db.Assignments.FirstOrDefaultAsync(a => a.AssignmentId == assId);
+
+        /// <summary>
+        /// Gets Announcements for Students and Professors.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <param name="isProfessor"></param>
+        /// <returns></returns>
+        public async Task<List<AnnouncementViewModel>> GetAnnouncements(AzureDbContext db, int acctId, bool isProfessor = false)
+        {
+            var announcements = new List<AnnouncementViewModel>();
+            var acct = await db.Accounts.FirstOrDefaultAsync(a => a.AccountId == acctId && a.DeleteDate == null);
+            if (acct == null) return announcements;
+
+            try
+            {
+                if (isProfessor)
+                {
+                    announcements = await (
+                        from Courses in db.Courses
+                        join Notifications in db.Notifications
+                        on Courses.CourseId equals Notifications.CourseId
+                        where Courses.ProfessorId == acctId && Courses.DeleteDate == null
+                        select new AnnouncementViewModel()
+                        {
+                            CourseId = Courses.CourseId,
+                            CourseName = Courses.Name,
+                            ProfessorAccountId = acctId,
+                            ProfessorName = $"{acct.FirstName} {acct.LastName}",
+                            AnnouncementDate = Notifications.CreateDate,
+                            Title = Notifications.Title,
+                            Message = Notifications.Message,
+                            Type = Notifications.Type
+                        }).OrderBy(a => a.AnnouncementDate).ToListAsync();
+                }
+                else
+                {
+                    var enrollments = await GetEnrollments(db, acctId);
+                    var courseIds = enrollments.Select(e => e.CourseId);
+                    if (enrollments == null || !enrollments.Any()) return announcements;
+
+                    announcements = await (
+                        from Courses in db.Courses
+                        join Notifications in db.Notifications
+                        on Courses.CourseId equals Notifications.CourseId
+                        where courseIds.Contains(Courses.CourseId) && Courses.DeleteDate == null
+                        select new AnnouncementViewModel()
+                        {
+                            CourseId = Courses.CourseId,
+                            CourseName = Courses.Name,
+                            ProfessorAccountId = db.Accounts.First(a => a.AccountId == Courses.ProfessorId).AccountId,
+                            ProfessorName = $"{db.Accounts.First(a => a.AccountId == Courses.ProfessorId).FirstName} " +
+                            $"{db.Accounts.First(a => a.AccountId == Courses.ProfessorId).LastName}",
+                            AnnouncementDate = Notifications.CreateDate,
+                            Title = Notifications.Title,
+                            Message = Notifications.Message
+                        }).OrderBy(a => a.AnnouncementDate).ThenBy(a => a.CourseId)
+                        .ToListAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return announcements;
+        }
+
+        /// <summary>
+        /// Saves a new Notification from an Announcement.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public async Task<bool> SaveAnnouncement(AzureDbContext db, AnnouncementViewModel model)
+        {
+            bool saved;
+            var notification = new Notification()
+            {
+                CourseId = model.CourseId,
+                CreateDate = DateTime.UtcNow,
+                Message = model.Message,
+                Title = model.Title,
+                Type = model.Type
+            };
+
+            if (model.Deleted)
+            {
+                notification.DeleteDate = DateTime.UtcNow;
+            }
+
+            db.Notifications.Add(notification);
+            saved = await db.SaveChangesAsync() > 0;
+            return saved;
+        }
     }
 }
 
