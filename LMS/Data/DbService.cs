@@ -43,6 +43,7 @@ namespace LMS.Data
         public Task<bool> UpdateSubmissionsOnDeletedCourse(AzureDbContext db, Course model);
         public Task<List<AnnouncementViewModel>> GetAnnouncements(AzureDbContext db, int acctId, bool isProfessor = false);
         public Task<bool> SaveAnnouncement(AzureDbContext db, AnnouncementViewModel model);
+        public Task<List<AppointmentData>> GetAppointments(AzureDbContext db, int acctId);
     }
     public class DbService : IDbService
     {
@@ -855,6 +856,49 @@ namespace LMS.Data
             db.Notifications.Add(notification);
             saved = await db.SaveChangesAsync() > 0;
             return saved;
+        }
+
+        /// <summary>
+        /// Gets the appointments to populate the calendar in the Dashboard.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<List<AppointmentData>> GetAppointments(AzureDbContext db, int acctId)
+        {
+            var rand = new Random();
+            var appointments = new List<AppointmentData>();
+            for (int i = 0; i < 10; i++)
+            {
+                var st = DateTime.Today.AddDays(rand.Next(1, 24) * -1).AddHours(rand.Next(1, 12)).AddMinutes(rand.Next(1, 60));
+                appointments.Add(new AppointmentData()
+                {
+                    Id = i,
+                    Description = $"Test Appointment {i}",
+                    StartTime = st,
+                    EndTime = st.AddHours(2),
+                    IsAllDay = rand.Next(1, 24) % 3 == 0,
+                    Location = $"Location {rand.Next(1, 24)}",
+                    Subject = $"Test Subject {i}"
+                });
+            }
+            
+            for (int i = 10; i < 20; i++)
+            {
+                var st = DateTime.Today.AddDays(rand.Next(1, 24)).AddHours(rand.Next(1, 12)).AddMinutes(rand.Next(1, 60));
+                appointments.Add(new AppointmentData()
+                {
+                    Id = i,
+                    Description = $"Test Appointment {i}",
+                    StartTime = st,
+                    EndTime = st.AddHours(2),
+                    IsAllDay = rand.Next(1, 24) % 3 == 0,
+                    Location = $"Location {rand.Next(1, 24)}",
+                    Subject = $"Test Subject {i}"
+                });
+            }
+
+            return appointments;
         }
     }
 }
