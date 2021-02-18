@@ -20,17 +20,83 @@ else
                             <DataAnnotationsValidator />
                             <ValidationSummary />
                             <div class="form-group ">
+                                <label for="cname" class="form-inline">Name</label>
                                 <InputText id="cname" class="form-control LMS-input" type="text" placeholder="Name (CS3750)" @bind-Value="_courseModel.Name" />
                             </div>
                             <div class="form-group ">
+                                <label for="cdesc" class="form-inline">Description</label>
                                 <InputText id="cdesc" class="form-control LMS-input" type="text" placeholder="Description" @bind-Value="_courseModel.Description" />
                             </div>
+                            <div class="form-group ">
+                                <label for="credits" class="form-inline">Credit Hours</label>
+                                <InputNumber id="credits" class="form-control LMS-input" type="number" placeholder="Number of Credits" @bind-Value="_courseModel.Credits" />
+                            </div>
                             <div class="form-group">
+                                <label for="sdate" class="form-inline">Start Date</label>
                                 <InputDate id="sdate" class="form-control LMS-input" title="Start Date" type="date" @bind-Value="_courseModel.StartDate" />
                             </div>
                             <div class="form-group">
+                                <label for="edate" class="form-inline">End Date</label>
                                 <InputDate id="edate" class="form-control LMS-input" title="End Date" type="date" @bind-Value="_courseModel.EndDate" />
                             </div>
+                            <div class="form-group">
+                                <label for="stime" class="form-inline">Start Time</label>
+                                @if (_invalidStartEndTimes)
+                                {
+                                    <small class="text-danger">Invalid Start/End Time</small>
+                                }
+                                <select id="stime" class="form-control LMS-Input" title="Select Class Start Time" @bind="_courseModel.StartTime">
+                                    @for (int i = 0; i <= 24; i++)
+                                    {
+                                        var time = i < 10 ? $"0{i}:00" : $"{i}:00";
+                                        <option value="@time">@time</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="stime" class="form-inline">End Time</label>
+                                @if (_invalidStartEndTimes)
+                                {
+                                    <small class="text-danger">Invalid Start/End Time</small>
+                                }
+                                <select id="etime" class="form-control LMS-Input" title="Select Class End Time" @bind="_courseModel.EndTime">
+                                    @for (int i = 0; i <= 24; i++)
+                                    {
+                                        var time = i < 10 ? $"0{i}:00" : $"{i}:00";
+                                        <option value="@time">@time</option>
+                                    }
+                                </select>
+                            </div>
+                            <BlazoredTextEditor @ref="@_richTextEditor">
+                                <ToolbarContent>
+                                    <select class="ql-header">
+                                        <option selected=""></option>
+                                        <option value="1"></option>
+                                        <option value="2"></option>
+                                        <option value="3"></option>
+                                        <option value="4"></option>
+                                        <option value="5"></option>
+                                    </select>
+                                    <span class="ql-formats">
+                                        <button class="ql-bold"></button>
+                                        <button class="ql-italic"></button>
+                                        <button class="ql-underline"></button>
+                                        <button class="ql-strike"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <select class="ql-color"></select>
+                                        <select class="ql-background"></select>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-list" value="ordered"></button>
+                                        <button class="ql-list" value="bullet"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-link"></button>
+                                    </span>
+                                </ToolbarContent>
+                                <EditorContent>@((MarkupString)@_editorContent)</EditorContent>
+                            </BlazoredTextEditor>
                             @if (_courseModel.CourseId > 0)
                             {
                                 <div class="form-group">
@@ -95,6 +161,10 @@ else
     private bool _deleteCourse;
     private bool _loading = true;
     private bool _acctIsProfessor = false;
+    private bool _invalidStartEndTimes;
+
+    private BlazoredTextEditor _richTextEditor = new BlazoredTextEditor();
+    private string _editorContent;
 
     protected async override Task OnInitializedAsync()
     {
@@ -111,13 +181,20 @@ else
     /// <param name="row"></param>
     public void RowClick(object row)
     {
-        if (!_acctIsProfessor) return;
         var course = row as Course;
-        if (course != null)
+        if (!_acctIsProfessor)
         {
-            Model.FormTitle = "Edit Course";
-            _courseModel = course;
-            _showCourseForm = true;
+            NavMan.NavigateTo($"/course/details/{course.CourseId}");
+        }
+        else
+        {
+            if (course != null)
+            {
+                Model.FormTitle = "Edit Course";
+                _courseModel = course;
+                _editorContent = _courseModel.Markup;
+                _showCourseForm = true;
+            }
         }
         this.StateHasChanged();
     }
@@ -136,11 +213,24 @@ else
     /// </summary>
     private async void SaveCourse()
     {
+        if (int.Parse(_courseModel.StartTime.Substring(0, 2)) > int.Parse(_courseModel.EndTime.Substring(0, 2)))
+        {
+            _invalidStartEndTimes = true;
+            return;
+        }
+        else
+        {
+            _invalidStartEndTimes = false;
+        }
+
         if (_deleteCourse)
         {
             _courseModel.DeleteDate = DateTime.UtcNow;
             await DbService.UpdateEnrollmentsOnDeletedCourse(AzureDb, _courseModel);
         }
+
+        _editorContent = await _richTextEditor.GetHTML();
+        _courseModel.Markup = _editorContent;
 
         var courseSaved = await DbService.SaveCourse(AzureDb, _courseModel);
         ResetForm();

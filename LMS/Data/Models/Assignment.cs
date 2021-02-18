@@ -12,6 +12,7 @@ namespace LMS.Data.Models
         [Range(0, 100)] public int MaxScore { get; set; }
         public string Name { get; set; }
         public int Type { get; set; }
+        public int SubmissionType { get; set; }
         public DateTime? DueDate { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime? UpdateDate { get; set; }
