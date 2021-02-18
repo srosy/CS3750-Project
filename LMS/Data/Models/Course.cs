@@ -19,5 +19,6 @@ namespace LMS.Data.Models
         [Required] [Range(1, 4, ErrorMessage = "Credits range [1, 4]")] public int Credits { get; set; }
         [Required] public string StartTime { get; set; }
         [Required] public string EndTime { get; set; }
+        public string Markup { get; set; }
     }
 }

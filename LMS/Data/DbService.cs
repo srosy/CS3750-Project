@@ -354,6 +354,7 @@ namespace LMS.Data
                     course.EndTime = model.EndTime;
                     course.StartTime = model.StartTime;
                     course.Credits = model.Credits;
+                    course.Markup = model.Markup;
 
                     saved = await db.SaveChangesAsync() > 0;
                 }

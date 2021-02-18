@@ -35,9 +35,17 @@
                             {
                                 var course = _courses.First(c => c.CourseId == context.CourseId);
                                 info = $"{course.Name} - {course.Description}";
+                        <td class="ef-td">
+                            <a href="/course/details/@course.CourseId" title="Goto course page">@info</a>
+                        </td>
+                            }
+                            else
+                            {
+                        <td class="ef-td">
+                            "No Course"
+                        </td>
                             }
                 }
-                <td class="ef-td">@(info ?? "No Course")</td>
             </MatTableRow>
         </MatTable>
     }

@@ -67,6 +67,36 @@ else
                                     }
                                 </select>
                             </div>
+                            <BlazoredTextEditor @ref="@_richTextEditor">
+                                <ToolbarContent>
+                                    <select class="ql-header">
+                                        <option selected=""></option>
+                                        <option value="1"></option>
+                                        <option value="2"></option>
+                                        <option value="3"></option>
+                                        <option value="4"></option>
+                                        <option value="5"></option>
+                                    </select>
+                                    <span class="ql-formats">
+                                        <button class="ql-bold"></button>
+                                        <button class="ql-italic"></button>
+                                        <button class="ql-underline"></button>
+                                        <button class="ql-strike"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <select class="ql-color"></select>
+                                        <select class="ql-background"></select>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-list" value="ordered"></button>
+                                        <button class="ql-list" value="bullet"></button>
+                                    </span>
+                                    <span class="ql-formats">
+                                        <button class="ql-link"></button>
+                                    </span>
+                                </ToolbarContent>
+                                <EditorContent>@((MarkupString)@_editorContent)</EditorContent>
+                            </BlazoredTextEditor>
                             @if (_courseModel.CourseId > 0)
                             {
                                 <div class="form-group">
@@ -133,6 +163,9 @@ else
     private bool _acctIsProfessor = false;
     private bool _invalidStartEndTimes;
 
+    private BlazoredTextEditor _richTextEditor = new BlazoredTextEditor();
+    private string _editorContent;
+
     protected async override Task OnInitializedAsync()
     {
         Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
@@ -148,13 +181,20 @@ else
     /// <param name="row"></param>
     public void RowClick(object row)
     {
-        if (!_acctIsProfessor) return;
         var course = row as Course;
-        if (course != null)
+        if (!_acctIsProfessor)
         {
-            Model.FormTitle = "Edit Course";
-            _courseModel = course;
-            _showCourseForm = true;
+            NavMan.NavigateTo($"/course/details/{course.CourseId}");
+        }
+        else
+        {
+            if (course != null)
+            {
+                Model.FormTitle = "Edit Course";
+                _courseModel = course;
+                _editorContent = _courseModel.Markup;
+                _showCourseForm = true;
+            }
         }
         this.StateHasChanged();
     }
@@ -188,6 +228,9 @@ else
             _courseModel.DeleteDate = DateTime.UtcNow;
             await DbService.UpdateEnrollmentsOnDeletedCourse(AzureDb, _courseModel);
         }
+
+        _editorContent = await _richTextEditor.GetHTML();
+        _courseModel.Markup = _editorContent;
 
         var courseSaved = await DbService.SaveCourse(AzureDb, _courseModel);
         ResetForm();
