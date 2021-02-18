@@ -416,7 +416,7 @@ namespace LMS.Data
                 for (int i = 0; i < enrollments.Count; i++)
                 {
                     var e = enrollments[i];
-                    if (e.DeleteDate != null && e.EnrollmentId == 0)
+                    if (e.DeleteDate == null && e.EnrollmentId == 0)
                     {
                         db.Enrollments.Add(e);
                     }
