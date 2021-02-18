@@ -127,7 +127,7 @@ else
             Model.Payments = new List<Data.Models.Payment>();
         }
 
-        var chargedAmount = Model.Enrollments.Count() * BASE_PAYMENT_AMOUNT;
+        var chargedAmount = Model.Enrollments.Sum(e => e.Credits) * BASE_PAYMENT_AMOUNT;
         var paymentAmount = Model.Payments.Sum(p => p.PaymentAmount);
         _amountDue = chargedAmount - paymentAmount;
     }
