@@ -37,11 +37,14 @@ else
                                 <hr class="my-4">
                                 <div class="text-left">@((MarkupString)Model.Assignment.Description)</div>
                             </div>
-                            <div class="form-group text-left">
-                                <label for="file-upload" class="LMS-form-label">File Upload</label>
-                                <InputFile id="file-upload" OnChange="UploadFileOnChange" title="Upload a file" />
-                                <small class="input-file-message @(_fileMessage.ToLower().Contains("select") ? "text-danger" : "text-success")">@_fileMessage</small>
-                            </div>
+                            @if (Model.Assignment.SubmissionType == (int)SubmissionType.FILE_UPLOAD)
+                            {
+                                <div class="form-group text-left">
+                                    <label for="file-upload" class="LMS-form-label">File Upload</label>
+                                    <InputFile id="file-upload" OnChange="UploadFileOnChange" title="Upload a file" />
+                                    <small class="input-file-message @(_fileMessage.ToLower().Contains("select") ? "text-danger" : "text-success")">@_fileMessage</small>
+                                </div>
+                            }
                             <div class="form-group">
                                 <label for="comments" class="form-inline">Submission Comments</label>
                                 <InputTextArea id="comments" class="form-control LMS-input" type="text" placeholder="Input any submission comments" @bind-Value="_submissionModel.Comments" />
@@ -103,7 +106,7 @@ else
     private void SetupSubmission()
     {
         _submissionModel = Model.Submissions.FirstOrDefault(s => s.AssignmentId == Model.Assignment.AssignmentId);
-        _hasPreviousFileSubmission = !string.IsNullOrEmpty(_submissionModel?.UploadFileName);
+        _hasPreviousFileSubmission = !string.IsNullOrEmpty(_submissionModel?.UploadFileName) && Model.Assignment.SubmissionType == (int)SubmissionType.FILE_UPLOAD;
 
         if (_submissionModel == null)
         {

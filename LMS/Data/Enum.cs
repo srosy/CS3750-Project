@@ -16,6 +16,12 @@
         SURVEY = 5
     }
 
+    public enum SubmissionType
+    {
+        TEXT = 1,
+        FILE_UPLOAD = 2,
+    }
+
     public enum NotificationType
     {
         SYSTEM = 1,

@@ -600,6 +600,7 @@ namespace LMS.Data
                     ass.Name = assignment.Name;
                     ass.Type = assignment.Type;
                     ass.Description = assignment.Description;
+                    ass.SubmissionType = assignment.SubmissionType;
                 }
                 else
                 {
