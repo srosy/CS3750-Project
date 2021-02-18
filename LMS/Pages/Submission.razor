@@ -45,6 +45,13 @@ else
                                     <small class="input-file-message @(_fileMessage.ToLower().Contains("select") ? "text-danger" : "text-success")">@_fileMessage</small>
                                 </div>
                             }
+                            else
+                            {
+                                <div class="form-group text-left">
+                                    <label for="text-response" class="LMS-form-label">Text Response</label>
+                                    <InputTextArea id="text-response" class="form-control LMS-input" type="text" placeholder="Input your text response" @bind-Value="_submissionModel.TextResponse" />
+                                </div>
+                            }
                             <div class="form-group">
                                 <label for="comments" class="form-inline">Submission Comments</label>
                                 <InputTextArea id="comments" class="form-control LMS-input" type="text" placeholder="Input any submission comments" @bind-Value="_submissionModel.Comments" />

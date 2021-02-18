@@ -658,6 +658,7 @@ namespace LMS.Data
                     sub.UploadFileName = submission.UploadFileName;
                     sub.UploadFilePath = submission.UploadFilePath;
                     sub.AccountId = submission.AccountId;
+                    sub.TextResponse = submission.TextResponse;
                 }
                 else
                 {
