@@ -43,6 +43,7 @@ namespace LMS.Data
         public Task<bool> UpdateSubmissionsOnDeletedCourse(AzureDbContext db, Course model);
         public Task<List<AnnouncementViewModel>> GetAnnouncements(AzureDbContext db, int acctId, bool isProfessor = false);
         public Task<bool> SaveAnnouncement(AzureDbContext db, AnnouncementViewModel model);
+        public Task<List<AppointmentData>> GetAppointments(AzureDbContext db, int acctId);
         public Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId, bool isProfessor = false);
         public Task<bool> SaveGrades(AzureDbContext db, List<GradeViewModel> grades);
     }
@@ -353,6 +354,10 @@ namespace LMS.Data
                     course.ProfessorId = model.ProfessorId;
                     course.Name = model.Name;
                     course.Description = model.Description;
+                    course.EndTime = model.EndTime;
+                    course.StartTime = model.StartTime;
+                    course.Credits = model.Credits;
+                    course.Markup = model.Markup;
 
                     saved = await db.SaveChangesAsync() > 0;
                 }
@@ -415,7 +420,7 @@ namespace LMS.Data
                 for (int i = 0; i < enrollments.Count; i++)
                 {
                     var e = enrollments[i];
-                    if (e.DeleteDate != null && e.EnrollmentId == 0)
+                    if (e.DeleteDate == null && e.EnrollmentId == 0)
                     {
                         db.Enrollments.Add(e);
                     }
@@ -599,6 +604,7 @@ namespace LMS.Data
                     ass.Name = assignment.Name;
                     ass.Type = assignment.Type;
                     ass.Description = assignment.Description;
+                    ass.SubmissionType = assignment.SubmissionType;
                 }
                 else
                 {
@@ -656,6 +662,7 @@ namespace LMS.Data
                     sub.UploadFileName = submission.UploadFileName;
                     sub.UploadFilePath = submission.UploadFilePath;
                     sub.AccountId = submission.AccountId;
+                    sub.TextResponse = submission.TextResponse;
                 }
                 else
                 {
@@ -937,6 +944,49 @@ namespace LMS.Data
         public async Task<bool> SaveGrades(AzureDbContext db, List<GradeViewModel> grades)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Gets the appointments to populate the calendar in the Dashboard.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<List<AppointmentData>> GetAppointments(AzureDbContext db, int acctId)
+        {
+            var rand = new Random();
+            var appointments = new List<AppointmentData>();
+            for (int i = 0; i < 10; i++)
+            {
+                var st = DateTime.Today.AddDays(rand.Next(1, 24) * -1).AddHours(rand.Next(1, 12)).AddMinutes(rand.Next(1, 60));
+                appointments.Add(new AppointmentData()
+                {
+                    Id = i,
+                    Description = $"Test Appointment {i}",
+                    StartTime = st,
+                    EndTime = st.AddHours(2),
+                    IsAllDay = rand.Next(1, 24) % 3 == 0,
+                    Location = $"Location {rand.Next(1, 24)}",
+                    Subject = $"Test Subject {i}"
+                });
+            }
+            
+            for (int i = 10; i < 20; i++)
+            {
+                var st = DateTime.Today.AddDays(rand.Next(1, 24)).AddHours(rand.Next(1, 12)).AddMinutes(rand.Next(1, 60));
+                appointments.Add(new AppointmentData()
+                {
+                    Id = i,
+                    Description = $"Test Appointment {i}",
+                    StartTime = st,
+                    EndTime = st.AddHours(2),
+                    IsAllDay = rand.Next(1, 24) % 3 == 0,
+                    Location = $"Location {rand.Next(1, 24)}",
+                    Subject = $"Test Subject {i}"
+                });
+            }
+
+            return appointments;
         }
     }
 }

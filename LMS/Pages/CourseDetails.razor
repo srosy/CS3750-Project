@@ -1,0 +1,59 @@
+﻿@page "/course/details/{courseid}"
+
+@if (_loading)
+{
+    <h1 class="header-default header-inline">Loading...&nbsp;</h1>
+}
+else
+{
+    @if (_courseId <= 0)
+    {
+        <h1 class="header-default">Stop tryna break stuffz. Invalid Course Id.</h1>
+    }
+    else
+    {
+        <div class="row text-center">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header"><h1>Details for @Model.Course.Name</h1></div>
+                    <div class="card-body text-left">
+                        @((MarkupString)Model.Course.Markup)
+                        <br />
+                        @if (Model.Assignments.Any())
+                        {
+                            <h2>Assignments</h2>
+                            var index = 0;
+                            @foreach (var ass in Model.Assignments)
+                            {
+                                index++;
+                                <a href="/submission/@ass.AssignmentId" title="Goto submit assignment page">@index. @ass.Name</a><br />
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+
+    [Parameter]
+    public string courseid { get; set; }
+
+    private CourseDetailViewModel Model = new CourseDetailViewModel();
+    private bool _loading = true;
+    private int _courseId;
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        if (int.TryParse(courseid, out _courseId))
+        {
+            Model.Course = AzureDb.Courses.FirstOrDefault(c => c.CourseId == _courseId);
+            Model.Assignments = DbService.GetAssignments(AzureDb, new List<Course>() { new Course() { CourseId = _courseId } });
+        }
+        _loading = false;
+    }
+}

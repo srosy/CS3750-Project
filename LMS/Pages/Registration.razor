@@ -141,6 +141,7 @@ else
                 {
                     AccountId = Model.Account.AccountId,
                     CourseId = course.CourseId,
+                    Credits = course.Credits,
                     CreateDate = DateTime.UtcNow
                 });
                 toastMsg = $"Enrolled in {course.Name}"; // toasttype, message, duration
