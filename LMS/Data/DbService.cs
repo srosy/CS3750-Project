@@ -853,6 +853,14 @@ namespace LMS.Data
             return saved;
         }
 
+        /// <summary>
+        /// Gets a students grades for all assignments graded of courses enrolled and if professor,
+        /// gets all grades for all assignments of all students in all courses current instructing.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <param name="isProfessor"></param>
+        /// <returns></returns>
         public async Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId, bool isProfessor = false)
         {
             var grades = new List<GradeViewModel>();
@@ -861,7 +869,7 @@ namespace LMS.Data
             {
                 if (isProfessor)
                 {
-
+                    throw new NotImplementedException();
                 }
                 else
                 {
@@ -899,7 +907,7 @@ namespace LMS.Data
                             else
                             {
                                 grade.Score = submission.Score / gradeViewModel.Assignments[i].MaxScore;
-                                grade.ScoreDisplay =  $"{submission.Score}/{gradeViewModel.Assignments[j].MaxScore}" +
+                                grade.ScoreDisplay = $"{submission.Score}/{gradeViewModel.Assignments[j].MaxScore}" +
                                     $" ({grade.Score})";
                                 grade.LetterGrade = GradeHelper.GenGradeFromPercentage(grade.Score);
                             }
@@ -911,7 +919,8 @@ namespace LMS.Data
                         var sum = gradedGrades.Sum(g => g.Score);
 
                         gradeViewModel.OverallPercentageGrade = sum / gradedGrades.Count();
-                        gradeViewModel.OverallLetterGrade = GradeHelper.GenGradeFromPercentage(gradeViewModel.OverallPercentageGrade);
+                        gradeViewModel.OverallLetterGrade = gradeViewModel.OverallPercentageGrade > 0 ?
+                            GradeHelper.GenGradeFromPercentage(gradeViewModel.OverallPercentageGrade) : "N/A";
 
                         grades.Add(gradeViewModel);
                     }
