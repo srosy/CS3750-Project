@@ -125,10 +125,10 @@ else
     {
         var file = files.First();
         _fileMessage = file.Name;
-        _submissionModel.UploadFileName = file.Name;
+        _submissionModel.UploadFileName = $"{Model.Assignment.CourseId}-{file.Name}";
         var fileBytes = await LMS_Image.ConvertFileToByteArray(file);
         var azureStorage = new AzureStorage();
-        _submissionModel.UploadFilePath = await azureStorage.UploadFile(file.Name, fileBytes, Model.Account.AccountId);
+        _submissionModel.UploadFilePath = await azureStorage.UploadFile(_submissionModel.UploadFileName, fileBytes, Model.Account.AccountId);
     }
 
     /// <summary>
