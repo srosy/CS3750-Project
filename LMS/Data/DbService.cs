@@ -351,6 +351,9 @@ namespace LMS.Data
                     course.ProfessorId = model.ProfessorId;
                     course.Name = model.Name;
                     course.Description = model.Description;
+                    course.EndTime = model.EndTime;
+                    course.StartTime = model.StartTime;
+                    course.Credits = model.Credits;
 
                     saved = await db.SaveChangesAsync() > 0;
                 }
