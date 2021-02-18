@@ -1,15 +1,15 @@
 ﻿@page "/login";
 @layout UnauthenticatedLayout;
 
-<div class="row ">
-    <div class="col-md-4"></div>
-    <div class="col-md-4">
-        @if (_loading)
-        {
-            <h2 class="header-default">Loading...</h2>
-        }
-        else
-        {
+@if (_loading)
+{
+    <Loading LayoutType="spinner-unauthenticated"/>
+}
+else
+{
+    <div class="row ">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
             <div class="card LMS-card">
                 <div class="card-header LMS-title">
                     <h3>Login</h3>
@@ -40,10 +40,10 @@
                     }
                 </div>
             </div>
-        }
+        </div>
+        <div class="col-md-4"></div>
     </div>
-    <div class="col-md-4"></div>
-</div>
+}
 
 @code {
     private AuthenticationViewModel Model = new AuthenticationViewModel();
