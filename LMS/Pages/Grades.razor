@@ -1,7 +1,87 @@
 ﻿@page "/grades";
 
-<h3 class="header-default">Grades</h3>
+@if (_loading)
+{
+    <h1 class="header-default">Loading...</h1>
+}
+else
+{
+    @if (_acctIsProfessor)
+    {
+        <div class="row text-center">
+            <div class="col-md-2"></div>
+            <div class="col-md-8">
+                <div class="card LMS-card">
+                    <div class="card-header LMS-form">
+                        <h3>Edit Student Grades</h3>
+                    </div>
+                    <div class="card card-body">
+                        <!--  Create a table to edit all the grades; separate update button Save()  -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2"></div>
+        </div>
+    }
+    else
+    {
+        if (Model.Grades.Any())
+        {
+            foreach (var c in Model.Courses)
+            {
+                var gradeVM = Model.Grades.First(g => g.CourseId == c.CourseId);
+                <br />
+                <h2>@c.Name Grade: @gradeVM.OverallPercentageGrade (@gradeVM.OverallLetterGrade)</h2>
+                <MatTable Items="gradeVM.Grades" class="mat-elevation-z5 lms-table" Striped="true" AllowSelection="false">
+                    <MatTableHeader>
+                        <th style="min-width: @COL_SIZE;">Assignment Name</th>
+                        <th style="min-width: @COL_SIZE;">Points</th>
+                        <th style="min-width: @COL_SIZE;">Percentage</th>
+                        <th style="min-width: @COL_SIZE;">Letter Grade</th>
+                    </MatTableHeader>
+                    <MatTableRow>
+                        <td>@context.AssignmentName</td>
+                        <td>@context.ScoreDisplay</td>
+                        <td>@context.Score</td>
+                        <td>@context.LetterGrade</td>
+                    </MatTableRow>
+                </MatTable>
+            }
+        }
+        else
+        {
+            <div class="text-center">
+                <p class="text-danger">No posted Grades.</p>
+            </div>
+        }
+    }
+}
 
 @code {
 
+    private GradesViewModel Model = new GradesViewModel();
+    private bool _loading = true;
+    private bool _acctIsProfessor = false;
+    private const string COL_SIZE = "250px";
+
+    protected async override Task OnInitializedAsync()
+    {
+        Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        _acctIsProfessor = Model.Account.Role == (int)Role.PROFESSOR;
+        Model.Grades = await DbService.GetGrades(AzureDb, Model.Account.AccountId, _acctIsProfessor);
+        _loading = false;
+    }
+
+    /// <summary>
+    /// Saves the Grades.
+    /// </summary>
+    private async void Save()
+    {
+        _loading = true;
+        var gradesSaved = await DbService.SaveGrades(AzureDb, Model.Grades); // TODO
+        await JS.InvokeVoidAsync("Toast", new[] { "success", "Grades Saved.", "3000" }); // toasttype, message, duration
+        _loading = false;
+        this.StateHasChanged();
+    }
 }
+

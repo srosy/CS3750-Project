@@ -43,6 +43,8 @@ namespace LMS.Data
         public Task<bool> UpdateSubmissionsOnDeletedCourse(AzureDbContext db, Course model);
         public Task<List<AnnouncementViewModel>> GetAnnouncements(AzureDbContext db, int acctId, bool isProfessor = false);
         public Task<bool> SaveAnnouncement(AzureDbContext db, AnnouncementViewModel model);
+        public Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId, bool isProfessor = false);
+        public Task<bool> SaveGrades(AzureDbContext db, List<GradeViewModel> grades);
     }
     public class DbService : IDbService
     {
@@ -849,6 +851,83 @@ namespace LMS.Data
             db.Notifications.Add(notification);
             saved = await db.SaveChangesAsync() > 0;
             return saved;
+        }
+
+        public async Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId, bool isProfessor = false)
+        {
+            var grades = new List<GradeViewModel>();
+
+            try
+            {
+                if (isProfessor)
+                {
+
+                }
+                else
+                {
+                    var enrollments = await GetEnrollments(db, acctId);
+                    var courses = enrollments.Select(e => new Course() { CourseId = e.CourseId }).ToList();
+                    var asses = GetAssignments(db, courses);
+
+                    for (int i = 0; i < courses.Count; i++)
+                    {
+                        var gradeViewModel = new GradeViewModel()
+                        {
+                            CourseId = courses[i].CourseId,
+                            Assignments = GetAssignments(db, new List<Course>() { new Course() { CourseId = courses[i].CourseId } }),
+                            Submissions = await GetSubmissions(db, acctId),
+                            Grades = new List<Grade>(),
+                            OverallLetterGrade = "F-",
+                            OverallPercentageGrade = 0
+                        };
+
+                        for (int j = 0; j < gradeViewModel.Assignments.Count; j++)
+                        {
+                            var grade = new Grade()
+                            {
+                                AssignmentId = gradeViewModel.Assignments[j].AssignmentId,
+                                AssignmentName = gradeViewModel.Assignments[j].Name
+                            };
+                            var submission = gradeViewModel.Submissions.FirstOrDefault(s => s.AssignmentId == grade.AssignmentId);
+                            if (submission == null)
+                            {
+                                grade.Score = 0;
+                                grade.ScoreDisplay = "Not Yet Graded";
+                                grade.LetterGrade = string.Empty;
+
+                            }
+                            else
+                            {
+                                grade.Score = submission.Score / gradeViewModel.Assignments[i].MaxScore;
+                                grade.ScoreDisplay =  $"{submission.Score}/{gradeViewModel.Assignments[j].MaxScore}" +
+                                    $" ({grade.Score})";
+                                grade.LetterGrade = GradeHelper.GenGradeFromPercentage(grade.Score);
+                            }
+
+                            gradeViewModel.Grades.Add(grade);
+                        }
+
+                        var gradedGrades = gradeViewModel.Grades.Where(g => g.Score > 0);
+                        var sum = gradedGrades.Sum(g => g.Score);
+
+                        gradeViewModel.OverallPercentageGrade = sum / gradedGrades.Count();
+                        gradeViewModel.OverallLetterGrade = GradeHelper.GenGradeFromPercentage(gradeViewModel.OverallPercentageGrade);
+
+                        grades.Add(gradeViewModel);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return grades;
+        }
+
+        public async Task<bool> SaveGrades(AzureDbContext db, List<GradeViewModel> grades)
+        {
+            throw new NotImplementedException();
         }
     }
 }
