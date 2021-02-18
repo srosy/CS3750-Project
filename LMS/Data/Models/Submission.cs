@@ -16,5 +16,6 @@ namespace LMS.Data.Models
         public string Comments { get; set; }
         public string UploadFileName { get; set; }
         public string UploadFilePath { get; set; }
+        public string TextResponse { get; set; }
     }
 }

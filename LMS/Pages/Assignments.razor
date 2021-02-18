@@ -2,7 +2,7 @@
 
 @if (_loading)
 {
-    <h1 class="header-default">Loading...</h1>
+    <Loading />
 }
 else
 {
@@ -19,12 +19,21 @@ else
                         <EditForm Model="@_assignmentModel" OnValidSubmit="@SaveAssignment">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
-                            <div class="form-group">
+                            @*<div class="form-group">
                                 <label for="type" class="form-inline">Assignment Type</label>
                                 <select id="type" class="form-control LMS-Input" title="Select an Assignment Type" @bind="_assignmentModel.Type">
                                     @foreach (var t in Enum.GetNames(typeof(AssignmentType)))
                                     {
                                         <option value="@((int)Enum.Parse(typeof(AssignmentType), t))">@t</option>
+                                    }
+                                </select>
+                            </div>*@
+                            <div class="form-group">
+                                <label for="subtype" class="form-inline">Submission Type</label>
+                                <select id="subtype" class="form-control LMS-Input" title="Select a Submission Type" @bind="_assignmentModel.SubmissionType">
+                                    @foreach (var t in Enum.GetNames(typeof(SubmissionType)))
+                                    {
+                                        <option value="@((int)Enum.Parse(typeof(SubmissionType), t))">@t</option>
                                     }
                                 </select>
                             </div>
@@ -99,7 +108,7 @@ else
         <h3 class="header-default courses-header">@(_acctIsProfessor ? "Assignments for the Courses you Teach" : "Assignments")</h3>
         @if (_acctIsProfessor)
         {
-            <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; _deleteAssignment = false; _assignmentModel = new Assignment() { CreateDate = DateTime.UtcNow, MaxScore = DEFAULT_MAX_SCORE, DueDate = DEFAULT_DUE_DATE }; Model.FormTitle = "Add New Assignment"; })">New Assignment</MatButton>
+            <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; _deleteAssignment = false; _assignmentModel = new Assignment() { CreateDate = DateTime.UtcNow, MaxScore = DEFAULT_MAX_SCORE, DueDate = DEFAULT_DUE_DATE, Type = (int)AssignmentType.ASSIGNMENT }; Model.FormTitle = "Add New Assignment"; })">New Assignment</MatButton>
             <br />
             @if (Model.Assignments.Any())
             {
@@ -243,7 +252,7 @@ else
     private void ResetForm()
     {
         _showForm = false;
-        _assignmentModel = new Assignment() { CreateDate = DateTime.UtcNow, MaxScore = DEFAULT_MAX_SCORE, DueDate = DEFAULT_DUE_DATE };
+        _assignmentModel = new Assignment() { CreateDate = DateTime.UtcNow, MaxScore = DEFAULT_MAX_SCORE, DueDate = DEFAULT_DUE_DATE, Type = (int)AssignmentType.ASSIGNMENT };
     }
 
     /// <summary>

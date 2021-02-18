@@ -16,5 +16,9 @@ namespace LMS.Data.Models
         public DateTime CreateDate { get; set; }
         public DateTime? UpdateDate { get; set; }
         public DateTime? DeleteDate { get; set; }
+        [Required] [Range(1, 4, ErrorMessage = "Credits range [1, 4]")] public int Credits { get; set; }
+        [Required] public string StartTime { get; set; }
+        [Required] public string EndTime { get; set; }
+        public string Markup { get; set; }
     }
 }
