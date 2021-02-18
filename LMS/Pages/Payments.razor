@@ -20,22 +20,23 @@ else
                             <DataAnnotationsValidator />
                             <ValidationSummary />
                             <div class="form-group ">
-                                <h4>Payment Amount Due: $@_amountDue.ToString("0.00")</h4>
-                                <small class="text-danger">This amount will be charged to the inputted card</small>
+                                <h4>Payment Amount Due: <strong class="text-danger">$@_amountDue.ToString("0.00")</strong></h4>
                             </div>
                             <label for="card-number" class="form-inline">CC Number</label>
                             <div class="form-group ">
                                 <InputText id="card-number" class="form-control LMS-input" type="text" placeholder="CC Number" @bind-Value="_paymentModel.CC_Num" />
                             </div>
-
                             <label for="card-exp-date" class="form-inline">Exp Date</label>
                             <div class="form-group">
                                 <InputDate id="card-exp-date" class="form-control LMS-input" title="End Date" type="date" @bind-Value="_paymentModel.ExpDate" />
                             </div>
-
                             <label for="card-ccv" class="form-inline">CVC Code</label>
                             <div class="form-group ">
-                                <InputText id="card-ccv" class="form-control LMS-input" type="text" placeholder="CCV Code" @bind-Value="_paymentModel.CCV" />
+                                <InputText id="card-ccv" class="form-control LMS-input" type="text" placeholder="CVC Code" @bind-Value="_paymentModel.CCV" />
+                            </div>
+                            <label for="card-number" class="form-inline">Amount to Charge</label>
+                            <div class="form-group ">
+                                <InputNumber id="card-number" class="form-control LMS-input" type="number" placeholder="@_amountDue" @bind-Value="_chargeAmount" />
                             </div>
                             <MatButton Class="btn btn-primary LMS-btn" type="submit">Process Payment</MatButton>
                         </EditForm>
@@ -95,6 +96,7 @@ else
     private bool _showForm;
     private bool _loading = true;
     private decimal _amountDue;
+    private decimal _chargeAmount;
     private const decimal BASE_PAYMENT_AMOUNT = 100.00m;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -144,7 +146,7 @@ else
             CardNumber = _paymentModel.CC_Num,
             CVC = int.Parse(_paymentModel.CCV),
             ExpDate = _paymentModel.ExpDate,
-            AttemptAmount = _amountDue
+            AttemptAmount = _chargeAmount
         };
 
         var success = await DbService.AddPayment(AzureDb, payment);
