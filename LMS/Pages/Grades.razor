@@ -172,7 +172,7 @@ else
             await JS.InvokeVoidAsync("Toast", new[] { "error", $"Error saving {ass.Name}, expected 0 <= score <= {ass.MaxScore} but got: {pc.Score} ", "3000" }); // toasttype, message, duration
         });
 
-        return problemChildren.Any();
+        return !problemChildren.Any();
     }
 
     /// <summary>
