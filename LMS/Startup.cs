@@ -10,7 +10,6 @@ using MatBlazor;
 using System;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Net.Http.Headers;
 using Syncfusion.Blazor;
 
@@ -28,7 +27,7 @@ namespace LMS
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
-            services.AddServerSideBlazor(); //.AddCircuitOptions(options => { options.DetailedErrors = true; }); // remove circuitoptions after testing test-site only bugs
+            services.AddServerSideBlazor();//.AddCircuitOptions(options => { options.DetailedErrors = true; }); // remove circuitoptions after testing test-site only bugs
             services.AddDbContext<AzureDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("AZURE_DB_CONN_STRING")), ServiceLifetime.Transient);
             services.AddSingleton<IDbService, DbService>();
             services.AddMatBlazor();
