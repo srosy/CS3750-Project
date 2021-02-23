@@ -687,3 +687,8 @@ input[type='file'] {
     color: indigo !important;
     font-weight: 700 !important;
 }
+
+.primary-lms, .primary-lms:hover {
+    background-color: indigo;
+    border-color: indigo;
+}
