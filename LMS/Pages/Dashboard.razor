@@ -48,13 +48,21 @@ else
     {
         if (firstRender)
         {
-            await Setup();
+            var session = await SessionObj.GetSession(AzureDb, Storage);
+            if (session == null)
+            {
+                NavMan.NavigateTo("sessionexpired");
+            }
+            else
+            {
+                await Setup(session.AccountId);
+            }
         }
     }
 
-    private async Task Setup()
+    private async Task Setup(int acctId)
     {
-        _account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        _account = await DbService.GetAccount(AzureDb, acctId);
         _loading = false;
         StateHasChanged();
     }

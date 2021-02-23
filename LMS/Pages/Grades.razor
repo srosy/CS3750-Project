@@ -1,7 +1,222 @@
 ﻿@page "/grades";
 
-<h3 class="header-default">Grades</h3>
+@if (_loading)
+{
+    <Loading />
+}
+else
+{
+    @if (_acctIsProfessor)
+    {
+        <div class="row text-center">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Edit Student Grades</h2>
+                    </div>
+                    <div class="card card-body">
+
+                        <div class="flex-row" style="margin-left: auto;">
+                            <div class="form-inline">
+                                <MatTooltip Tooltip="Course Name" Position="@MatTooltipPosition.Top" Attributes="Model.ToolTipAttributes">
+                                    <select @ref="context.Current" class="form-control m-1" @bind="_filterCourseId">
+                                        @foreach (var c in Model.Courses)
+                                        {
+                                            <option value="@c.CourseId">@c.Name</option>
+                                        }
+                                    </select>
+                                </MatTooltip>
+                                <MatTooltip Tooltip="Assignment Name" Position="@MatTooltipPosition.Top" Attributes="Model.ToolTipAttributes">
+                                    <select @ref="context.Current" class="form-control m-1" @bind="_filterAssId">
+                                        @foreach (var a in Model.Assignments)
+                                        {
+                                            <option value="@a.AssignmentId">@a.Name</option>
+                                        }
+                                    </select>
+                                </MatTooltip>
+                                <button type="button" class="btn btn-primary m-1" @onclick="Filter">Filter</button>
+                            </div>
+                        </div>
+
+                        @if (_filteredSubmissions.Any())
+                        {
+                            var assType = Model.Assignments.First(a => a.AssignmentId == _filteredSubmissions.First().AssignmentId).SubmissionType;
+                            <MatTable Items="_filteredSubmissions" class="mat-elevation-z5 lms-table" Striped="true" AllowSelection="false" ShowPaging="false">
+                                <MatTableHeader>
+                                    <th style="min-width: @GradesViewModel.COL_SIZE;">Student Name</th>
+                                    <th style="min-width: @GradesViewModel.COL_SIZE;">Score Earned</th>
+                                    <th style="min-width: 300px;">Submission Comments</th>
+                                    <th style="min-width: 500px;">@(assType == (int)SubmissionType.FILE_UPLOAD ? "File Submission" : "Text Submission")</th>
+                                </MatTableHeader>
+                                <MatTableRow>
+                                    <td class="text-left">
+                                        @{
+                                                        var student = Model.StudentAccounts.First(a => a.AccountId == context.AccountId);
+                                            <p>@student.FirstName @student.LastName (ID: @student.AccountId)</p>
+                                        }
+                                    </td>
+                                    <td>
+                                        <input type="number" @bind-value="@context.Score" class="form-control" max="100" min="0" />
+                                    </td>
+                                    <td class="text-left"><small>@context.Comments</small></td>
+                                    <td class="text-left">
+                                        @if (assType == (int)SubmissionType.FILE_UPLOAD)
+                                                    {
+                                            <a href="@context.UploadFilePath" target="_self">Download @context.UploadFileName</a>
+                                                    }
+                                                    else
+                                                    {
+                                            <small>@context.TextResponse</small>
+                                                    }
+                                    </td>
+                                </MatTableRow>
+                            </MatTable>
+
+                            <MatButton Class="btn btn-primary LMS-btn" Type="button" OnClick="Save">Save</MatButton>
+                            <MatButton Class="btn btn-secondary LMS-btn" Type="button" OnClick="ResetForm">Reset</MatButton>
+                        }
+                        else
+                        {
+                            <h2>No submissions for @_filterAss.Name (AssignmentID: @_filterAss.AssignmentId)</h2>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        if (Model.Grades.Any())
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h2>Grades for Your Classes</h2>
+                </div>
+                <div class="card card-body">
+                    @foreach (var c in Model.Courses)
+                    {
+                        var gradeVM = Model.Grades.First(g => g.CourseId == c.CourseId);
+                        <br />
+                        <h2>@c.Name Grade: @(gradeVM.Grades.Any(g => g.ScoreDisplay.ToLower().Contains("not")) ? "N/A" : $"{gradeVM.OverallPercentageGrade}% ({gradeVM.OverallLetterGrade})")</h2>
+                        <MatTable Items="gradeVM.Grades" class="mat-elevation-z5 lms-table" Striped="true" AllowSelection="false" ShowPaging="false">
+                            <MatTableHeader>
+                                <th style="min-width: @GradesViewModel.COL_SIZE;">Assignment Name</th>
+                                <th style="min-width: @GradesViewModel.COL_SIZE;">Points</th>
+                                <th style="min-width: @GradesViewModel.COL_SIZE;">Percentage</th>
+                                <th style="min-width: @GradesViewModel.COL_SIZE;">Letter Grade</th>
+                            </MatTableHeader>
+                            <MatTableRow>
+                                <td><a target="_self" href="/submission/@context.AssignmentId" title="Go to assignment: @context.AssignmentName">@context.AssignmentName</a></td>
+                                <td>@context.ScoreDisplay</td>
+                                <td>@(context.ScoreDisplay.ToLower().Contains("not") ? "N/A" : $"{context.Score}%")</td>
+                                <td>@(context.ScoreDisplay.ToLower().Contains("not") ? "N/A" : $"{context.LetterGrade}")</td>
+                            </MatTableRow>
+                        </MatTable>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="text-center">
+                <p class="text-danger">No posted Grades.</p>
+            </div>
+        }
+    }
+}
 
 @code {
+    private GradesViewModel Model = new GradesViewModel();
+    private bool _loading = true;
+    private bool _acctIsProfessor = false;
 
+    private Course _filterCourse;
+    private int _filterCourseId;
+    private Assignment _filterAss;
+    private int _filterAssId;
+    private List<Data.Models.Submission> _filteredSubmissions;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        _acctIsProfessor = Model.Account.Role == (int)Role.PROFESSOR;
+
+        if (_acctIsProfessor)
+        {
+            Model.Courses = await DbService.GetCourses(AzureDb, Model.Account.AccountId);
+            Model.Assignments = DbService.GetAssignments(AzureDb, Model.Courses);
+            Model.Submissions = await AzureDb.Submissions.Where(s => s.DeleteDate == null).ToListAsync();
+            Model.StudentAccounts = await AzureDb.Accounts.Where(a => a.Role == (int)Role.STUDENT).ToListAsync();
+            ResetForm();
+        }
+        else
+        {
+            Model.Grades = await DbService.GetGrades(AzureDb, Model.Account.AccountId);
+            Model.Courses = AzureDb.Courses.Where(c => Model.Grades.Select(g => g.CourseId).ToList().Contains(c.CourseId)).ToList();
+        }
+
+        _loading = false;
+    }
+
+    /// <summary>
+    /// Determines if the form input data is invalid and alerts the user if any.
+    /// </summary>
+    /// <returns></returns>
+    private bool FormVerified()
+    {
+        var problemChildren = _filteredSubmissions.Where(s => s.Score < 0 || s.Score > Model.Assignments.First(a => a.AssignmentId == s.AssignmentId).MaxScore).ToList();
+
+        problemChildren.ForEach(async pc =>
+        {
+            var ass = Model.Assignments.First(a => a.AssignmentId == pc.AssignmentId);
+            await JS.InvokeVoidAsync("Toast", new[] { "error", $"Error saving {ass.Name}, expected 0 <= score <= {ass.MaxScore} but got: {pc.Score} ", "3000" }); // toasttype, message, duration
+        });
+
+        return problemChildren.Any();
+    }
+
+    /// <summary>
+    /// Saves the Grades.
+    /// </summary>
+    private async void Save()
+    {
+        if (!FormVerified())
+        {
+            return;
+        }
+
+        var gradesSaved = await DbService.SaveGrades(AzureDb, _filteredSubmissions);
+        await JS.InvokeVoidAsync("Toast", new[] { gradesSaved ? "success" : "error", gradesSaved ? "Grades Saved." : "Failed to save grades.", "3000" }); // toasttype, message, duration
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Resets the form.
+    /// </summary>
+    private void ResetForm()
+    {
+        _filterCourse = Model.Courses.First();
+        _filterCourseId = _filterCourse.CourseId;
+        _filterAss = Model.Assignments.Where(a => a.CourseId == _filterCourse.CourseId).FirstOrDefault();
+        _filterAssId = _filterAss.AssignmentId;
+        Filter();
+    }
+
+    /// <summary>
+    /// Handles when a filter option is changed in the edit view.
+    /// </summary>
+    private void Filter()
+    {
+        _filteredSubmissions = new List<Data.Models.Submission>();
+
+        _filterCourse = Model.Courses.First(c => c.CourseId == _filterCourseId);
+        _filterAss = Model.Assignments.First(a => a.AssignmentId == _filterAssId);
+
+        if (_filterAss.CourseId == _filterCourse.CourseId)
+        {
+            _filteredSubmissions = Model.Submissions.Where(s => s.AssignmentId == _filterAss.AssignmentId).ToList();
+        }
+        StateHasChanged();
+    }
 }
+
