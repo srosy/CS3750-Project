@@ -7,7 +7,13 @@ namespace LMS.Shared.Models
     {
         public Account Account { get; set; }
         public List<Course> Courses { get; set; }
+        public List<Assignment> Assignments { get; set; }
+        public List<Submission> Submissions { get; set; }
         public List<GradeViewModel> Grades { get; set; }
+        public List<Account> StudentAccounts { get; set; }
+
+        public Dictionary<string, object> ToolTipAttributes = new Dictionary<string, object>() { { "style", "font-size: larger; background-color: indigo;" } };
+        public const string COL_SIZE = "250px";
     }
 
     public class GradeViewModel
