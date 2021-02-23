@@ -21,11 +21,11 @@ html, body {
     visibility: hidden;
 }
 
-    .scrollbox-content,
-    .scrollbox:hover,
-    .scrollbox:focus {
-        visibility: visible;
-    }
+.scrollbox-content,
+.scrollbox:hover,
+.scrollbox:focus {
+    visibility: visible;
+}
 
 .dashboard {
     height: 100vh;
@@ -63,71 +63,71 @@ app {
     height: 100%;
 }
 
-    .main .top-row {
-        background-color: white;
-        border-bottom: 1px solid #d6d5d5;
-    }
+.main .top-row {
+    background-color: white;
+    border-bottom: 1px solid #d6d5d5;
+}
 
-        .main .top-row > a, .main .top-row .btn-link {
-            white-space: nowrap;
-            margin-left: 1.5rem;
-        }
+.main .top-row > a, .main .top-row .btn-link {
+    white-space: nowrap;
+    margin-left: 1.5rem;
+}
 
-        .main .top-row a:first-child {
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+.main .top-row a:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 .sidebar {
     background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
 }
 
-    .sidebar .top-row {
-        background-color: rgba(0,0,0,0.4);
-    }
+.sidebar .top-row {
+    background-color: rgba(0,0,0,0.4);
+}
 
-    .sidebar .navbar-brand {
-        font-size: 1.1rem;
-    }
+.sidebar .navbar-brand {
+    font-size: 1.1rem;
+}
 
-    .sidebar .oi {
-        width: 2rem;
-        font-size: 1.1rem;
-        vertical-align: text-top;
-        top: -2px;
-    }
+.sidebar .oi {
+    width: 2rem;
+    font-size: 1.1rem;
+    vertical-align: text-top;
+    top: -2px;
+}
 
-    .sidebar .nav-item {
-        font-size: 0.9rem;
-        padding-bottom: 0.5rem;
-    }
+.sidebar .nav-item {
+    font-size: 0.9rem;
+    padding-bottom: 0.5rem;
+}
 
-        .sidebar .nav-item:first-of-type {
-            padding-top: 1rem;
-        }
+.sidebar .nav-item:first-of-type {
+    padding-top: 1rem;
+}
 
-        .sidebar .nav-item:last-of-type {
-            padding-bottom: 1rem;
-        }
+.sidebar .nav-item:last-of-type {
+    padding-bottom: 1rem;
+}
 
-        .sidebar .nav-item a {
-            color: #d7d7d7;
-            border-radius: 4px;
-            height: 3rem;
-            display: flex;
-            align-items: center;
-            line-height: 3rem;
-        }
+.sidebar .nav-item a {
+    color: #d7d7d7;
+    border-radius: 4px;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    line-height: 3rem;
+}
 
-            .sidebar .nav-item a.active {
-                background-color: rgba(255,255,255,0.25);
-                color: white;
-            }
+.sidebar .nav-item a.active {
+    background-color: rgba(255,255,255,0.25);
+    color: white;
+}
 
-            .sidebar .nav-item a:hover {
-                background-color: rgba(255,255,255,0.1);
-                color: white;
-            }
+.sidebar .nav-item a:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+}
 
 .content {
     padding-top: 1.1rem;
@@ -161,12 +161,12 @@ app {
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
 
 @media (max-width: 767.98px) {
     .main .top-row:not(.auth) {
@@ -405,9 +405,9 @@ app {
     float: right;
 }
 
-    .add-new-course.mdc-button.mdc-ripple-upgraded:hover {
-        background-color: darkslateblue;
-    }
+.add-new-course.mdc-button.mdc-ripple-upgraded:hover {
+    background-color: darkslateblue;
+}
 
 .add-new-course-container {
     padding-top: 15px;
@@ -597,21 +597,21 @@ app {
     transition: transform .2s;
 }
 
-    .zoom:hover {
-        transform: scale(1.25);
-    }
+.zoom:hover {
+    transform: scale(1.25);
+}
 
 .shake {
     transition: transform .2s;
 }
 
-    .shake:hover {
-        animation-name: shake;
-        animation-timing-function: ease-in-out;
-        animation-duration: 1s;
-        animation-iteration-count: 2;
-        animation-delay: .1s;
-    }
+.shake:hover {
+    animation-name: shake;
+    animation-timing-function: ease-in-out;
+    animation-duration: 1s;
+    animation-iteration-count: 2;
+    animation-delay: .1s;
+}
 
 input[type='file'] {
     color: white;
@@ -673,4 +673,17 @@ input[type='file'] {
     left: 0;
     right: 0;
     margin: auto;
+}
+
+.e-schedule .e-month-view .e-current-date .e-date-header,
+.e-schedule .e-month-agenda-view .e-current-date .e-date-header,
+.e-schedule .e-month-view .e-appointment {
+    background-color: indigo !important;
+}
+
+.e-schedule .e-month-view .e-date-header-wrap table td.e-current-day,
+.e-schedule .e-month-agenda-view .e-date-header-wrap table td.e-current-day, .e-schedule .e-schedule-toolbar .e-active-view .e-tbar-btn-text,
+.e-schedule .e-schedule-toolbar .e-active-view .e-icons {
+    color: indigo !important;
+    font-weight: 700 !important;
 }
