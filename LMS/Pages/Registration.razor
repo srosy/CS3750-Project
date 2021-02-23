@@ -83,16 +83,24 @@ else
     {
         if (firstRender)
         {
-            await Setup();
+            var session = await SessionObj.GetSession(AzureDb, Storage);
+            if (session == null)
+            {
+                NavMan.NavigateTo("sessionexpired");
+            }
+            else
+            {
+                await Setup(session.AccountId);
+            }
         }
     }
 
-    private async Task Setup()
+    private async Task Setup(int acctId)
     {
         Model.Courses = await DbService.GetCourses(AzureDb);
         Model.Students = await DbService.GetAccounts(AzureDb, Role.STUDENT);
         Model.Professors = await DbService.GetAccounts(AzureDb, Role.PROFESSOR);
-        Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        Model.Account = await DbService.GetAccount(AzureDb, acctId);
         _acctIsProfessor = Model.Account.Role == (int)Role.PROFESSOR;
 
         if (_acctIsProfessor)

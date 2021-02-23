@@ -44,6 +44,8 @@ namespace LMS.Data
         public Task<List<AnnouncementViewModel>> GetAnnouncements(AzureDbContext db, int acctId, bool isProfessor = false);
         public Task<bool> SaveAnnouncement(AzureDbContext db, AnnouncementViewModel model);
         public Task<List<AppointmentData>> GetAppointments(AzureDbContext db, int acctId);
+        public Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId);
+        public Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions);
     }
     public class DbService : IDbService
     {
@@ -859,6 +861,102 @@ namespace LMS.Data
         }
 
         /// <summary>
+        /// Gets all student grades for all assignments from all courses currently enrolled.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <param name="isProfessor"></param>
+        /// <returns></returns>
+        public async Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId)
+        {
+            var grades = new List<GradeViewModel>();
+
+            try
+            {
+                var enrollments = await GetEnrollments(db, acctId);
+                var courses = enrollments.Select(e => new Course() { CourseId = e.CourseId }).ToList();
+                var asses = GetAssignments(db, courses);
+
+                for (int i = 0; i < courses.Count; i++)
+                {
+                    var gradeViewModel = new GradeViewModel()
+                    {
+                        CourseId = courses[i].CourseId,
+                        Assignments = GetAssignments(db, new List<Course>() { new Course() { CourseId = courses[i].CourseId } }),
+                        Submissions = await GetSubmissions(db, acctId),
+                        Grades = new List<Grade>(),
+                        OverallLetterGrade = "F-",
+                        OverallPercentageGrade = 0
+                    };
+
+                    for (int j = 0; j < gradeViewModel.Assignments.Count; j++)
+                    {
+                        var grade = new Grade()
+                        {
+                            AssignmentId = gradeViewModel.Assignments[j].AssignmentId,
+                            AssignmentName = gradeViewModel.Assignments[j].Name
+                        };
+                        var submission = gradeViewModel.Submissions.FirstOrDefault(s => s.AssignmentId == grade.AssignmentId);
+                        if (submission == null)
+                        {
+                            grade.Score = 0;
+                            grade.ScoreDisplay = "Not Yet Graded";
+                            grade.LetterGrade = string.Empty;
+
+                        }
+                        else
+                        {
+                            grade.Score = Math.Round((submission.Score / (decimal)gradeViewModel.Assignments[i].MaxScore) * 100, 2);
+                            grade.ScoreDisplay = $"{submission.Score}/{gradeViewModel.Assignments[j].MaxScore}" +
+                                $" ({grade.Score})";
+                            grade.LetterGrade = GradeHelper.GenGradeFromPercentage(grade.Score);
+                        }
+
+                        gradeViewModel.Grades.Add(grade);
+                    }
+
+                    var gradedGrades = gradeViewModel.Grades.Where(g => g.Score > 0);
+                    var sum = gradedGrades.Sum(g => g.Score);
+
+
+                    gradeViewModel.OverallPercentageGrade = gradedGrades.Count() > 0 ? sum / gradedGrades.Count() : 0.00m;
+                    gradeViewModel.OverallLetterGrade = gradeViewModel.OverallPercentageGrade > 0 ?
+                        GradeHelper.GenGradeFromPercentage(gradeViewModel.OverallPercentageGrade) : "N/A";
+
+                    grades.Add(gradeViewModel);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return grades;
+        }
+
+        /// <summary>
+        /// Updates the graded Submissions passed.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="gradedSubmissions"></param>
+        /// <returns></returns>
+        public async Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions)
+        {
+            var allSaved = new bool[gradedSubmissions.Count];
+            try
+            {
+                var index = 0;
+                var tasks = gradedSubmissions.Select(s => SaveSubmission(db, s));
+                allSaved = await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return allSaved.All(s => s == true);
+        }
+
+        /// <summary>
         /// Gets the appointments to populate the calendar in the Dashboard.
         /// </summary>
         /// <param name="db"></param>
@@ -882,7 +980,7 @@ namespace LMS.Data
                     Subject = $"Test Subject {i}"
                 });
             }
-            
+
             for (int i = 10; i < 20; i++)
             {
                 var st = DateTime.Today.AddDays(rand.Next(1, 24)).AddHours(rand.Next(1, 12)).AddMinutes(rand.Next(1, 60));

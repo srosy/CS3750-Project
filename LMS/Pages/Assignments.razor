@@ -20,14 +20,14 @@ else
                             <DataAnnotationsValidator />
                             <ValidationSummary />
                             @*<div class="form-group">
-                                <label for="type" class="form-inline">Assignment Type</label>
-                                <select id="type" class="form-control LMS-Input" title="Select an Assignment Type" @bind="_assignmentModel.Type">
-                                    @foreach (var t in Enum.GetNames(typeof(AssignmentType)))
-                                    {
-                                        <option value="@((int)Enum.Parse(typeof(AssignmentType), t))">@t</option>
-                                    }
-                                </select>
-                            </div>*@
+                                    <label for="type" class="form-inline">Assignment Type</label>
+                                    <select id="type" class="form-control LMS-Input" title="Select an Assignment Type" @bind="_assignmentModel.Type">
+                                        @foreach (var t in Enum.GetNames(typeof(AssignmentType)))
+                                        {
+                                            <option value="@((int)Enum.Parse(typeof(AssignmentType), t))">@t</option>
+                                        }
+                                    </select>
+                                </div>*@
                             <div class="form-group">
                                 <label for="subtype" class="form-inline">Submission Type</label>
                                 <select id="subtype" class="form-control LMS-Input" title="Select a Submission Type" @bind="_assignmentModel.SubmissionType">
@@ -106,6 +106,10 @@ else
     else
     {
         <h3 class="header-default courses-header">@(_acctIsProfessor ? "Assignments for the Courses you Teach" : "Assignments")</h3>
+        @if (!_acctIsProfessor)
+        {
+            <small class="text-white">&nbsp;Click on any assignment to go to proceed to submit.</small>
+        }
         @if (_acctIsProfessor)
         {
             <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; _deleteAssignment = false; _assignmentModel = new Assignment() { CreateDate = DateTime.UtcNow, MaxScore = DEFAULT_MAX_SCORE, DueDate = DEFAULT_DUE_DATE, Type = (int)AssignmentType.ASSIGNMENT }; Model.FormTitle = "Add New Assignment"; })">New Assignment</MatButton>
@@ -153,19 +157,23 @@ else
                                 <h3>@course.Name Assignments</h3>
                             </div>
                             <div class="card-body text-center">
-                                <small>Click on any assignment to go to proceed to submit.</small>
                                 <MatTable Items="assignments" class="mat-elevation-z5 lms-table" Striped="true" ShowPaging="false">
                                     <MatTableHeader>
                                         <th class="text-center" style="min-width: @COL_SIZE;">Type</th>
                                         <th class="text-center" style="min-width: @COL_SIZE;">Assignment Name</th>
                                         <th class="text-center" style="min-width: @COL_SIZE;">Max Score</th>
                                         <th class="text-center" style="min-width: @COL_SIZE;">Due Date</th>
+                                        <th class="text-center" style="min-width: 25px;">Submitted</th>
                                     </MatTableHeader>
                                     <MatTableRow>
                                         <td>@(Enum.GetName(typeof(AssignmentType), context.Type))</td>
                                         <td><a href="/submission/@context.AssignmentId" title="Goto submit assignment page">@context.Name</a></td>
                                         <td>@context.MaxScore</td>
                                         <td>@context.DueDate?.ToShortDateString()</td>
+                                        <td>@{ 
+                                            var turnedIn = AzureDb.Submissions.Any(s => s.AssignmentId == context.AssignmentId && s.AccountId == Model.Account.AccountId && s.DeleteDate == null);
+                                            <span><i class="oi @(turnedIn ? "oi-circle-check" : "oi-circle-x")" style="color: @(turnedIn ? "green" : "red")"></i></span>
+                                        }</td>
                                     </MatTableRow>
                                 </MatTable>
                             </div>

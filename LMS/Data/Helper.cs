@@ -268,5 +268,30 @@ namespace LMS.Data.Helper
         /// <returns></returns>
         public override bool IsValid(object value) => Convert.ToDateTime(value) >= DateTime.Now.AddDays(1); // test cc requires a future exp date
     }
+
+    public static class GradeHelper
+    {
+        public static string GenGradeFromPercentage(decimal grade)
+        {
+            grade = Math.Round(grade);
+            var letterGrade = string.Empty;
+
+            if (grade > 100) letterGrade = "A+";
+            if (grade <= 100 && grade >= 93) letterGrade = "A";
+            if (grade <= 92 && grade >= 90) letterGrade = "A-";
+            if (grade <= 89 && grade >= 87) letterGrade = "B+";
+            if (grade <= 86 && grade >= 83) letterGrade = "B";
+            if (grade <= 82 && grade >= 80) letterGrade = "B-";
+            if (grade <= 79 && grade >= 75) letterGrade = "C+";
+            if (grade <= 74 && grade >= 70) letterGrade = "C";
+            if (grade <= 69 && grade >= 65) letterGrade = "C-";
+            if (grade <= 64 && grade >= 62) letterGrade = "D+";
+            if (grade <= 61 && grade >= 58) letterGrade = "D";
+            if (grade <= 57 && grade >= 54) letterGrade = "D-";
+            if (grade <= 53) letterGrade = "F";
+
+            return letterGrade;
+        }
+    }
 }
 

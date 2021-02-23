@@ -24,7 +24,6 @@
     {
         var enrollments = await DbService.GetEnrollments(AzureDb, Account.AccountId);
         await SetupBalances();
-        base.OnParametersSet();
         _loading = false;
     }
 
@@ -37,7 +36,7 @@
         var enrollments = await DbService.GetEnrollments(AzureDb, Account.AccountId);
         var payments = await DbService.GetPayments(AzureDb, Account.AccountId);
 
-        var chargedAmount = enrollments.Count() * 100.00m;
+        var chargedAmount = enrollments.Sum(e => e.Credits) * 100.00m;
         var paymentAmount = payments.Sum(p => p.PaymentAmount);
         _amountDue = chargedAmount - paymentAmount;
     }
