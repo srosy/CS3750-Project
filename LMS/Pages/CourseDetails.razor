@@ -26,7 +26,13 @@ else
                             @foreach (var ass in Model.Assignments)
                             {
                                 index++;
-                                <a href="/submission/@ass.AssignmentId" title="Goto submit assignment page">@index. @ass.Name</a><br />
+                                <a href="/submission/@ass.AssignmentId" title="Goto submit assignment page">@index. @ass.Name</a>
+                                var sus = Model.Submissions?.FirstOrDefault(s => s.AssignmentId == ass.AssignmentId);
+                                if (sus != null)
+                                {
+                                    <div class="badge badge-success">Grade: @sus.Score/@ass.MaxScore</div>
+                                }
+                                <br />
                             }
                         }
                     </div>
@@ -54,6 +60,7 @@ else
             Model.Course = AzureDb.Courses.FirstOrDefault(c => c.CourseId == _courseId);
             Model.Assignments = DbService.GetAssignments(AzureDb, new List<Course>() { new Course() { CourseId = _courseId } });
         }
+        Model.Submissions = await BrowserStorage<List<Data.Models.Submission>>.GetObject(Storage, "submissions");
         _loading = false;
     }
 }

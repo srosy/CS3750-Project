@@ -227,6 +227,7 @@ else
                 }
             });
             Model.Courses = enrolledCourses;
+            Model.Submissions = await BrowserStorage<List<Data.Models.Submission>>.GetObject(Storage, "submissions");
         }
 
         Model.Assignments = DbService.GetAssignments(AzureDb, Model.Courses);

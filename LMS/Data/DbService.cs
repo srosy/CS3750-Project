@@ -80,6 +80,12 @@ namespace LMS.Data
                 var appointments = await GetAppointments(db,storage);
                 await BrowserStorage<List<AppointmentData>>.SaveObject(storage, "appointments", appointments);
 
+                if (acct.Role == (int)Role.STUDENT)
+                {
+                    var submissions = await GetSubmissions(db, acct.AccountId);
+                    await BrowserStorage<List<Submission>>.SaveObject(storage, "submissions", submissions);
+                }
+                
                 if (auth.EmailVerified)
                 {
                     return true;
