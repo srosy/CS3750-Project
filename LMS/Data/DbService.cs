@@ -44,7 +44,7 @@ namespace LMS.Data
         public Task<bool> UpdateSubmissionsOnDeletedCourse(AzureDbContext db, Course model);
         public Task<List<AnnouncementViewModel>> GetAnnouncements(AzureDbContext db, int acctId, bool isProfessor = false);
         public Task<bool> SaveAnnouncement(AzureDbContext db, AnnouncementViewModel model);
-        public Task<List<AppointmentData>> GetAppointments(AzureDbContext db, int acctId);
+        public Task<List<AppointmentData>> GetAppointments(AzureDbContext db, ILocalStorageService storage);
         public Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId);
         public Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions);
     }
@@ -73,10 +73,12 @@ namespace LMS.Data
                 await SessionObj.CreateSession(db, storage, acct.AccountId);
 
                 // set local storage stuffz
-                var _enrollments = await GetEnrollments(db, acct.AccountId);
-                var _courses = await GetCourses(db, acct.Role == (int)Role.PROFESSOR ? acct.AccountId : 0);
-                await BrowserStorage<List<Enrollment>>.SaveObject(storage, "enrollments", _enrollments);
-                await BrowserStorage<List<Course>>.SaveObject(storage, "courses", _courses);
+                var enrollments = await GetEnrollments(db, acct.AccountId);
+                await BrowserStorage<List<Enrollment>>.SaveObject(storage, "enrollments", enrollments);
+                var courses = await GetCourses(db, acct.Role == (int)Role.PROFESSOR ? acct.AccountId : 0);
+                await BrowserStorage<List<Course>>.SaveObject(storage, "courses", courses);
+                var appointments = await GetAppointments(db,storage);
+                await BrowserStorage<List<AppointmentData>>.SaveObject(storage, "appointments", appointments);
 
                 if (auth.EmailVerified)
                 {
@@ -969,38 +971,58 @@ namespace LMS.Data
         /// <param name="db"></param>
         /// <param name="acctId"></param>
         /// <returns></returns>
-        public async Task<List<AppointmentData>> GetAppointments(AzureDbContext db, int acctId)
+        public async Task<List<AppointmentData>> GetAppointments(AzureDbContext db, ILocalStorageService storage)
         {
-            var rand = new Random();
             var appointments = new List<AppointmentData>();
-            for (int i = 0; i < 10; i++)
-            {
-                var st = DateTime.Today.AddDays(rand.Next(1, 24) * -1).AddHours(rand.Next(1, 12)).AddMinutes(rand.Next(1, 60));
-                appointments.Add(new AppointmentData()
-                {
-                    Id = i,
-                    Description = $"Test Appointment {i}",
-                    StartTime = st,
-                    EndTime = st.AddHours(2),
-                    IsAllDay = rand.Next(1, 24) % 3 == 0,
-                    Location = $"Location {rand.Next(1, 24)}",
-                    Subject = $"Test Subject {i}"
-                });
-            }
+            var courses = await BrowserStorage<List<Course>>.GetObject(storage, "courses");
+            var asses = GetAssignments(db, courses);
 
-            for (int i = 10; i < 20; i++)
+            try
             {
-                var st = DateTime.Today.AddDays(rand.Next(1, 24)).AddHours(rand.Next(1, 12)).AddMinutes(rand.Next(1, 60));
-                appointments.Add(new AppointmentData()
+                var index = 0;
+                foreach (var c in courses)
                 {
-                    Id = i,
-                    Description = $"Test Appointment {i}",
-                    StartTime = st,
-                    EndTime = st.AddHours(2),
-                    IsAllDay = rand.Next(1, 24) % 3 == 0,
-                    Location = $"Location {rand.Next(1, 24)}",
-                    Subject = $"Test Subject {i}"
-                });
+                    var st = DateTime.ParseExact(c.StartTime, "H:mm", null, System.Globalization.DateTimeStyles.None);
+                    var et = DateTime.ParseExact(c.EndTime, "H:mm", null, System.Globalization.DateTimeStyles.None);
+                    var sd = c.StartDate;
+                    var ed = c.EndDate;
+
+                    var today = DateTime.UtcNow;
+                    while (today < ed)
+                    {
+                        appointments.Add(new AppointmentData()
+                        {
+                            Id = index++,
+                            Description = $"{c.Description}",
+                            StartTime = st,
+                            EndTime = et,
+                            IsAllDay = false,
+                            Location = $"Zoom Meeting",
+                            Subject = $"{c.Name}"
+                        });
+
+                        st = st.AddDays(7);
+                        et = et.AddDays(7);
+                        today = today.AddDays(7);
+                    }
+                }
+                foreach (var a in asses)
+                {
+                    appointments.Add(new AppointmentData()
+                    {
+                        Id = index++,
+                        Description = $"{a.Name} DUE",
+                        StartTime = a.DueDate ?? DateTime.UtcNow,
+                        EndTime = a.DueDate ?? DateTime.UtcNow.AddHours(2),
+                        IsAllDay = false,
+                        Location = $"Assignment",
+                        Subject = $"Assignment"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
 
             return appointments;

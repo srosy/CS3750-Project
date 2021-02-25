@@ -1,6 +1,6 @@
 ﻿@if (!_loading)
 {
-    @if (Account.Role == (int)Role.PROFESSOR)
+    @if (Role == Role.PROFESSOR)
     {
         <MatTable Items="_courses" class="mat-elevation-z5 lms-table dashboard-enrollment-table" Striped="true" ShowPaging="false">
             <MatTableHeader>
@@ -55,8 +55,7 @@
     private bool _loading = true;
     private List<Enrollment> _enrollments;
     private List<Course> _courses;
-
-    [Parameter] public Account Account { get; set; }
+    [Parameter] public Role Role { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
