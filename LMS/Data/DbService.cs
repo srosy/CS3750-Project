@@ -8,6 +8,7 @@ using LMS.Data.Helper;
 using System.Collections.Generic;
 using MimeKit;
 using Microsoft.EntityFrameworkCore;
+using LMS.Data.Enum;
 
 namespace LMS.Data
 {
@@ -70,6 +71,12 @@ namespace LMS.Data
 
                 await DeleteSession(db, storage);
                 await SessionObj.CreateSession(db, storage, acct.AccountId);
+
+                // set local storage stuffz
+                var _enrollments = await GetEnrollments(db, acct.AccountId);
+                var _courses = await GetCourses(db, acct.Role == (int)Role.PROFESSOR ? acct.AccountId : 0);
+                await BrowserStorage<List<Enrollment>>.SaveObject(storage, "enrollments", _enrollments);
+                await BrowserStorage<List<Course>>.SaveObject(storage, "courses", _courses);
 
                 if (auth.EmailVerified)
                 {

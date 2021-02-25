@@ -60,10 +60,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _enrollments = await DbService.GetEnrollments(AzureDb, Account.AccountId);
-        _courses = await DbService.GetCourses(AzureDb, Account.Role == (int)Role.PROFESSOR ? Account.AccountId : 0);
+        _enrollments = await BrowserStorage<List<Enrollment>>.GetObject(Storage, "enrollments");
+        _courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses");
         _loading = false;
-
-        base.OnParametersSet();
     }
 }
