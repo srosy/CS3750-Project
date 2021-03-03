@@ -103,7 +103,9 @@ else
         _acctIsProfessor = Model.Account.Role == (int)Role.PROFESSOR;
         if (_acctIsProfessor)
         {
-            Model.Courses = await DbService.GetCourses(AzureDb, Model.Account.AccountId);
+
+            Model.Courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses");
+
         }
         Model.Announcements = await DbService.GetAnnouncements(AzureDb, Model.Account.AccountId, _acctIsProfessor);
         ResetForm();

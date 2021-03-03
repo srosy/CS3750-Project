@@ -1,6 +1,6 @@
 ﻿@if (!_loading)
 {
-    @if (Account.Role == (int)Role.PROFESSOR)
+    @if (Role == Role.PROFESSOR)
     {
         <MatTable Items="_courses" class="mat-elevation-z5 lms-table dashboard-enrollment-table" Striped="true" ShowPaging="false">
             <MatTableHeader>
@@ -35,9 +35,17 @@
                             {
                                 var course = _courses.First(c => c.CourseId == context.CourseId);
                                 info = $"{course.Name} - {course.Description}";
+                        <td class="ef-td">
+                            <a href="/course/details/@course.CourseId" title="Goto course page">@info</a>
+                        </td>
+                            }
+                            else
+                            {
+                        <td class="ef-td">
+                            "No Course"
+                        </td>
                             }
                 }
-                <td class="ef-td">@(info ?? "No Course")</td>
             </MatTableRow>
         </MatTable>
     }
@@ -47,15 +55,12 @@
     private bool _loading = true;
     private List<Enrollment> _enrollments;
     private List<Course> _courses;
-
-    [Parameter] public Account Account { get; set; }
+    [Parameter] public Role Role { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
-        _enrollments = await DbService.GetEnrollments(AzureDb, Account.AccountId);
-        _courses = await DbService.GetCourses(AzureDb, Account.Role == (int)Role.PROFESSOR ? Account.AccountId : 0);
+        _enrollments = await BrowserStorage<List<Enrollment>>.GetObject(Storage, "enrollments");
+        _courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses");
         _loading = false;
-
-        base.OnParametersSet();
     }
 }

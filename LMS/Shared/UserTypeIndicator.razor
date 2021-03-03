@@ -15,15 +15,23 @@
     {
         if (firstRender)
         {
-            await Setup();
+            var session = await SessionObj.GetSession(AzureDb, Storage);
+            if (session == null)
+            {
+                NavMan.NavigateTo("sessionexpired");
+            }
+            else
+            {
+                await Setup(session.AccountId);
+            }
         }
     }
 
-    private async Task Setup()
+    private async Task Setup(int acctId)
     {
-        var account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        var account = await DbService.GetAccount(AzureDb, acctId);
         _userType = Enum.GetName(typeof(Role), account.Role);
-        _badgeClass = account.Role == (int)Role.STUDENT ? "secondary" : "info";
+        _badgeClass = account.Role == (int)Role.STUDENT ? "secondary" : "primary primary-lms";
 
         _loading = false;
         StateHasChanged();

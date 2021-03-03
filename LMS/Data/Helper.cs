@@ -1,21 +1,53 @@
-﻿using System;
+﻿using Blazored.LocalStorage;
+using BlazorInputFile;
+using LMS.Data.Models;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Blazored.LocalStorage;
-using BlazorInputFile;
-using LMS.Data.Enum;
-using LMS.Data.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace LMS.Data.Helper
 {
+    public static class BrowserStorage<T>
+    {
+        public static async Task<T> GetObject(ILocalStorageService storage, string name)
+        {
+            try
+            {
+                var obj = await storage.GetItemAsync<T>(name);
+                return obj;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return default;
+            }
+
+        }
+        public static async Task SaveObject(ILocalStorageService storage, string name, T obj)
+        {
+            try
+            {
+                var existing = await storage.ContainKeyAsync(name);
+                if (existing)
+                {
+                    await storage.RemoveItemAsync(name);
+                }
+
+                await storage.SetItemAsync(name, obj);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+    }
+
     public class SessionObj
     {
         public Guid SessionId { get; set; }
@@ -267,6 +299,31 @@ namespace LMS.Data.Helper
         /// <param name="value"></param>
         /// <returns></returns>
         public override bool IsValid(object value) => Convert.ToDateTime(value) >= DateTime.Now.AddDays(1); // test cc requires a future exp date
+    }
+
+    public static class GradeHelper
+    {
+        public static string GenGradeFromPercentage(decimal grade)
+        {
+            grade = Math.Round(grade);
+            var letterGrade = string.Empty;
+
+            if (grade > 100) letterGrade = "A+";
+            if (grade <= 100 && grade >= 93) letterGrade = "A";
+            if (grade <= 92 && grade >= 90) letterGrade = "A-";
+            if (grade <= 89 && grade >= 87) letterGrade = "B+";
+            if (grade <= 86 && grade >= 83) letterGrade = "B";
+            if (grade <= 82 && grade >= 80) letterGrade = "B-";
+            if (grade <= 79 && grade >= 75) letterGrade = "C+";
+            if (grade <= 74 && grade >= 70) letterGrade = "C";
+            if (grade <= 69 && grade >= 65) letterGrade = "C-";
+            if (grade <= 64 && grade >= 62) letterGrade = "D+";
+            if (grade <= 61 && grade >= 58) letterGrade = "D";
+            if (grade <= 57 && grade >= 54) letterGrade = "D-";
+            if (grade <= 53) letterGrade = "F";
+
+            return letterGrade;
+        }
     }
 }
 

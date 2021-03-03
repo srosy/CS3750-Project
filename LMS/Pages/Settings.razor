@@ -124,9 +124,9 @@ else
                 </div>
                 <div class="row profile-link-grid">
                     <div class="col-md-3">
-                        <a href="@Model.Settings.SocialMediaLink1" target="_blank" title="Click to go to"><img src="https://cs3750lms.blob.core.windows.net/images/insta.webp" class="profile-link" /></a>
-                        <a href="@Model.Settings.SocialMediaLink2" target="_blank" title="Click to go to"><img src="https://cs3750lms.blob.core.windows.net/images/twitter.webp" class="profile-link" /></a>
-                        <a href="@Model.Settings.SocialMediaLink3" target="_blank" title="Click to go to"><img src="https://www.flaticon.com/svg/vstatic/svg/25/25231.svg?token=exp=1613595903~hmac=c6c597a06cad35cd6b60947ba2472bc2" class="profile-link" /></a>
+                        <a href="@Model.Settings.SocialMediaLink1" target="_blank" title="Click to go to"><img src="https://cs3750lms.blob.core.windows.net/images/insta.webp" class="profile-link zoom" /></a>
+                        <a href="@Model.Settings.SocialMediaLink2" target="_blank" title="Click to go to"><img src="https://cs3750lms.blob.core.windows.net/images/twitter.webp" class="profile-link zoom" /></a>
+                        <a href="@Model.Settings.SocialMediaLink3" target="_blank" title="Click to go to"><img src="https://cs3750lms.blob.core.windows.net/images/github.webp" class="profile-link zoom" /></a>
                     </div>
                 </div>
             </div>
@@ -145,13 +145,21 @@ else
     {
         if (firstRender)
         {
-            await Setup();
+            var session = await SessionObj.GetSession(AzureDb, Storage);
+            if (session == null)
+            {
+                NavMan.NavigateTo("sessionexpired");
+            }
+            else
+            {
+                await Setup(session.AccountId);
+            }
         }
     }
 
-    private async Task Setup()
+    private async Task Setup(int acctId)
     {
-        Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
+        Model.Account = await DbService.GetAccount(AzureDb, acctId);
         Model.Settings = await DbService.GetSettings(AzureDb, Model.Account.AccountId);
 
         if (Model.Settings == null)

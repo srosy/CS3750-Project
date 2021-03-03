@@ -1,0 +1,23 @@
+﻿@using Syncfusion.Blazor.Schedule
+
+<SfSchedule TValue="AppointmentData" CurrentView="_view" Height="650px" @bind-SelectedDate="@_today">
+    <ScheduleEventSettings DataSource="@_appointments"></ScheduleEventSettings>
+</SfSchedule>
+
+@code {
+    DateTime _today = DateTime.Today;
+    View _view = View.Month;
+    List<AppointmentData> _appointments = new List<AppointmentData>();
+
+    protected async override Task OnInitializedAsync()
+    {
+        _appointments = await DbService.GetAppointments(AzureDb, Storage);
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await Task.Delay(1);
+        await JS.InvokeVoidAsync("hide_watermark", "");
+    }
+}
+

@@ -19,12 +19,21 @@ else
                         <EditForm Model="@_assignmentModel" OnValidSubmit="@SaveAssignment">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
+                            @*<div class="form-group">
+                                    <label for="type" class="form-inline">Assignment Type</label>
+                                    <select id="type" class="form-control LMS-Input" title="Select an Assignment Type" @bind="_assignmentModel.Type">
+                                        @foreach (var t in Enum.GetNames(typeof(AssignmentType)))
+                                        {
+                                            <option value="@((int)Enum.Parse(typeof(AssignmentType), t))">@t</option>
+                                        }
+                                    </select>
+                                </div>*@
                             <div class="form-group">
-                                <label for="type" class="form-inline">Assignment Type</label>
-                                <select id="type" class="form-control LMS-Input" title="Select an Assignment Type" @bind="_assignmentModel.Type">
-                                    @foreach (var t in Enum.GetNames(typeof(AssignmentType)))
+                                <label for="subtype" class="form-inline">Submission Type</label>
+                                <select id="subtype" class="form-control LMS-Input" title="Select a Submission Type" @bind="_assignmentModel.SubmissionType">
+                                    @foreach (var t in Enum.GetNames(typeof(SubmissionType)))
                                     {
-                                        <option value="@((int)Enum.Parse(typeof(AssignmentType), t))">@t</option>
+                                        <option value="@((int)Enum.Parse(typeof(SubmissionType), t))">@t</option>
                                     }
                                 </select>
                             </div>
@@ -97,9 +106,13 @@ else
     else
     {
         <h3 class="header-default courses-header">@(_acctIsProfessor ? "Assignments for the Courses you Teach" : "Assignments")</h3>
+        @if (!_acctIsProfessor)
+        {
+            <small class="text-white">&nbsp;Click on any assignment to go to proceed to submit.</small>
+        }
         @if (_acctIsProfessor)
         {
-            <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; _deleteAssignment = false; _assignmentModel = new Assignment() { CreateDate = DateTime.UtcNow, MaxScore = DEFAULT_MAX_SCORE, DueDate = DEFAULT_DUE_DATE }; Model.FormTitle = "Add New Assignment"; })">New Assignment</MatButton>
+            <MatButton Class="add-new-course" @onclick="@(() => { _showForm = true; _deleteAssignment = false; _assignmentModel = new Assignment() { CreateDate = DateTime.UtcNow, MaxScore = DEFAULT_MAX_SCORE, DueDate = DEFAULT_DUE_DATE, Type = (int)AssignmentType.ASSIGNMENT }; Model.FormTitle = "Add New Assignment"; })">New Assignment</MatButton>
             <br />
             @if (Model.Assignments.Any())
             {
@@ -144,19 +157,23 @@ else
                                 <h3>@course.Name Assignments</h3>
                             </div>
                             <div class="card-body text-center">
-                                <small>Click on any assignment to go to proceed to submit.</small>
                                 <MatTable Items="assignments" class="mat-elevation-z5 lms-table" Striped="true" ShowPaging="false">
                                     <MatTableHeader>
                                         <th class="text-center" style="min-width: @COL_SIZE;">Type</th>
                                         <th class="text-center" style="min-width: @COL_SIZE;">Assignment Name</th>
                                         <th class="text-center" style="min-width: @COL_SIZE;">Max Score</th>
                                         <th class="text-center" style="min-width: @COL_SIZE;">Due Date</th>
+                                        <th class="text-center" style="min-width: 25px;">Submitted</th>
                                     </MatTableHeader>
                                     <MatTableRow>
                                         <td>@(Enum.GetName(typeof(AssignmentType), context.Type))</td>
                                         <td><a href="/submission/@context.AssignmentId" title="Goto submit assignment page">@context.Name</a></td>
                                         <td>@context.MaxScore</td>
                                         <td>@context.DueDate?.ToShortDateString()</td>
+                                        <td>@{ 
+                                            var turnedIn = AzureDb.Submissions.Any(s => s.AssignmentId == context.AssignmentId && s.AccountId == Model.Account.AccountId && s.DeleteDate == null);
+                                            <span><i class="oi @(turnedIn ? "oi-circle-check" : "oi-circle-x")" style="color: @(turnedIn ? "green" : "red")"></i></span>
+                                        }</td>
                                     </MatTableRow>
                                 </MatTable>
                             </div>
@@ -196,7 +213,7 @@ else
     {
         Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
         _acctIsProfessor = Model.Account.Role == (int)Role.PROFESSOR;
-        Model.Courses = await DbService.GetCourses(AzureDb, _acctIsProfessor ? Model.Account.AccountId : 0);
+        Model.Courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses");
 
         if (!_acctIsProfessor)
         {
@@ -210,6 +227,7 @@ else
                 }
             });
             Model.Courses = enrolledCourses;
+            Model.Submissions = await BrowserStorage<List<Data.Models.Submission>>.GetObject(Storage, "submissions");
         }
 
         Model.Assignments = DbService.GetAssignments(AzureDb, Model.Courses);
@@ -243,7 +261,7 @@ else
     private void ResetForm()
     {
         _showForm = false;
-        _assignmentModel = new Assignment() { CreateDate = DateTime.UtcNow, MaxScore = DEFAULT_MAX_SCORE, DueDate = DEFAULT_DUE_DATE };
+        _assignmentModel = new Assignment() { CreateDate = DateTime.UtcNow, MaxScore = DEFAULT_MAX_SCORE, DueDate = DEFAULT_DUE_DATE, Type = (int)AssignmentType.ASSIGNMENT };
     }
 
     /// <summary>
@@ -263,7 +281,7 @@ else
 
         var assignmentSaved = await DbService.SaveAssignment(AzureDb, _assignmentModel) && assUpdated;
         ResetForm();
-        Model.Courses = await DbService.GetCourses(AzureDb, _acctIsProfessor ? Model.Account.AccountId : 0);
+        Model.Courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses");
         Model.Assignments = DbService.GetAssignments(AzureDb, Model.Courses);
         await JS.InvokeVoidAsync("Toast", new[] { assignmentSaved ? "success" : "error", assignmentSaved ? "Saved Assignment." : "Failed to save Assignment.", assignmentSaved ? "3000" : "5000" }); // toasttype, message, duration
         this.StateHasChanged();

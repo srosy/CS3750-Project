@@ -8,6 +8,7 @@ using LMS.Data.Helper;
 using System.Collections.Generic;
 using MimeKit;
 using Microsoft.EntityFrameworkCore;
+using LMS.Data.Enum;
 
 namespace LMS.Data
 {
@@ -43,6 +44,10 @@ namespace LMS.Data
         public Task<bool> UpdateSubmissionsOnDeletedCourse(AzureDbContext db, Course model);
         public Task<List<AnnouncementViewModel>> GetAnnouncements(AzureDbContext db, int acctId, bool isProfessor = false);
         public Task<bool> SaveAnnouncement(AzureDbContext db, AnnouncementViewModel model);
+        public Task<List<AppointmentData>> GetAppointments(AzureDbContext db, ILocalStorageService storage);
+        public Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId);
+        public Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions);
+        public Task<BellCurveChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName);
     }
     public class DbService : IDbService
     {
@@ -67,6 +72,20 @@ namespace LMS.Data
 
                 await DeleteSession(db, storage);
                 await SessionObj.CreateSession(db, storage, acct.AccountId);
+
+                // set local storage stuffz
+                var enrollments = await GetEnrollments(db, acct.AccountId);
+                await BrowserStorage<List<Enrollment>>.SaveObject(storage, "enrollments", enrollments);
+                var courses = await GetCourses(db, acct.Role == (int)Role.PROFESSOR ? acct.AccountId : 0);
+                await BrowserStorage<List<Course>>.SaveObject(storage, "courses", courses);
+                var appointments = await GetAppointments(db, storage);
+                await BrowserStorage<List<AppointmentData>>.SaveObject(storage, "appointments", appointments);
+
+                if (acct.Role == (int)Role.STUDENT)
+                {
+                    var submissions = await GetSubmissions(db, acct.AccountId);
+                    await BrowserStorage<List<Submission>>.SaveObject(storage, "submissions", submissions);
+                }
 
                 if (auth.EmailVerified)
                 {
@@ -351,6 +370,10 @@ namespace LMS.Data
                     course.ProfessorId = model.ProfessorId;
                     course.Name = model.Name;
                     course.Description = model.Description;
+                    course.EndTime = model.EndTime;
+                    course.StartTime = model.StartTime;
+                    course.Credits = model.Credits;
+                    course.Markup = model.Markup;
 
                     saved = await db.SaveChangesAsync() > 0;
                 }
@@ -413,7 +436,7 @@ namespace LMS.Data
                 for (int i = 0; i < enrollments.Count; i++)
                 {
                     var e = enrollments[i];
-                    if (e.DeleteDate != null && e.EnrollmentId == 0)
+                    if (e.DeleteDate == null && e.EnrollmentId == 0)
                     {
                         db.Enrollments.Add(e);
                     }
@@ -597,6 +620,7 @@ namespace LMS.Data
                     ass.Name = assignment.Name;
                     ass.Type = assignment.Type;
                     ass.Description = assignment.Description;
+                    ass.SubmissionType = assignment.SubmissionType;
                 }
                 else
                 {
@@ -654,6 +678,7 @@ namespace LMS.Data
                     sub.UploadFileName = submission.UploadFileName;
                     sub.UploadFilePath = submission.UploadFilePath;
                     sub.AccountId = submission.AccountId;
+                    sub.TextResponse = submission.TextResponse;
                 }
                 else
                 {
@@ -849,6 +874,219 @@ namespace LMS.Data
             db.Notifications.Add(notification);
             saved = await db.SaveChangesAsync() > 0;
             return saved;
+        }
+
+        /// <summary>
+        /// Gets all student grades for all assignments from all courses currently enrolled.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <param name="isProfessor"></param>
+        /// <returns></returns>
+        public async Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId)
+        {
+            var grades = new List<GradeViewModel>();
+
+            try
+            {
+                var enrollments = await GetEnrollments(db, acctId);
+                var courses = enrollments.Select(e => new Course() { CourseId = e.CourseId }).ToList();
+                var asses = GetAssignments(db, courses);
+
+                for (int i = 0; i < courses.Count; i++)
+                {
+                    var gradeViewModel = new GradeViewModel()
+                    {
+                        CourseId = courses[i].CourseId,
+                        Assignments = GetAssignments(db, new List<Course>() { new Course() { CourseId = courses[i].CourseId } }),
+                        Submissions = await GetSubmissions(db, acctId),
+                        Grades = new List<Grade>(),
+                        OverallLetterGrade = "F-",
+                        OverallPercentageGrade = 0
+                    };
+
+                    for (int j = 0; j < gradeViewModel.Assignments.Count; j++)
+                    {
+                        var grade = new Grade()
+                        {
+                            AssignmentId = gradeViewModel.Assignments[j].AssignmentId,
+                            AssignmentName = gradeViewModel.Assignments[j].Name
+                        };
+                        var submission = gradeViewModel.Submissions.FirstOrDefault(s => s.AssignmentId == grade.AssignmentId);
+                        if (submission == null)
+                        {
+                            grade.Score = 0;
+                            grade.ScoreDisplay = "Not Yet Graded";
+                            grade.LetterGrade = string.Empty;
+
+                        }
+                        else
+                        {
+                            grade.Score = Math.Round((submission.Score / (decimal)gradeViewModel.Assignments[i].MaxScore) * 100, 2);
+                            grade.ScoreDisplay = $"{submission.Score}/{gradeViewModel.Assignments[j].MaxScore}" +
+                                $" ({grade.Score})";
+                            grade.LetterGrade = GradeHelper.GenGradeFromPercentage(grade.Score);
+                        }
+
+                        gradeViewModel.Grades.Add(grade);
+                    }
+
+                    var gradedGrades = gradeViewModel.Grades.Where(g => g.Score > 0);
+                    var sum = gradedGrades.Sum(g => g.Score);
+
+
+                    gradeViewModel.OverallPercentageGrade = gradedGrades.Count() > 0 ? sum / gradedGrades.Count() : 0.00m;
+                    gradeViewModel.OverallLetterGrade = gradeViewModel.OverallPercentageGrade > 0 ?
+                        GradeHelper.GenGradeFromPercentage(gradeViewModel.OverallPercentageGrade) : "N/A";
+
+                    grades.Add(gradeViewModel);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return grades;
+        }
+
+        /// <summary>
+        /// Updates the graded Submissions passed.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="gradedSubmissions"></param>
+        /// <returns></returns>
+        public async Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions)
+        {
+            var allSaved = new bool[gradedSubmissions.Count];
+            try
+            {
+                var index = 0;
+                var tasks = gradedSubmissions.Select(s => SaveSubmission(db, s));
+                allSaved = await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return allSaved.All(s => s == true);
+        }
+
+        /// <summary>
+        /// Gets the appointments to populate the calendar in the Dashboard.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<List<AppointmentData>> GetAppointments(AzureDbContext db, ILocalStorageService storage)
+        {
+            var appointments = new List<AppointmentData>();
+            var courses = await BrowserStorage<List<Course>>.GetObject(storage, "courses");
+            var asses = GetAssignments(db, courses);
+
+            try
+            {
+                var index = 0;
+                foreach (var c in courses)
+                {
+                    var st = DateTime.ParseExact(c.StartTime, "H:mm", null, System.Globalization.DateTimeStyles.None);
+                    var et = DateTime.ParseExact(c.EndTime, "H:mm", null, System.Globalization.DateTimeStyles.None);
+                    var sd = c.StartDate;
+                    var ed = c.EndDate;
+
+                    var today = DateTime.UtcNow;
+                    while (today < ed)
+                    {
+                        appointments.Add(new AppointmentData()
+                        {
+                            Id = index++,
+                            Description = $"{c.Description}",
+                            StartTime = st,
+                            EndTime = et,
+                            IsAllDay = false,
+                            Location = $"Zoom Meeting",
+                            Subject = $"{c.Name}"
+                        });
+
+                        st = st.AddDays(7);
+                        et = et.AddDays(7);
+                        today = today.AddDays(7);
+                    }
+                }
+                foreach (var a in asses)
+                {
+                    appointments.Add(new AppointmentData()
+                    {
+                        Id = index++,
+                        Description = $"{a.Name} DUE",
+                        StartTime = a.DueDate ?? DateTime.UtcNow,
+                        EndTime = a.DueDate ?? DateTime.UtcNow.AddHours(2),
+                        IsAllDay = false,
+                        Location = $"Assignment",
+                        Subject = $"Assignment"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return appointments;
+        }
+
+        /// <summary>
+        /// Generates a Bell Chart based off the passed assignments' grades, if any.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="asses"></param>
+        /// <param name="chartName"></param>
+        /// <returns></returns>
+        public async Task<BellCurveChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName = "Standing")
+        {
+            var chart = new BellCurveChart()
+            {
+                Name = chartName,
+                Series = new Series[asses.Count]
+            };
+
+            for (int i = 0; i < asses.Count; i++)
+            {
+                var ass = asses[i];
+
+                var gradedSubmissions = await db.Submissions.Where(s => s.AssignmentId == asses[i].AssignmentId && s.Score > 0)
+                .Select(s => s.Score)
+                .OrderBy(s => s)
+                .ToArrayAsync();
+
+                var quartileLength = (gradedSubmissions.Length / 2) - 1;
+                var quartileMedian = (int)(Math.Round(quartileLength / 2d, 0));
+                var median = (int)(Math.Round(gradedSubmissions.Length / 2d, 0));
+                var q1 = gradedSubmissions.Take(quartileLength).ToArray()[quartileMedian];
+                var q3 = gradedSubmissions.TakeLast(quartileLength).ToArray()[quartileMedian];
+
+                var seriesData = gradedSubmissions.Select(s => new
+                {
+                    x = ass.Name,
+                    low = gradedSubmissions.Min(),
+                    q1 = q1,
+                    median = gradedSubmissions[median],
+                    q3 = q3,
+                    high = gradedSubmissions.Max()
+                }).ToArray();
+
+                var series = new Series()
+                {
+                    AssignmentId = ass.AssignmentId,
+                    Name = ass.Name,
+                    PointsPossible = ass.MaxScore,
+                    Data = seriesData
+                };
+
+                chart.Series[i] = series;
+            }
+
+            return chart;
         }
     }
 }
