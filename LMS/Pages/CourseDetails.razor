@@ -72,9 +72,7 @@ else
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-
         await SetupCharts();
-
     }
 
     protected async override Task OnInitializedAsync()
@@ -92,7 +90,7 @@ else
             _charts = new List<BellCurveChart>();
             foreach (var ass in Model.Assignments)
             {
-                var chart = await DbService.GetAssignmentChart(AzureDb, ass);
+                var chart = await DbService.GetAssignmentStandingChart(AzureDb, new List<Assignment>() { ass }, ass.Name);
                 _charts.Add(chart);
             }
         }
@@ -110,18 +108,19 @@ else
             var index = 0;
             foreach (var c in _charts)
             {
-                var total = c.Series.Data.Length;
-                var sum = c.Series.Data.Sum();
-                var median = Math.Round((decimal)sum / total, 0);
+                // single series per chart
+                var series = c.Series.First();
+                var total = series.Data.Length;
+                var median = (int)series.Data[3];
 
                 var score = 0;
-                var submission = Model.Submissions.FirstOrDefault(s => s.AssignmentId == c.Series.AssignmentId);
+                var submission = Model.Submissions.FirstOrDefault(s => s.AssignmentId == series.AssignmentId);
                 if (submission != null)
                 {
                     score = submission.Score;
                 }
 
-                await JS.InvokeVoidAsync("SetupAssignmentChart", $"chart-{index++}", c.Name, c.Series.Data, median, c.Series.PointsPossible, score);
+                await JS.InvokeVoidAsync("SetupAssignmentChart", $"chart-{index++}", c.Name, series.Data, median, series.PointsPossible, score);
             }
         }
     }

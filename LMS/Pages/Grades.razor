@@ -74,6 +74,15 @@ else
 
                             <MatButton Class="btn btn-primary LMS-btn" Type="button" OnClick="Save">Save</MatButton>
                             <MatButton Class="btn btn-secondary LMS-btn" Type="button" OnClick="ResetForm">Reset</MatButton>
+
+                            @if (_chart != null && _chart.Series.Any())
+                            {
+                                <div class="chart">
+                                    <figure class="highcharts-figure">
+                                        <div id="chart"></div>
+                                    </figure>
+                                </div>
+                            }
                         }
                         else
                         {
@@ -136,6 +145,13 @@ else
     private int _filterAssId;
     private List<Data.Models.Submission> _filteredSubmissions;
 
+    private BellCurveChart _chart;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await SetupChart();
+    }
+
     protected async override Task OnInitializedAsync()
     {
         Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
@@ -147,6 +163,7 @@ else
             Model.Assignments = DbService.GetAssignments(AzureDb, Model.Courses);
             Model.Submissions = await AzureDb.Submissions.Where(s => s.DeleteDate == null).ToListAsync();
             Model.StudentAccounts = await AzureDb.Accounts.Where(a => a.Role == (int)Role.STUDENT).ToListAsync();
+            _chart = await DbService.GetAssignmentStandingChart(AzureDb, Model.Assignments, "Class Standing By Assignment");
             ResetForm();
         }
         else
@@ -218,5 +235,17 @@ else
         }
         StateHasChanged();
     }
+
+    private async Task SetupChart()
+    {
+        if (_chart != null && _chart.Series.Any())
+        {
+            var series = _chart.Series.Select(s => s.Data).ToArray();
+
+            var categories = _chart.Series.Select(s => s.Name).ToArray();
+            await JS.InvokeVoidAsync("SetupAssignmentProfessorChart", "chart", _chart.Name, series, categories);
+        }
+    }
 }
+
 

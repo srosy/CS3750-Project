@@ -147,6 +147,44 @@
             });
         }
     </script>
+    <script type="text/javascript">
+        //https://www.highcharts.com/demo/box-plot
+        function SetupAssignmentProfessorChart(index, title, series, categories) {
+
+            console.log(series.toString());
+            console.log(categories.toString());
+
+            Highcharts.chart(index, {
+                chart: {
+                    type: 'boxplot'
+                },
+                title: {
+                    text: title
+                },
+                legend: {
+                    enabled: false
+                },
+                xAxis: {
+                    categories: categories, //categories,
+                    title: {
+                        text: 'Assignments'
+                    }
+                },
+                yAxis: {
+                    title: {
+                        text: 'Scores'
+                    }
+                },
+                series: [{
+                    name: '',
+                    data: series,
+                    tooltip: {
+                        headerFormat: '<em>Details</em><br/>'
+                    }
+                }]
+            });
+        }
+    </script>
 
 </head>
 <body>

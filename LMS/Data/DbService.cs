@@ -47,7 +47,7 @@ namespace LMS.Data
         public Task<List<AppointmentData>> GetAppointments(AzureDbContext db, ILocalStorageService storage);
         public Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId);
         public Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions);
-        public Task<BellCurveChart> GetAssignmentChart(AzureDbContext db, Assignment ass);
+        public Task<BellCurveChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName);
     }
     public class DbService : IDbService
     {
@@ -78,7 +78,7 @@ namespace LMS.Data
                 await BrowserStorage<List<Enrollment>>.SaveObject(storage, "enrollments", enrollments);
                 var courses = await GetCourses(db, acct.Role == (int)Role.PROFESSOR ? acct.AccountId : 0);
                 await BrowserStorage<List<Course>>.SaveObject(storage, "courses", courses);
-                var appointments = await GetAppointments(db,storage);
+                var appointments = await GetAppointments(db, storage);
                 await BrowserStorage<List<AppointmentData>>.SaveObject(storage, "appointments", appointments);
 
                 if (acct.Role == (int)Role.STUDENT)
@@ -86,7 +86,7 @@ namespace LMS.Data
                     var submissions = await GetSubmissions(db, acct.AccountId);
                     await BrowserStorage<List<Submission>>.SaveObject(storage, "submissions", submissions);
                 }
-                
+
                 if (auth.EmailVerified)
                 {
                     return true;
@@ -1036,29 +1036,55 @@ namespace LMS.Data
         }
 
         /// <summary>
-        /// Generates a Bell Chart based off the passed assignment's grades, if any.
+        /// Generates a Bell Chart based off the passed assignments' grades, if any.
         /// </summary>
         /// <param name="db"></param>
-        /// <param name="ass"></param>
+        /// <param name="asses"></param>
+        /// <param name="chartName"></param>
         /// <returns></returns>
-        public async Task<BellCurveChart> GetAssignmentChart(AzureDbContext db, Assignment ass)
+        public async Task<BellCurveChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName = "Standing")
         {
-            var gradedSubmissions = await db.Submissions.Where(s => s.AssignmentId == ass.AssignmentId && s.Score > 0)
+            var chart = new BellCurveChart()
+            {
+                Name = chartName,
+                Series = new Series[asses.Count]
+            };
+
+            for (int i = 0; i < asses.Count; i++)
+            {
+                var ass = asses[i];
+
+                var gradedSubmissions = await db.Submissions.Where(s => s.AssignmentId == asses[i].AssignmentId && s.Score > 0)
                 .Select(s => s.Score)
                 .OrderBy(s => s)
                 .ToArrayAsync();
 
-            if (gradedSubmissions.Length <= 0)
-            {
-                return null;
-            }
+                var quartileLength = (gradedSubmissions.Length / 2) - 1;
+                var quartileMedian = (int)(Math.Round(quartileLength / 2d, 0));
+                var median = (int)(Math.Round(gradedSubmissions.Length / 2d, 0));
+                var q1 = gradedSubmissions.Take(quartileLength).ToArray()[quartileMedian];
+                var q3 = gradedSubmissions.TakeLast(quartileLength).ToArray()[quartileMedian];
 
-            var chart = new BellCurveChart()
-            {
-                Name = ass.Name,
-                Color = "rgba(75, 0, 130, .5)",
-                Series = new Series() { Data = gradedSubmissions, PointsPossible = ass.MaxScore, AssignmentId = ass.AssignmentId }
-            };
+                var seriesData = gradedSubmissions.Select(s => new
+                {
+                    x = ass.Name,
+                    low = gradedSubmissions.Min(),
+                    q1 = q1,
+                    median = gradedSubmissions[median],
+                    q3 = q3,
+                    high = gradedSubmissions.Max()
+                }).ToArray();
+
+                var series = new Series()
+                {
+                    AssignmentId = ass.AssignmentId,
+                    Name = ass.Name,
+                    PointsPossible = ass.MaxScore,
+                    Data = seriesData
+                };
+
+                chart.Series[i] = series;
+            }
 
             return chart;
         }
