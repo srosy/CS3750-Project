@@ -47,6 +47,7 @@ namespace LMS.Data
         public Task<List<AppointmentData>> GetAppointments(AzureDbContext db, ILocalStorageService storage);
         public Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId);
         public Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions);
+        public Task<BellCurveChart> GetAssignmentChart(AzureDbContext db, Assignment ass);
     }
     public class DbService : IDbService
     {
@@ -1032,6 +1033,34 @@ namespace LMS.Data
             }
 
             return appointments;
+        }
+
+        /// <summary>
+        /// Generates a Bell Chart based off the passed assignment's grades, if any.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="ass"></param>
+        /// <returns></returns>
+        public async Task<BellCurveChart> GetAssignmentChart(AzureDbContext db, Assignment ass)
+        {
+            var gradedSubmissions = await db.Submissions.Where(s => s.AssignmentId == ass.AssignmentId && s.Score > 0)
+                .Select(s => s.Score)
+                .OrderBy(s => s)
+                .ToArrayAsync();
+
+            if (gradedSubmissions.Length <= 0)
+            {
+                return null;
+            }
+
+            var chart = new BellCurveChart()
+            {
+                Name = ass.Name,
+                Color = "rgba(75, 0, 130, .5)",
+                Series = new Series() { Data = gradedSubmissions, PointsPossible = ass.MaxScore, AssignmentId = ass.AssignmentId }
+            };
+
+            return chart;
         }
     }
 }
