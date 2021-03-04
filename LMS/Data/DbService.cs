@@ -72,12 +72,16 @@ namespace LMS.Data
 
                 await DeleteSession(db, storage);
                 await SessionObj.CreateSession(db, storage, acct.AccountId);
+                var enrollments = await GetEnrollments(db, acct.AccountId);
+                var courses = await GetCourses(db, acct.Role == (int)Role.PROFESSOR ? acct.AccountId : 0);
 
                 // set local storage stuffz
-                var enrollments = await GetEnrollments(db, acct.AccountId);
-                await BrowserStorage<List<Enrollment>>.SaveObject(storage, "enrollments", enrollments);
-                var courses = await GetCourses(db, acct.Role == (int)Role.PROFESSOR ? acct.AccountId : 0);
-                await BrowserStorage<List<Course>>.SaveObject(storage, "courses", courses);
+                var tasks = new List<Task>()
+                {
+                    BrowserStorage<List<Enrollment>>.SaveObject(storage, "enrollments", enrollments),
+                    BrowserStorage<List<Course>>.SaveObject(storage, "courses", courses),
+                };
+                await Task.WhenAll(tasks);
                 var appointments = await GetAppointments(db, storage);
                 await BrowserStorage<List<AppointmentData>>.SaveObject(storage, "appointments", appointments);
 
@@ -91,11 +95,9 @@ namespace LMS.Data
                 {
                     return true;
                 }
-                else
-                {
-                    Console.WriteLine("Account has not been validated.");
-                    return false;
-                }
+
+                Console.WriteLine("Account has not been validated.");
+                return false;
 
             }
             catch (Exception ex)
@@ -981,7 +983,7 @@ namespace LMS.Data
         public async Task<List<AppointmentData>> GetAppointments(AzureDbContext db, ILocalStorageService storage)
         {
             var appointments = new List<AppointmentData>();
-            var courses = await BrowserStorage<List<Course>>.GetObject(storage, "courses");
+            var courses = await BrowserStorage<List<Course>>.GetObject(storage, "courses", new List<Course>());
             var asses = GetAssignments(db, courses);
 
             try

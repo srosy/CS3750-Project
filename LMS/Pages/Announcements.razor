@@ -104,7 +104,7 @@ else
         if (_acctIsProfessor)
         {
 
-            Model.Courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses");
+            Model.Courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses", new List<Course>());
 
         }
         Model.Announcements = await DbService.GetAnnouncements(AzureDb, Model.Account.AccountId, _acctIsProfessor);

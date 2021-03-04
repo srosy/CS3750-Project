@@ -15,11 +15,17 @@ namespace LMS.Data.Helper
 {
     public static class BrowserStorage<T>
     {
-        public static async Task<T> GetObject(ILocalStorageService storage, string name)
+        public static async Task<T> GetObject(ILocalStorageService storage, string name, T obj)
         {
             try
             {
-                var obj = await storage.GetItemAsync<T>(name);
+                var _obj = await storage.GetItemAsync<T>(name);
+
+                if (_obj != null)
+                {
+                    obj = _obj;
+                }
+
                 return obj;
             }
             catch (Exception ex)
@@ -27,7 +33,6 @@ namespace LMS.Data.Helper
                 Console.WriteLine(ex.Message);
                 return default;
             }
-
         }
         public static async Task SaveObject(ILocalStorageService storage, string name, T obj)
         {

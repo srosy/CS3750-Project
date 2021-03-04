@@ -83,7 +83,7 @@ else
             Model.Course = AzureDb.Courses.FirstOrDefault(c => c.CourseId == _courseId);
             Model.Assignments = DbService.GetAssignments(AzureDb, new List<Course>() { new Course() { CourseId = _courseId } });
         }
-        Model.Submissions = await BrowserStorage<List<Data.Models.Submission>>.GetObject(Storage, "submissions");
+        Model.Submissions = await BrowserStorage<List<Data.Models.Submission>>.GetObject(Storage, "submissions", new List<Data.Models.Submission>());
 
         if (Model.Assignments.Any())
         {

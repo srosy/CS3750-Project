@@ -59,8 +59,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _enrollments = await BrowserStorage<List<Enrollment>>.GetObject(Storage, "enrollments");
-        _courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses");
+        _enrollments = await BrowserStorage<List<Enrollment>>.GetObject(Storage, "enrollments", new List<Enrollment>());
+        _courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses", new List<Course>());
         _loading = false;
     }
 }

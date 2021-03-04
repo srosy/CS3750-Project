@@ -213,7 +213,7 @@ else
     {
         Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
         _acctIsProfessor = Model.Account.Role == (int)Role.PROFESSOR;
-        Model.Courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses");
+        Model.Courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses", new List<Course>());
 
         if (!_acctIsProfessor)
         {
@@ -227,7 +227,7 @@ else
                 }
             });
             Model.Courses = enrolledCourses;
-            Model.Submissions = await BrowserStorage<List<Data.Models.Submission>>.GetObject(Storage, "submissions");
+            Model.Submissions = await BrowserStorage<List<Data.Models.Submission>>.GetObject(Storage, "submissions", new List<Data.Models.Submission>());
         }
 
         Model.Assignments = DbService.GetAssignments(AzureDb, Model.Courses);
@@ -281,7 +281,7 @@ else
 
         var assignmentSaved = await DbService.SaveAssignment(AzureDb, _assignmentModel) && assUpdated;
         ResetForm();
-        Model.Courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses");
+        Model.Courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses", new List<Course>());
         Model.Assignments = DbService.GetAssignments(AzureDb, Model.Courses);
         await JS.InvokeVoidAsync("Toast", new[] { assignmentSaved ? "success" : "error", assignmentSaved ? "Saved Assignment." : "Failed to save Assignment.", assignmentSaved ? "3000" : "5000" }); // toasttype, message, duration
         this.StateHasChanged();
