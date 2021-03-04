@@ -27,10 +27,15 @@ namespace UnitTest
         [Fact]
         public async Task StudentEnrollThenDropCourse()
         {
+            // Arrange
+            #region Arrange
             //Getting n classes student is enrolled in
             var enrollments = await _db.GetEnrollments(_context, 74);
             int count = enrollments.Count();
+            #endregion
 
+            // Act
+            #region Act
             enrollments.Add(new LMS.Data.Models.Enrollment
             {
                 AccountId = 74,
@@ -42,18 +47,27 @@ namespace UnitTest
             //Enrolling student in n+1 classes
             await _db.UpdateEnrollments(_context, 74, enrollments);
             enrollments = await _db.GetEnrollments(_context, 74);
+            #endregion
 
+            // Assert
+            #region Assert
             //Comparing n+1 to enrolled classes
             enrollments.Count().ShouldBeEquivalentTo(count + 1);
+            #endregion
 
+            // Act II
+            #region Act II
             var courses = await _context.Courses.Where(c => c.CourseId == enrollments.Last().CourseId).ToListAsync();
 
             //Unenrolling student from class
             await _db.UpdateEnrollmentsOnDeletedCourse(_context, courses.FirstOrDefault());
             enrollments = await _db.GetEnrollments(_context, 74);
+            #endregion
 
+            #region Assert II
             //Comparing n to enrolled classes
             enrollments.Count().ShouldBeEquivalentTo(count);
+            #endregion
         }
     }
 }

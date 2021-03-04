@@ -28,32 +28,34 @@ namespace UnitTest
         [Fact]
         public async Task InstructorAddCourse()
         {
-            try
-            {
-                //Retrieving n classes from the professor's schedule
-                var courses = _context.Courses.Where(c => c.DeleteDate == null && c.ProfessorId == 108);
-                int count = courses.Count();
+            // Arrange
+            #region Arrange
+            // Retrieving n classes from the professor's schedule
+            var courses = _context.Courses.Where(c => c.DeleteDate == null && c.ProfessorId == 108);
+            int count = courses.Count();
+            #endregion
 
-                //Adding a new class to the professor's schedule
-                var testCourse = new LMS.Data.Models.Course()
-                {
-                    Name = "TestCourse",
-                    ProfessorId = 108,
-                    StartDate = new DateTime(2021, 1, 1),
-                    EndDate = new DateTime(2021, 5, 5),
-                    Credits = 1,
-                    CreateDate = DateTime.Now
-                };
-                await _db.SaveCourse(_context, testCourse);
-
-                //Comparing n+1 classes to the professor's schedule
-                courses = _context.Courses.Where(c => c.DeleteDate == null && c.ProfessorId == 108);
-                courses.Count().ShouldBeEquivalentTo(count+1);
-            }
-            catch (Exception e)
+            // Act
+            #region Act
+            // Adding a new class to the professor's schedule
+            var testCourse = new LMS.Data.Models.Course()
             {
-                throw new Exception(e.Message);
-            }  
+                Name = "TestCourse",
+                ProfessorId = 108,
+                StartDate = new DateTime(2021, 1, 1),
+                EndDate = new DateTime(2021, 5, 5),
+                Credits = 1,
+                CreateDate = DateTime.Now
+            };
+            await _db.SaveCourse(_context, testCourse);
+            #endregion
+
+            // Assert
+            #region Assert
+            // Comparing n+1 classes to the professor's schedule
+            courses = _context.Courses.Where(c => c.DeleteDate == null && c.ProfessorId == 108);
+            courses.Count().ShouldBeEquivalentTo(count + 1);
+            #endregion
         }
     }
 }
