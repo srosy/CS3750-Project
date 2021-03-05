@@ -18,16 +18,39 @@ else
                     <div class="card-header"><h1>Details for @Model.Course.Name</h1></div>
                     <div class="card-body text-left">
                         @((MarkupString)Model.Course.Markup)
-                        <br />
                         @if (Model.Assignments.Any())
                         {
-                            <h2>Assignments</h2>
-                            var index = 0;
-                            @foreach (var ass in Model.Assignments)
-                            {
-                                index++;
-                                <a href="/submission/@ass.AssignmentId" title="Goto submit assignment page">@index. @ass.Name</a><br />
-                            }
+                            <h2 class="text-center">Assignments</h2>
+                            <br />
+                            int index = 0, chartCount = 0;
+                            <div class="row text-center">
+                                @foreach (var ass in Model.Assignments)
+                                {
+                                    index++;
+                                    var sus = Model.Submissions?.FirstOrDefault(s => s.AssignmentId == ass.AssignmentId);
+                                    <div class="col-md-6 text-center">
+                                        <div class="col-md-12 text-center">
+                                            <a href="/submission/@ass.AssignmentId" title="Goto submit assignment page">@index. @ass.Name</a>
+                                            @if (sus != null)
+                                            {
+                                                <div class="badge badge-success mt-1 ml-1 pt-1">Grade: @sus.Score/@ass.MaxScore</div>
+                                            }
+                                        </div>
+                                        <div class="col-md-12" style="display: block; margin: auto;">
+                                            @if (_charts != null && _charts.Any())
+                                            {
+                                                <div class="chart">
+                                                    <figure class="highcharts-figure">
+                                                        <div id="chart-@chartCount"></div>
+                                                    </figure>
+                                                </div>
+                                                chartCount++;
+                                            }
+                                        </div>
+                                    </div>
+                                    <br />
+                                }
+                            </div>
                         }
                     </div>
                 </div>
@@ -45,6 +68,12 @@ else
     private bool _loading = true;
     private int _courseId;
 
+    private List<BoxPlotChart> _charts;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await SetupCharts();
+    }
 
     protected async override Task OnInitializedAsync()
     {
@@ -54,6 +83,44 @@ else
             Model.Course = AzureDb.Courses.FirstOrDefault(c => c.CourseId == _courseId);
             Model.Assignments = DbService.GetAssignments(AzureDb, new List<Course>() { new Course() { CourseId = _courseId } });
         }
+        Model.Submissions = await BrowserStorage<List<Data.Models.Submission>>.GetObject(Storage, "submissions", new List<Data.Models.Submission>());
+
+        if (Model.Assignments.Any())
+        {
+            _charts = new List<BoxPlotChart>();
+            foreach (var ass in Model.Assignments)
+            {
+                var chart = await DbService.GetAssignmentStandingChart(AzureDb, new List<Assignment>() { ass }, ass.Name);
+                _charts.Add(chart);
+            }
+        }
         _loading = false;
+    }
+
+    /// <summary>
+    /// Sets up charts to show Assignment statistics, if any.
+    /// </summary>
+    /// <returns></returns>
+    private async Task SetupCharts()
+    {
+        if (_charts != null && _charts.Any())
+        {
+            var index = 0;
+            foreach (var c in _charts)
+            {
+                // single series per chart
+                var series = c.Series.First();
+
+                var score = 0;
+                var submission = Model.Submissions.FirstOrDefault(s => s.AssignmentId == series.AssignmentId);
+                if (submission != null)
+                {
+                    score = submission.Score;
+                }
+
+                var seriesArray = new { series.Data.low, series.Data.q1, series.Data.median, series.Data.q3, series.Data.high };
+                await JS.InvokeVoidAsync("SetupAssignmentChart", $"chart-{index++}", c.Name, seriesArray, series.Data.median, series.PointsPossible, score);
+            }
+        }
     }
 }

@@ -1,21 +1,58 @@
-﻿using System;
+﻿using Blazored.LocalStorage;
+using BlazorInputFile;
+using LMS.Data.Models;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Blazored.LocalStorage;
-using BlazorInputFile;
-using LMS.Data.Enum;
-using LMS.Data.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace LMS.Data.Helper
 {
+    public static class BrowserStorage<T>
+    {
+        public static async Task<T> GetObject(ILocalStorageService storage, string name, T obj)
+        {
+            try
+            {
+                var _obj = await storage.GetItemAsync<T>(name);
+
+                if (_obj != null)
+                {
+                    obj = _obj;
+                }
+
+                return obj;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return default;
+            }
+        }
+        public static async Task SaveObject(ILocalStorageService storage, string name, T obj)
+        {
+            try
+            {
+                var existing = await storage.ContainKeyAsync(name);
+                if (existing)
+                {
+                    await storage.RemoveItemAsync(name);
+                }
+
+                await storage.SetItemAsync(name, obj);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+    }
+
     public class SessionObj
     {
         public Guid SessionId { get; set; }
