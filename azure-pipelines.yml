@@ -38,3 +38,33 @@ steps:
     ResourceGroupName: 'CS3750'
     SlotName: 'test'
     packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+
+- task: AzureAppServiceSettings@1
+  displayName: Azure App Service Settings
+  inputs:
+    azureSubscription: $(azureSubscription)
+    appName: 'CS3750-LMS'
+    ResourceGroupName: 'CS3750'
+    slotName: 'test'
+    appSettings: |
+      [
+        {
+          "name": "WEBSITE_NODE_DEFAULT_VERSION",
+          "value": "6.9.1",
+          "slotSetting": false
+        },
+        {
+          "name": "WEBSITE_RUN_FROM_PACKAGE",
+          "value": "1",
+          "slotSetting": false
+        }
+      ]
+    connectionStrings: |
+      [
+        {
+          "name": "AzureDbContext",
+          "value": $(DB_CONN_STRING),
+          "type": "SQLAzure",
+          "slotSetting": false
+        }
+      ]
