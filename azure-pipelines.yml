@@ -52,11 +52,6 @@ steps:
           "name": "WEBSITE_NODE_DEFAULT_VERSION",
           "value": "6.9.1",
           "slotSetting": true
-        },
-        {
-          "name": "WEBSITE_RUN_FROM_PACKAGE",
-          "value": "1",
-          "slotSetting": true
         }
       ]
     connectionStrings: |
