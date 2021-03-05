@@ -63,7 +63,7 @@ steps:
       [
         {
           "name": "AzureDbContext",
-          "value": $(DB_CONN_STRING),
+          "value": "$(DB_CONN_STRING)",
           "type": "SQLAzure",
           "slotSetting": false
         }
