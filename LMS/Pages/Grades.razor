@@ -145,7 +145,7 @@ else
     private int _filterAssId;
     private List<Data.Models.Submission> _filteredSubmissions;
 
-    private BellCurveChart _chart;
+    private BoxPlotChart _chart;
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
@@ -241,9 +241,18 @@ else
         if (_chart != null && _chart.Series.Any())
         {
             var series = _chart.Series.Select(s => s.Data).ToArray();
-
             var categories = _chart.Series.Select(s => s.Name).ToArray();
-            await JS.InvokeVoidAsync("SetupAssignmentProfessorChart", "chart", _chart.Name, series, categories);
+
+            var seriesArray = _chart.Series.Select(s => new
+            {
+                s.Data.low,
+                s.Data.q1,
+                s.Data.median,
+                s.Data.q3,
+                s.Data.high
+            });
+
+            await JS.InvokeVoidAsync("SetupAssignmentProfessorChart", "chart", _chart.Name, seriesArray, categories);
         }
     }
 }

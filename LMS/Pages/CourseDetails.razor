@@ -68,7 +68,7 @@ else
     private bool _loading = true;
     private int _courseId;
 
-    private List<BellCurveChart> _charts;
+    private List<BoxPlotChart> _charts;
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
@@ -87,7 +87,7 @@ else
 
         if (Model.Assignments.Any())
         {
-            _charts = new List<BellCurveChart>();
+            _charts = new List<BoxPlotChart>();
             foreach (var ass in Model.Assignments)
             {
                 var chart = await DbService.GetAssignmentStandingChart(AzureDb, new List<Assignment>() { ass }, ass.Name);
@@ -110,8 +110,6 @@ else
             {
                 // single series per chart
                 var series = c.Series.First();
-                var total = series.Data.Length;
-                var median = (int)series.Data[3];
 
                 var score = 0;
                 var submission = Model.Submissions.FirstOrDefault(s => s.AssignmentId == series.AssignmentId);
@@ -120,7 +118,8 @@ else
                     score = submission.Score;
                 }
 
-                await JS.InvokeVoidAsync("SetupAssignmentChart", $"chart-{index++}", c.Name, series.Data, median, series.PointsPossible, score);
+                var seriesArray = new { series.Data.low, series.Data.q1, series.Data.median, series.Data.q3, series.Data.high };
+                await JS.InvokeVoidAsync("SetupAssignmentChart", $"chart-{index++}", c.Name, seriesArray, series.Data.median, series.PointsPossible, score);
             }
         }
     }

@@ -47,7 +47,7 @@ namespace LMS.Data
         public Task<List<AppointmentData>> GetAppointments(AzureDbContext db, ILocalStorageService storage);
         public Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId);
         public Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions);
-        public Task<BellCurveChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName);
+        public Task<BoxPlotChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName);
     }
     public class DbService : IDbService
     {
@@ -1044,9 +1044,9 @@ namespace LMS.Data
         /// <param name="asses"></param>
         /// <param name="chartName"></param>
         /// <returns></returns>
-        public async Task<BellCurveChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName = "Standing")
+        public async Task<BoxPlotChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName = "Standing")
         {
-            var chart = new BellCurveChart()
+            var chart = new BoxPlotChart()
             {
                 Name = chartName,
                 Series = new Series[asses.Count]
@@ -1067,9 +1067,8 @@ namespace LMS.Data
                 var q1 = gradedSubmissions.Take(quartileLength).ToArray()[quartileMedian];
                 var q3 = gradedSubmissions.TakeLast(quartileLength).ToArray()[quartileMedian];
 
-                var seriesData = gradedSubmissions.Select(s => new
+                var seriesData = gradedSubmissions.Select(s => new SeriesData
                 {
-                    x = ass.Name,
                     low = gradedSubmissions.Min(),
                     q1 = q1,
                     median = gradedSubmissions[median],
@@ -1082,7 +1081,7 @@ namespace LMS.Data
                     AssignmentId = ass.AssignmentId,
                     Name = ass.Name,
                     PointsPossible = ass.MaxScore,
-                    Data = seriesData
+                    Data = seriesData.First()
                 };
 
                 chart.Series[i] = series;
