@@ -28,11 +28,6 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-
 - task: AzureRmWebAppDeployment@4
   inputs:
     ConnectionType: 'AzureRM'
@@ -42,4 +37,4 @@ steps:
     deployToSlotOrASE: true
     ResourceGroupName: 'CS3750'
     SlotName: 'test'
-    packageForLinux: '$(build.artifactStagingDirectory)\WebApp.zip'
+    packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
