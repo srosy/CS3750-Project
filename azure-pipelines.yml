@@ -42,4 +42,4 @@ steps:
     deployToSlotOrASE: true
     ResourceGroupName: 'CS3750'
     SlotName: 'test'
-    packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    packageForLinux: '$(build.artifactStagingDirectory)\WebApp.zip'
