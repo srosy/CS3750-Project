@@ -51,20 +51,20 @@ steps:
         {
           "name": "WEBSITE_NODE_DEFAULT_VERSION",
           "value": "6.9.1",
-          "slotSetting": false
+          "slotSetting": true
         },
         {
           "name": "WEBSITE_RUN_FROM_PACKAGE",
           "value": "1",
-          "slotSetting": false
+          "slotSetting": true
         }
       ]
     connectionStrings: |
       [
         {
           "name": "AzureDbContext",
-          "value": "$(DB_CONN_STRING)",
+          "value": "Server=tcp:srosy-weber.database.windows.net,1433;Initial Catalog=LMS;Persist Security Info=False;User ID=srosy;Password=GaviSpe64!;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
           "type": "SQLAzure",
-          "slotSetting": false
+          "slotSetting": true
         }
       ]
