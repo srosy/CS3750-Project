@@ -122,16 +122,17 @@ else
         <br />
         @if (Model.Courses.Any())
         {
+            
             <MatTable Items="Model.Courses" class="mat-elevation-z5 lms-table"
                       Striped="true" FilterByColumnName="Description" PageLabel="Page:" DebounceMilliseconds="150"
                       AllowSelection="true" SelectionChanged="RowClick" @attributes="Model.TableAttributes">
                 <MatTableHeader>
-                    <th>Course ID</th>
-                    <th>Name</th>
-                    <th>Professor</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Description</th>
+                    <th style="min-width: @COL_SIZE;">Course ID</th>
+                    <th style="min-width: @COL_SIZE;">Name</th>
+                    <th style="min-width: @COL_SIZE;">Professor</th>
+                    <th style="min-width: @COL_SIZE;">Start Date</th>
+                    <th style="min-width: @COL_SIZE;">End Date</th>
+                    <th style="min-width: @COL_LG_SIZE;"><span style="width:50px">Description</span></th>
                 </MatTableHeader>
                 <MatTableRow>
                     <td>@context.CourseId</td>
@@ -143,8 +144,10 @@ else
                     <td>@context.StartDate.ToShortDateString()</td>
                     <td>@context.EndDate.ToShortDateString()</td>
                     <td>@context.Description</td>
+
                 </MatTableRow>
             </MatTable>
+            
         }
         else
         {
@@ -162,6 +165,8 @@ else
     private bool _loading = true;
     private bool _acctIsProfessor = false;
     private bool _invalidStartEndTimes;
+    private const string COL_SIZE = "185px";
+    private const string COL_LG_SIZE = "200px";
 
     private BlazoredTextEditor _richTextEditor = new BlazoredTextEditor();
     private string _editorContent;
