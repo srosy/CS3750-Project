@@ -29,7 +29,7 @@ namespace LMS.Data
         public Task<bool> UpdateAccount(AzureDbContext db, Account acct);
         public Task<bool> SaveSettings(AzureDbContext db, Settings settings);
         public Task<bool> DoSending(MimeMessage mailMessage);
-        public Task<bool> SendEmail(string email, AzureDbContext db, Notification notification = null);
+        public Task<bool> SendEmail(string email, AzureDbContext db = null, Notification notification = null);
         public Task VerifyEmail(string email, AzureDbContext db);
         public Task<bool> CheckAccountVerification(AzureDbContext azureDb, string email);
         public Task<string> GetVerificationCode(AzureDbContext db, string email);
@@ -170,30 +170,32 @@ namespace LMS.Data
         /// <param name="email"></param>
         /// <param name="db"></param>
         /// <returns></returns>
-        public async Task<bool> SendEmail(string email, AzureDbContext db, Notification notification = null)
-        {
-            var acct = await db.Accounts.FirstOrDefaultAsync(a => a.Email == email);
-            var matchingAuth = await db.Authentications.FirstOrDefaultAsync(a => a.AccountId == acct.AccountId);
-
-            var code = matchingAuth.ResetCode;
-
+        public async Task<bool> SendEmail(string email, AzureDbContext db = null, Notification notification = null)
+        {      
             try
             {
                 var mailMessage = new MimeMessage();
                 mailMessage.From.Add(new MailboxAddress("Team Git'r Dun", "LMS.GitrDun@gmail.com"));
                 mailMessage.To.Add(new MailboxAddress("User", email));
-
                 var textpart = new TextPart("plain");
+
+                if (db != null)
+                {
+                    var acct = await db.Accounts.FirstOrDefaultAsync(a => a.Email == email);
+                    var matchingAuth = await db.Authentications.FirstOrDefaultAsync(a => a.AccountId == acct.AccountId);
+                    var code = matchingAuth.ResetCode;
+
+                    if (!string.IsNullOrEmpty(code))
+                    {
+                        mailMessage.Subject = "LMS Verification Code";
+                        textpart.Text = $"Your LMS verification code is: \n\n" + code;
+                    }
+                }
 
                 if (notification != null)
                 {
                     mailMessage.Subject = notification.Title;
                     textpart.Text = notification.Message;
-                }
-                else if (!string.IsNullOrEmpty(code))
-                {
-                    mailMessage.Subject = "LMS Verification Code";
-                    textpart.Text = $"Your LMS verification code is: \n\n" + code;
                 }
 
                 mailMessage.Body = textpart;
@@ -967,18 +969,54 @@ namespace LMS.Data
         /// <returns></returns>
         public async Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions)
         {
-            var allSaved = new bool[gradedSubmissions.Count];
+            var allSaved = false;
             try
             {
-                var index = 0;
+                var submissions = gradedSubmissions.Select(s => s.SubmissionId);
+                var dbSubmissions = db.Submissions.Where(s => submissions.Contains(s.SubmissionId) && s.DeleteDate == null);
+
                 var tasks = gradedSubmissions.Select(s => SaveSubmission(db, s));
-                allSaved = await Task.WhenAll(tasks);
+                var allSubmissionsSaved = await Task.WhenAll(tasks);
+
+                var joined = from accounts in db.Accounts
+                             join gs in dbSubmissions on accounts.AccountId equals gs.AccountId
+                             select new
+                             {
+                                 email = accounts.Email,
+                                 score = gs.Score,
+                                 assId = gs.AssignmentId
+                             };
+
+                var emails = joined
+                    .Select(eat => new
+                    {
+                        email = eat.email,
+                        score = eat.score,
+                        assTitle = db.Assignments.First(x => x.AssignmentId == eat.assId).Name,
+                        courseName = db.Courses.First(c => c.CourseId == db.Assignments.First(x => x.AssignmentId == eat.assId).CourseId).Name,
+                        courseId = db.Courses.First(c => c.CourseId == db.Assignments.First(x => x.AssignmentId == eat.assId).CourseId).CourseId,
+                        possibleScore = db.Assignments.First(x => x.AssignmentId == eat.assId).MaxScore
+                    }).ToArray();
+
+                var emailTasks = emails.Select(e => SendEmail(e.email, null, new Notification()
+                {
+                    CourseId = e.courseId,
+                    CreateDate = DateTime.UtcNow,
+                    Title = $"Assignment Graded",
+                    Type = (int)NotificationType.SYSTEM,
+                    Message = $"Your assignment\n\n{e.assTitle}\n\nfor class\n\n{e.courseName}\n\nhas been graded with a score of {e.score}/{e.possibleScore}."
+                }));
+                var allEmailsSaved = await Task.WhenAll(emailTasks);
+
+                //TODO: Add notification to table and entries to notificationViewed
+
+                allSaved = allEmailsSaved.All(e => e == true) || allSubmissionsSaved.All(s => s == true);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
-            return allSaved.All(s => s == true);
+            return allSaved;
         }
 
         /// <summary>
@@ -1068,6 +1106,8 @@ namespace LMS.Data
                 .OrderBy(s => s)
                 .ToArrayAsync();
 
+                if (gradedSubmissions.Length <= 0) continue;
+
                 var quartileLength = (gradedSubmissions.Length / 2) - 1;
                 var quartileMedian = (int)(Math.Round(quartileLength / 2d, 0));
                 var median = (int)(Math.Round(gradedSubmissions.Length / 2d, 0));
@@ -1156,7 +1196,6 @@ namespace LMS.Data
                         .Select(z => z.a.Email).ToArrayAsync();
 
                     var allSent = new bool[emails.Length];
-
                     for (int i = 0; i < emails.Length; i++)
                     {
                         allSent[i] = await SendEmail(emails[i], db, notification);
