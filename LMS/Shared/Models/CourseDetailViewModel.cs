@@ -10,6 +10,6 @@ namespace LMS.Shared.Models
         public List<Assignment> Assignments { get; set; }
         public List<Submission> Submissions { get; set; }
         public List<GradeViewModel> Grades { get; set; }
-        public (int accountId, string standing)? Standing { get; set; }
+        public (int courseId, int accountId, string standing)? Standing { get; set; }
     }
 }

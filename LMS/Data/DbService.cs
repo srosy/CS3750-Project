@@ -48,7 +48,7 @@ namespace LMS.Data
         public Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId);
         public Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions);
         public Task<BoxPlotChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName);
-        public Task<List<(int, string)>> GetClassStandings(AzureDbContext db, int courseId, int accountId = 0);
+        public Task<List<(int, int, string)>> GetClassStandings(AzureDbContext db, int courseId, int accountId = 0);
     }
     public class DbService : IDbService
     {
@@ -1097,7 +1097,7 @@ namespace LMS.Data
         /// <param name="courseId"></param>
         /// <param name="accountId"></param>
         /// <returns></returns>
-        public async Task<List<(int, string)>> GetClassStandings(AzureDbContext db, int courseId, int accountId = 0)
+        public async Task<List<(int, int, string)>> GetClassStandings(AzureDbContext db, int courseId, int accountId = 0)
         {
             var acctIds = await db.Enrollments.Where(e => e.CourseId == courseId && e.DeleteDate == null).Select(e => e.AccountId).ToListAsync(); // get all acctIds of enrollments
 
@@ -1114,13 +1114,13 @@ namespace LMS.Data
 
 
             var standings = overallScores.OrderByDescending(score => score.grade)
-                .Select(s => (s.accountId, $"{overallScores.FindIndex(x => x.accountId == s.accountId) + 1}"))
+                .Select(s => (courseId, s.accountId, $"{overallScores.FindIndex(x => x.accountId == s.accountId) + 1}"))
                 .ToList();
 
             if (accountId > 0)
             {
                 var filtered = standings.FirstOrDefault(s => s.accountId == accountId);
-                return new List<(int, string)>() { filtered };
+                return new List<(int, int, string)>() { filtered };
             }
 
             return standings;

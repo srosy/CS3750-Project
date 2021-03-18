@@ -115,41 +115,78 @@ else
     else
     {
         <h3 class="header-default courses-header">Courses</h3>
-        @if (_acctIsProfessor)
-        {
-            <MatButton Class="add-new-course" @onclick="@(() => { _showCourseForm = true; _deleteCourse = false; _courseModel = new Course() { ProfessorId = Model.Account.AccountId,  StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddMonths(3) }; Model.FormTitle = "Add New Course"; })">Add New Course</MatButton>
-        }
-        <br />
-        @if (Model.Courses.Any())
-        {
-            <MatTable Items="Model.Courses" class="mat-elevation-z5 lms-table"
-                      Striped="true" FilterByColumnName="Description" PageLabel="Page:" DebounceMilliseconds="150"
-                      AllowSelection="true" SelectionChanged="RowClick" @attributes="Model.TableAttributes">
-                <MatTableHeader>
-                    <th>Course ID</th>
-                    <th>Name</th>
-                    <th>Professor</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Description</th>
-                </MatTableHeader>
-                <MatTableRow>
-                    <td>@context.CourseId</td>
-                    <td>@context.Name</td>
-                    <td>
-                        @Model.Professors.First(p => p.AccountId == context.ProfessorId).FirstName&nbsp;
-                        @Model.Professors.First(p => p.AccountId == context.ProfessorId).LastName
-                    </td>
-                    <td>@context.StartDate.ToShortDateString()</td>
-                    <td>@context.EndDate.ToShortDateString()</td>
-                    <td>@context.Description</td>
-                </MatTableRow>
-            </MatTable>
-        }
-        else
-        {
-            <p class="text-danger">No courses added.</p>
-        }
+
+        <MatAccordion>
+            <MatExpansionPanel @bind-Expanded="@_panelOpenState">
+                <MatExpansionPanelSummary>
+                    <MatExpansionPanelHeader>Courses</MatExpansionPanelHeader>
+                </MatExpansionPanelSummary>
+                <MatExpansionPanelDetails>
+                    @if (_acctIsProfessor)
+                    {
+                        <MatButton Class="add-new-course" @onclick="@(() => { _showCourseForm = true; _deleteCourse = false; _courseModel = new Course() { ProfessorId = Model.Account.AccountId,  StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddMonths(3) }; Model.FormTitle = "Add New Course"; })">Add New Course</MatButton>
+                    }
+                    <br />
+                    @if (Model.Courses.Any())
+                    {
+                        <MatTable Items="Model.Courses" class="mat-elevation-z5 lms-table"
+                                  Striped="true" FilterByColumnName="Description" PageLabel="Page:" DebounceMilliseconds="150"
+                                  AllowSelection="true" SelectionChanged="RowClick" @attributes="Model.TableAttributes">
+                            <MatTableHeader>
+                                <th>Course ID</th>
+                                <th>Name</th>
+                                <th>Professor</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Description</th>
+                            </MatTableHeader>
+                            <MatTableRow>
+                                <td>@context.CourseId</td>
+                                <td>@context.Name</td>
+                                <td>
+                                    @Model.Professors.First(p => p.AccountId == context.ProfessorId).FirstName&nbsp;
+                                    @Model.Professors.First(p => p.AccountId == context.ProfessorId).LastName
+                                </td>
+                                <td>@context.StartDate.ToShortDateString()</td>
+                                <td>@context.EndDate.ToShortDateString()</td>
+                                <td>@context.Description</td>
+                            </MatTableRow>
+                        </MatTable>
+                    }
+                    else
+                    {
+                        <p class="text-danger">No courses added.</p>
+                    }
+                </MatExpansionPanelDetails>
+            </MatExpansionPanel>
+
+            <MatExpansionPanel>
+                <MatExpansionPanelSummary>
+                    <MatExpansionPanelHeader>Standings</MatExpansionPanelHeader>
+                </MatExpansionPanelSummary>
+                <MatExpansionPanelDetails>
+                    @foreach (var c in Model.Courses)
+                    {
+                        var standings = Model.Standings.Where(s => s.courseId == c.CourseId);
+                        <h4>@c.Name</h4>
+                        <MatTable Items="standings" class="mat-elevation-z5 lms-table" Striped="true" AllowSelection="false" ShowPaging="false">
+                            <MatTableHeader>
+                                <th style="min-width: @GradesViewModel.COL_SIZE;">Student ID</th>
+                                <th style="min-width: @GradesViewModel.COL_SIZE;">Course Standing</th>
+                            </MatTableHeader>
+                            <MatTableRow>
+                                <td class="text-left">
+                                    @context.accountId
+                                </td>
+                                <td>
+                                    @context.standing
+                                </td>
+                            </MatTableRow>
+                        </MatTable>
+                    }
+                </MatExpansionPanelDetails>
+            </MatExpansionPanel>
+        </MatAccordion>
     }
 }
 
@@ -162,6 +199,7 @@ else
     private bool _loading = true;
     private bool _acctIsProfessor = false;
     private bool _invalidStartEndTimes;
+    private bool _panelOpenState = true;
 
     private BlazoredTextEditor _richTextEditor = new BlazoredTextEditor();
     private string _editorContent;
@@ -188,6 +226,15 @@ else
                 Model.Courses = courses;
             }
         }
+        else
+        {
+            foreach (var c in Model.Courses)
+            {
+                var standings = await DbService.GetClassStandings(AzureDb, c.CourseId);
+                Model.Standings.AddRange(standings);
+            }
+        }
+
         Model.Professors = await DbService.GetAccounts(AzureDb, Role.PROFESSOR);
         _loading = false;
     }
