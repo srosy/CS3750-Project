@@ -48,6 +48,7 @@ namespace LMS.Data
         public Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId);
         public Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions);
         public Task<BoxPlotChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName);
+        public Task<List<(int, string)>> GetClassStandings(AzureDbContext db, int courseId, int accountId = 0);
     }
     public class DbService : IDbService
     {
@@ -936,7 +937,6 @@ namespace LMS.Data
                     var gradedGrades = gradeViewModel.Grades.Where(g => g.Score > 0);
                     var sum = gradedGrades.Sum(g => g.Score);
 
-
                     gradeViewModel.OverallPercentageGrade = gradedGrades.Count() > 0 ? sum / gradedGrades.Count() : 0.00m;
                     gradeViewModel.OverallLetterGrade = gradeViewModel.OverallPercentageGrade > 0 ?
                         GradeHelper.GenGradeFromPercentage(gradeViewModel.OverallPercentageGrade) : "N/A";
@@ -1088,6 +1088,42 @@ namespace LMS.Data
             }
 
             return chart;
+        }
+
+        /// <summary>
+        /// Gets the class standings of all students in a class, or the individual standing provided an accountId.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="courseId"></param>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        public async Task<List<(int, string)>> GetClassStandings(AzureDbContext db, int courseId, int accountId = 0)
+        {
+            var acctIds = await db.Enrollments.Where(e => e.CourseId == courseId && e.DeleteDate == null).Select(e => e.AccountId).ToListAsync(); // get all acctIds of enrollments
+
+            var overallScores = new List<(int accountId, decimal grade)>();
+            foreach (var id in acctIds)
+            {
+                var grades = await GetGrades(db, id);
+                var grade = grades.FirstOrDefault(g => g.CourseId == courseId);
+                if (grade == null) continue;
+                overallScores.Add((id, grade.OverallPercentageGrade));
+            }
+
+            if (!overallScores.Any()) return null;
+
+
+            var standings = overallScores.OrderByDescending(score => score.grade)
+                .Select(s => (s.accountId, $"{overallScores.FindIndex(x => x.accountId == s.accountId) + 1}"))
+                .ToList();
+
+            if (accountId > 0)
+            {
+                var filtered = standings.FirstOrDefault(s => s.accountId == accountId);
+                return new List<(int, string)>() { filtered };
+            }
+
+            return standings;
         }
     }
 }

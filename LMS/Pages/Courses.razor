@@ -171,6 +171,23 @@ else
         Model.Account = await DbService.GetAccount(AzureDb, (await SessionObj.GetSession(AzureDb, Storage)).AccountId);
         _acctIsProfessor = Model.Account.Role == (int)Role.PROFESSOR;
         Model.Courses = await DbService.GetCourses(AzureDb, _acctIsProfessor ? Model.Account.AccountId : 0);
+
+        if (!_acctIsProfessor)
+        {
+            Model.Enrollments = await DbService.GetEnrollments(AzureDb, Model.Account.AccountId);
+            if (Model.Enrollments.Any())
+            {
+                var courses = new List<Course>();
+                Model.Courses.ForEach(c =>
+                {
+                    if (Model.Enrollments.Any(e => e.CourseId == c.CourseId))
+                    {
+                        courses.Add(c);
+                    }
+                });
+                Model.Courses = courses;
+            }
+        }
         Model.Professors = await DbService.GetAccounts(AzureDb, Role.PROFESSOR);
         _loading = false;
     }

@@ -110,6 +110,7 @@ else
         else
         {
             Model.Enrollments = await DbService.GetEnrollments(AzureDb, Model.Account.AccountId);
+            Model.Courses = Model.Courses.OrderByDescending(c => Model.Enrollments.FindIndex(e => e.CourseId == c.CourseId)).ThenBy(c => c.CourseId).ToList(); // order by enrollments first
         }
 
         _loading = false;
