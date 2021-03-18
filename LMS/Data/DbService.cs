@@ -29,7 +29,7 @@ namespace LMS.Data
         public Task<bool> UpdateAccount(AzureDbContext db, Account acct);
         public Task<bool> SaveSettings(AzureDbContext db, Settings settings);
         public Task<bool> DoSending(MimeMessage mailMessage);
-        public Task<bool> SendEmail(string email, AzureDbContext db);
+        public Task<bool> SendEmail(string email, AzureDbContext db, Notification notification = null);
         public Task VerifyEmail(string email, AzureDbContext db);
         public Task<bool> CheckAccountVerification(AzureDbContext azureDb, string email);
         public Task<string> GetVerificationCode(AzureDbContext db, string email);
@@ -49,6 +49,7 @@ namespace LMS.Data
         public Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions);
         public Task<BoxPlotChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName);
         public Task<List<(int, int, string)>> GetClassStandings(AzureDbContext db, int courseId, int accountId = 0);
+        public Task<bool> Announcement(AzureDbContext db, Notification notification, bool sendEmail = false);
     }
     public class DbService : IDbService
     {
@@ -169,7 +170,7 @@ namespace LMS.Data
         /// <param name="email"></param>
         /// <param name="db"></param>
         /// <returns></returns>
-        public async Task<bool> SendEmail(string email, AzureDbContext db)
+        public async Task<bool> SendEmail(string email, AzureDbContext db, Notification notification = null)
         {
             var acct = await db.Accounts.FirstOrDefaultAsync(a => a.Email == email);
             var matchingAuth = await db.Authentications.FirstOrDefaultAsync(a => a.AccountId == acct.AccountId);
@@ -184,11 +185,17 @@ namespace LMS.Data
 
                 var textpart = new TextPart("plain");
 
-                if (!string.IsNullOrEmpty(code))
+                if (notification != null)
+                {
+                    mailMessage.Subject = notification.Title;
+                    textpart.Text = notification.Message;
+                }
+                else if (!string.IsNullOrEmpty(code))
                 {
                     mailMessage.Subject = "LMS Verification Code";
                     textpart.Text = $"Your LMS verification code is: \n\n" + code;
                 }
+
                 mailMessage.Body = textpart;
                 var success = await DoSending(mailMessage);
                 return success;
@@ -1124,6 +1131,45 @@ namespace LMS.Data
             }
 
             return standings;
+        }
+
+        /// <summary>
+        /// Adds announcement to Notifications table and sends email notifications.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="notification"></param>
+        /// <param name="sendEmail"></param>
+        /// <returns></returns>
+        public async Task<bool> Announcement(AzureDbContext db, Notification notification, bool sendEmail = false)
+        {
+            var saved = false;
+            try
+            {
+                db.Notifications.Add(notification);
+                saved = await db.SaveChangesAsync() > 0;
+
+                if (sendEmail)
+                {
+                    var emails = await db.Accounts
+                        .Join(db.Enrollments, a => a.AccountId, e => e.AccountId, (a, e) => new { a, e })
+                        .Where(z => z.a.Role == (int)Role.STUDENT && z.a.DeleteDate == null && z.e.CourseId == notification.CourseId)
+                        .Select(z => z.a.Email).ToArrayAsync();
+
+                    var allSent = new bool[emails.Length];
+
+                    for (int i = 0; i < emails.Length; i++)
+                    {
+                        allSent[i] = await SendEmail(emails[i], db, notification);
+                    }
+
+                    saved = allSent.All(a => a) && saved;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return saved;
         }
     }
 }
