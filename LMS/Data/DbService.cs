@@ -50,6 +50,8 @@ namespace LMS.Data
         public Task<BoxPlotChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName);
         public Task<List<(int, int, string)>> GetClassStandings(AzureDbContext db, int courseId, int accountId = 0);
         public Task<bool> Announcement(AzureDbContext db, Notification notification, bool sendEmail = false);
+        public Task<List<NotificationViewed>> GetUndismissedNotifications(AzureDbContext db, int acctId);
+        public Task<bool> DismissNotification(AzureDbContext db, ILocalStorageService storage, int nfViewedId);
     }
     public class DbService : IDbService
     {
@@ -91,6 +93,9 @@ namespace LMS.Data
                 {
                     var submissions = await GetSubmissions(db, acct.AccountId);
                     await BrowserStorage<List<Submission>>.SaveObject(storage, "submissions", submissions);
+
+                    var activeNotifs = await GetUndismissedNotifications(db, acct.AccountId);
+                    await BrowserStorage<List<NotificationViewed>>.SaveObject(storage, "activeNotifications", activeNotifs);
                 }
 
                 if (auth.EmailVerified)
@@ -171,7 +176,7 @@ namespace LMS.Data
         /// <param name="db"></param>
         /// <returns></returns>
         public async Task<bool> SendEmail(string email, AzureDbContext db = null, Notification notification = null)
-        {      
+        {
             try
             {
                 var mailMessage = new MimeMessage();
@@ -817,6 +822,7 @@ namespace LMS.Data
                         where Courses.ProfessorId == acctId && Courses.DeleteDate == null
                         select new AnnouncementViewModel()
                         {
+                            NotificationId = Notifications.NotificationId,
                             CourseId = Courses.CourseId,
                             CourseName = Courses.Name,
                             ProfessorAccountId = acctId,
@@ -825,7 +831,7 @@ namespace LMS.Data
                             Title = Notifications.Title,
                             Message = Notifications.Message,
                             Type = Notifications.Type
-                        }).OrderBy(a => a.AnnouncementDate).ToListAsync();
+                        }).OrderByDescending(a => a.AnnouncementDate).ToListAsync();
                 }
                 else
                 {
@@ -840,6 +846,7 @@ namespace LMS.Data
                         where courseIds.Contains(Courses.CourseId) && Courses.DeleteDate == null
                         select new AnnouncementViewModel()
                         {
+                            NotificationId = Notifications.NotificationId,
                             CourseId = Courses.CourseId,
                             CourseName = Courses.Name,
                             ProfessorAccountId = db.Accounts.First(a => a.AccountId == Courses.ProfessorId).AccountId,
@@ -848,7 +855,7 @@ namespace LMS.Data
                             AnnouncementDate = Notifications.CreateDate,
                             Title = Notifications.Title,
                             Message = Notifications.Message
-                        }).OrderBy(a => a.AnnouncementDate).ThenBy(a => a.CourseId)
+                        }).OrderByDescending(a => a.AnnouncementDate).ThenBy(a => a.CourseId)
                         .ToListAsync();
                 }
             }
@@ -883,8 +890,12 @@ namespace LMS.Data
                 notification.DeleteDate = DateTime.UtcNow;
             }
 
-            db.Notifications.Add(notification);
-            saved = await db.SaveChangesAsync() > 0;
+            notification.Message = $"Hello,\n\nA new announcement" +
+            $"has been made for course\n\n{db.Courses.First(c => c.CourseId == notification.CourseId).Name}.\n\n" +
+            $"\n\n{model.Message}" +
+            $"\n\nThis is an automated message from LMS.";
+
+            saved = await Announcement(db, notification, true);
             return saved;
         }
 
@@ -1188,6 +1199,21 @@ namespace LMS.Data
                 db.Notifications.Add(notification);
                 saved = await db.SaveChangesAsync() > 0;
 
+                // gen unviewednotifs for students applicable to the notif
+                var students = await db.Enrollments.Where(e => e.CourseId == notification.CourseId).Select(e => e.AccountId).ToListAsync();
+                for (int i = 0; i < students.Count; i++)
+                {
+                    var notif = new NotificationViewed()
+                    {
+                        AccountId = students[i],
+                        NotificationId = notification.NotificationId,
+                        Viewed = false
+                    };
+
+                    db.NotificationsViewed.Add(notif);
+                    await db.SaveChangesAsync();
+                }
+                
                 if (sendEmail)
                 {
                     var emails = await db.Accounts
@@ -1203,6 +1229,39 @@ namespace LMS.Data
 
                     saved = allSent.All(a => a) && saved;
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return saved;
+        }
+
+        /// <summary>
+        /// Returns the notifications that have not been dismissed yet.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<List<NotificationViewed>> GetUndismissedNotifications(AzureDbContext db, int acctId) => await db.NotificationsViewed.Where(v => v.AccountId == acctId && !v.Viewed).ToListAsync();
+
+        /// <summary>
+        /// Marks a notification as viewed.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="nfViewedId"></param>
+        /// <returns></returns>
+        public async Task<bool> DismissNotification(AzureDbContext db, ILocalStorageService storage, int nfViewedId)
+        {
+            var saved = false;
+            try
+            {
+                var nv = db.NotificationsViewed.FirstOrDefault(v => v.ViewedId == nfViewedId);
+                nv.Viewed = true;
+                saved = await db.SaveChangesAsync() > 0;
+
+                var activeNotifs = await GetUndismissedNotifications(db, nv.AccountId);
+                await BrowserStorage<List<NotificationViewed>>.SaveObject(storage, "activeNotifications", activeNotifs);
             }
             catch (Exception ex)
             {

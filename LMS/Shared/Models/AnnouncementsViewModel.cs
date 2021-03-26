@@ -9,6 +9,7 @@ namespace LMS.Shared.Models
     {
         public Account Account { get; set; }
         public List<AnnouncementViewModel> Announcements { get; set; }
+        public List<NotificationViewed> UndismissedNotifications { get; set; }
         public List<Course> Courses { get; set; }
     }
 
@@ -23,5 +24,6 @@ namespace LMS.Shared.Models
         [Required] [MinLength(1, ErrorMessage = "You must input a Message.")] public string Message { get; set; }
         [DataType(DataType.Date)] public DateTime AnnouncementDate { get; set; }
         public bool Deleted { get; set; }
+        public int NotificationId { get; set; }
     }
 }
