@@ -233,7 +233,10 @@ else
             foreach (var c in Model.Courses)
             {
                 var standings = await DbService.GetClassStandings(AzureDb, c.CourseId);
-                Model.Standings.AddRange(standings);
+                if(standings != null)
+                {
+                    Model.Standings.AddRange(standings);
+                }
             }
         }
 

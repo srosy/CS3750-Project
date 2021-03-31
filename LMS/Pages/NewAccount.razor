@@ -97,6 +97,12 @@
             return;
         }
 
+        if(Model.Auth.Password == null || _confirmPassword == null)
+        {
+            _message = "Passwords must not be empty";
+            return;
+        }
+
         if (!_confirmPassword.Equals(Model.Auth.Password))
         {
             _message = "Passwords do not match!";

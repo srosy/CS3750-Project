@@ -38,7 +38,7 @@ else
                             </div>
                         </div>
 
-                        @if (_filteredSubmissions.Any())
+                        @if (_filteredSubmissions != null && _filteredSubmissions.Any())
                         {
                             var assType = Model.Assignments.First(a => a.AssignmentId == _filteredSubmissions.First().AssignmentId).SubmissionType;
                             <MatTable Items="_filteredSubmissions" class="mat-elevation-z5 lms-table" Striped="true" AllowSelection="false" ShowPaging="false">
@@ -86,7 +86,10 @@ else
                         }
                         else
                         {
-                            <h2>No submissions for @_filterAss.Name (AssignmentID: @_filterAss.AssignmentId)</h2>
+                            if (_filterAss != null)
+                            {
+                                <h2>No submissions for @_filterAss.Name (AssignmentID: @_filterAss.AssignmentId)</h2>
+                            }
                         }
                     </div>
                 </div>
@@ -215,8 +218,11 @@ else
         _filterCourse = Model.Courses.First();
         _filterCourseId = _filterCourse.CourseId;
         _filterAss = Model.Assignments.Where(a => a.CourseId == _filterCourse.CourseId).FirstOrDefault();
-        _filterAssId = _filterAss.AssignmentId;
-        Filter();
+        if(_filterAss != null)
+        {
+            _filterAssId = _filterAss.AssignmentId;
+            Filter();
+        }
     }
 
     /// <summary>
