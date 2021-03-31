@@ -33,5 +33,6 @@ namespace LMS.Shared.Models
         public decimal Score { get; set; }
         public string ScoreDisplay { get; set; }
         public string LetterGrade { get; set; }
+        public decimal MaxScore { get; internal set; }
     }
 }

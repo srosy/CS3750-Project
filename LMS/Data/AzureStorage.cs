@@ -6,7 +6,7 @@ namespace LMS.Data
 {
     public class AzureStorage
     {
-        private const string STORAGE_CONN_STRING = "DefaultEndpointsProtocol=https;AccountName=cs3750lms;AccountKey=2g8vOuxxMfKOrWbOZPsm2A4do8GLZLjHKU2ZSJFFXHt09P193t9T1sqN0g/8KPizIqsYp5h0nKRtI/gylxviGw==;EndpointSuffix=core.windows.net";
+        private const string STORAGE_CONN_STRING = "DefaultEndpointsProtocol=https;AccountName=3750lms;AccountKey=Ov5wA7dDj2Zd5+XJMdi5ntZc5ilUBhHNzIBjIDq5GKZNin4VbOzuEjYzCW89TD1eF5lPBgLloatPzpiw+NjGIA==;EndpointSuffix=core.windows.net";
 
         /// <summary>
         /// Uploads a file to the Azure Blob Storage Account.

@@ -281,6 +281,22 @@ else
         _assignmentModel.Description = _editorContent;
 
         var assignmentSaved = await DbService.SaveAssignment(AzureDb, _assignmentModel) && assUpdated;
+
+        var announcementsSent = await DbService.Announcement(AzureDb, new Notification()
+        {
+            Title = "New Assignment Created",
+            CourseId = _assignmentModel.CourseId,
+            CreateDate = DateTime.UtcNow,
+            Type = (int)NotificationType.SYSTEM,
+            Message = $"Hello,\n\nA new assignment\n\n" +
+            $"{_assignmentModel.Name}\n\n" +
+            $"has been created for course {Model.Courses.First(c => c.CourseId == _assignmentModel.CourseId).Name}" +
+            $"\n with a duedate of {_assignmentModel.DueDate}." +
+            $"\n\nThis is an automated message from LMS."
+        },
+        true);
+        await JS.InvokeVoidAsync("Toast", new[] { announcementsSent ? "success" : "error", announcementsSent ? "Announcements sent." : "Failed to send announcements.", announcementsSent ? "3000" : "5000" }); // toasttype, message, duration
+
         ResetForm();
         Model.Courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses", new List<Course>());
         Model.Assignments = DbService.GetAssignments(AzureDb, Model.Courses);
