@@ -120,12 +120,12 @@ else
                           Striped="true" FilterByColumnName="Description" PageLabel="Page:" DebounceMilliseconds="150"
                           AllowSelection="true" SelectionChanged="RowClick" @attributes="Model.TableAttributes">
                     <MatTableHeader>
-                        <th>Type</th>
-                        <th>Assignment Id</th>
-                        <th>Course Id</th>
-                        <th>Name</th>
-                        <th>Max Score</th>
-                        <th>Due Date</th>
+                        <th style="min-width: @COL_PROF_SIZE;">Type</th>
+                        <th style="min-width: @COL_PROF_SIZE;">Assignment Id</th>
+                        <th style="min-width: @COL_PROF_SIZE;">Course Id</th>
+                        <th style="min-width: @COL_PROF_SIZE;">Name</th>
+                        <th style="min-width: @COL_PROF_SIZE;">Max Score</th>
+                        <th style="min-width: @COL_PROF_SIZE;">Due Date</th>
                     </MatTableHeader>
                     <MatTableRow>
                         <td>@(Enum.GetName(typeof(AssignmentType), context.Type))</td>
@@ -203,7 +203,8 @@ else
     private bool _loading = true;
     private bool _acctIsProfessor = false;
     private const int DEFAULT_MAX_SCORE = 100;
-    private const string COL_SIZE = "300px";
+    private const string COL_SIZE = "290px";
+    private const string COL_PROF_SIZE = "275px";
     private DateTime DEFAULT_DUE_DATE = DateTime.UtcNow.AddDays(14);
 
     private BlazoredTextEditor _richTextEditor = new BlazoredTextEditor();
