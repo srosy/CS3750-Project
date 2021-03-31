@@ -18,6 +18,12 @@ else
                     <div class="card-header"><h1>Details for @Model.Course.Name</h1></div>
                     <div class="card-body text-left">
                         @((MarkupString)Model.Course.Markup)
+                        <h2>Grade: @(Model.Grades.Any(g => g.OverallPercentageGrade <= 0m && g.CourseId == Model.Course.CourseId) ? "N/A" : $"{Model.Grades.First(g => g.CourseId == Model.Course.CourseId).OverallPercentageGrade}% ({Model.Grades.First(g => g.CourseId == Model.Course.CourseId).OverallLetterGrade})")</h2>
+                        @if (!string.IsNullOrEmpty(Model?.Standing?.standing))
+                        {
+                            <h2>Standing: @Model.Standing?.standing</h2>
+                        }
+
                         @if (Model.Assignments.Any())
                         {
                             <h2 class="text-center">Assignments</h2>
@@ -83,10 +89,13 @@ else
             Model.Course = AzureDb.Courses.FirstOrDefault(c => c.CourseId == _courseId);
             Model.Assignments = DbService.GetAssignments(AzureDb, new List<Course>() { new Course() { CourseId = _courseId } });
         }
+
         Model.Submissions = await BrowserStorage<List<Data.Models.Submission>>.GetObject(Storage, "submissions", new List<Data.Models.Submission>());
+        Model.Grades = await DbService.GetGrades(AzureDb, Model.Account.AccountId);
 
         if (Model.Assignments.Any())
         {
+
             _charts = new List<BoxPlotChart>();
             foreach (var ass in Model.Assignments)
             {
@@ -94,6 +103,10 @@ else
                 _charts.Add(chart);
             }
         }
+
+        var standings = await DbService.GetClassStandings(AzureDb, Model.Course.CourseId, Model.Account.AccountId);
+        Model.Standing = standings.FirstOrDefault();
+
         _loading = false;
     }
 
@@ -110,7 +123,6 @@ else
             {
                 // single series per chart
                 var series = c.Series.First();
-
                 var score = 0;
                 var submission = Model.Submissions.FirstOrDefault(s => s.AssignmentId == series.AssignmentId);
                 if (submission != null)

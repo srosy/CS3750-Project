@@ -9,7 +9,7 @@ else
     @if (_acctIsProfessor)
     {
         <div class="row text-center">
-            <div class="col-md-4"></div>
+            <div class="col-md-3"></div>
             <div class="col-md-6">
                 <div class="card LMS-card">
                     <div class="card-header LMS-form">
@@ -53,30 +53,49 @@ else
                     </div>
                 </div>
             </div>
-            <div class="col-md-4"></div>
+            <div class="col-md-3"></div>
         </div>
         <br />
         <h4 class="header-default">Past Announcements</h4>
     }
     @if (Model.Announcements.Any())
     {
-        <MatTable Items="Model.Announcements" class="mat-elevation-z5 lms-table" Striped="true" AllowSelection="false">
+        <MatListItem Class="text-danger">Select a row to mark as viewed</MatListItem>
+        <MatDivider></MatDivider>
+        <MatTable Items="Model.Announcements" class="mat-elevation-z5 lms-table" Striped="true" AllowSelection="!_acctIsProfessor" SelectionChanged="RowClick">
             <MatTableHeader>
                 <th style="min-width: @COL_SIZE;">Announcement Date</th>
                 <th style="min-width: @COL_SIZE;">Title</th>
                 <th style="min-width: @COL_SIZE;">Course Name</th>
                 <th style="min-width: @COL_SIZE;">Professor</th>
+                @if (!_acctIsProfessor)
+                {
+                    <th style="min-width: @COL_SIZE;">Dismissed</th>
+                }
                 <th>Content</th>
             </MatTableHeader>
             <MatTableRow>
                 <td>
                     @{if (context.AnnouncementDate.ToShortDateString() == DateTime.UtcNow.ToShortDateString())
-                                {<i class="oi oi-bell shake alert-has-announcements" title="There's a new announcement today.">&nbsp;&nbsp;</i>}}
+                                {<i class="oi oi-bell shake alert-has-announcements" title="This announcement was made today.">&nbsp;&nbsp;</i>}}
                     @context.AnnouncementDate.ToShortDateString()
                 </td>
                 <td>@context.Title</td>
                 <td>@context.CourseName</td>
                 <td>@context.ProfessorName</td>
+                @if (!_acctIsProfessor)
+                        {
+                    <td>
+                        @if (Model.UndismissedNotifications.Any(n => n.NotificationId == context.NotificationId))
+                                {
+                            <strong class="text-danger">NEW</strong>
+                                }
+                                else
+                                {
+                            <span>Dismissed</span>
+                                }
+                    </td>
+                        }
                 <td>@context.Message</td>
             </MatTableRow>
         </MatTable>
@@ -90,7 +109,6 @@ else
 }
 
 @code {
-
     private AnnouncementsViewModel Model = new AnnouncementsViewModel();
     private AnnouncementViewModel _announcementModel = new AnnouncementViewModel();
     private bool _loading = true;
@@ -103,9 +121,11 @@ else
         _acctIsProfessor = Model.Account.Role == (int)Role.PROFESSOR;
         if (_acctIsProfessor)
         {
-
             Model.Courses = await BrowserStorage<List<Course>>.GetObject(Storage, "courses", new List<Course>());
-
+        }
+        else
+        {
+            Model.UndismissedNotifications = await BrowserStorage<List<NotificationViewed>>.GetObject(Storage, "activeNotifications", new List<NotificationViewed>());
         }
         Model.Announcements = await DbService.GetAnnouncements(AzureDb, Model.Account.AccountId, _acctIsProfessor);
         ResetForm();
@@ -137,6 +157,22 @@ else
         await JS.InvokeVoidAsync("Toast", new[] { "success", "Announcement Posted.", "3000" }); // toasttype, message, duration
         _loading = false;
         this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Handle when the row is clicked.
+    /// </summary>
+    /// <param name="row"></param>
+    public async void RowClick(object row)
+    {
+        var announcement = row as AnnouncementViewModel;
+        var notif = Model.UndismissedNotifications.FirstOrDefault(n => n.NotificationId == announcement.NotificationId);
+        if (notif == null) return;
+
+        var saved = await DbService.DismissNotification(AzureDb, Storage, notif.ViewedId);
+        await JS.InvokeVoidAsync("Toast", new[] { "success", "Dismissed Notification.", "1000" }); // toasttype, message, duration
+        Model.UndismissedNotifications = await BrowserStorage<List<NotificationViewed>>.GetObject(Storage, "activeNotifications", new List<NotificationViewed>());
+        NavMan.NavigateTo("announcements", forceLoad: true);
     }
 }
 

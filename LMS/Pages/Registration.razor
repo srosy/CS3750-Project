@@ -17,10 +17,10 @@ else
                       Striped="true" PageLabel="Page:" DebounceMilliseconds="150"
                       @attributes="Model.TableAttributes">
                 <MatTableHeader>
-                    <th>Name</th>
-                    <th>Student ID</th>
-                    <th>Course ID</th>
-                    <th>Course Description</th>
+                    <th style="min-width: @COL_PROF_SIZE;">Name</th>
+                    <th style="min-width: @COL_PROF_SIZE;">Student ID</th>
+                    <th style="min-width: @COL_PROF_SIZE;">Course ID</th>
+                    <th style="min-width: @COL_PROF_SIZE;">Course Description</th>
                 </MatTableHeader>
                 <MatTableRow>
                     @{ var student = Model.Students.FirstOrDefault(s => s.AccountId == context.AccountId); }
@@ -40,13 +40,13 @@ else
                       Striped="true" FilterByColumnName="Description" PageLabel="Page:" DebounceMilliseconds="150"
                       AllowSelection="true" SelectionChanged="RowClick" @attributes="Model.TableAttributes">
                 <MatTableHeader>
-                    <th>Course ID</th>
-                    <th>Name</th>
-                    <th>Professor</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Description</th>
-                    <th>Enrolled</th>
+                    <th style="min-width: @COL_SIZE;">Course ID</th>
+                    <th style="min-width: @COL_SIZE;">Name</th>
+                    <th style="min-width: @COL_SIZE;">Professor</th>
+                    <th style="min-width: @COL_SIZE;">Start Date</th>
+                    <th style="min-width: @COL_SIZE;">End Date</th>
+                    <th style="min-width: @COL_SIZE;">Description</th>
+                    <th style="min-width: @COL_SIZE;">Enrolled</th>
                 </MatTableHeader>
                 <MatTableRow>
                     <td>@context.CourseId</td>
@@ -78,6 +78,8 @@ else
     private EnrollmentsViewModel Model = new EnrollmentsViewModel();
     private bool _loading = true;
     private bool _acctIsProfessor;
+    private const string COL_PROF_SIZE = "400px";
+    private const string COL_SIZE = "220px";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -110,6 +112,7 @@ else
         else
         {
             Model.Enrollments = await DbService.GetEnrollments(AzureDb, Model.Account.AccountId);
+            Model.Courses = Model.Courses.OrderByDescending(c => Model.Enrollments.FindIndex(e => e.CourseId == c.CourseId)).ThenBy(c => c.CourseId).ToList(); // order by enrollments first
         }
 
         _loading = false;

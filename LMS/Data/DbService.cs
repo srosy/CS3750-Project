@@ -29,7 +29,7 @@ namespace LMS.Data
         public Task<bool> UpdateAccount(AzureDbContext db, Account acct);
         public Task<bool> SaveSettings(AzureDbContext db, Settings settings);
         public Task<bool> DoSending(MimeMessage mailMessage);
-        public Task<bool> SendEmail(string email, AzureDbContext db);
+        public Task<bool> SendEmail(string email, AzureDbContext db = null, Notification notification = null);
         public Task VerifyEmail(string email, AzureDbContext db);
         public Task<bool> CheckAccountVerification(AzureDbContext azureDb, string email);
         public Task<string> GetVerificationCode(AzureDbContext db, string email);
@@ -48,6 +48,10 @@ namespace LMS.Data
         public Task<List<GradeViewModel>> GetGrades(AzureDbContext db, int acctId);
         public Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions);
         public Task<BoxPlotChart> GetAssignmentStandingChart(AzureDbContext db, List<Assignment> asses, string chartName);
+        public Task<List<(int, int, string)>> GetClassStandings(AzureDbContext db, int courseId, int accountId = 0);
+        public Task<bool> Announcement(AzureDbContext db, Notification notification, bool sendEmail = false);
+        public Task<List<NotificationViewed>> GetUndismissedNotifications(AzureDbContext db, int acctId);
+        public Task<bool> DismissNotification(AzureDbContext db, ILocalStorageService storage, int nfViewedId);
     }
     public class DbService : IDbService
     {
@@ -89,6 +93,9 @@ namespace LMS.Data
                 {
                     var submissions = await GetSubmissions(db, acct.AccountId);
                     await BrowserStorage<List<Submission>>.SaveObject(storage, "submissions", submissions);
+
+                    var activeNotifs = await GetUndismissedNotifications(db, acct.AccountId);
+                    await BrowserStorage<List<NotificationViewed>>.SaveObject(storage, "activeNotifications", activeNotifs);
                 }
 
                 if (auth.EmailVerified)
@@ -168,26 +175,34 @@ namespace LMS.Data
         /// <param name="email"></param>
         /// <param name="db"></param>
         /// <returns></returns>
-        public async Task<bool> SendEmail(string email, AzureDbContext db)
+        public async Task<bool> SendEmail(string email, AzureDbContext db = null, Notification notification = null)
         {
-            var acct = await db.Accounts.FirstOrDefaultAsync(a => a.Email == email);
-            var matchingAuth = await db.Authentications.FirstOrDefaultAsync(a => a.AccountId == acct.AccountId);
-
-            var code = matchingAuth.ResetCode;
-
             try
             {
                 var mailMessage = new MimeMessage();
                 mailMessage.From.Add(new MailboxAddress("Team Git'r Dun", "LMS.GitrDun@gmail.com"));
                 mailMessage.To.Add(new MailboxAddress("User", email));
-
                 var textpart = new TextPart("plain");
 
-                if (!string.IsNullOrEmpty(code))
+                if (db != null)
                 {
-                    mailMessage.Subject = "LMS Verification Code";
-                    textpart.Text = $"Your LMS verification code is: \n\n" + code;
+                    var acct = await db.Accounts.FirstOrDefaultAsync(a => a.Email == email);
+                    var matchingAuth = await db.Authentications.FirstOrDefaultAsync(a => a.AccountId == acct.AccountId);
+                    var code = matchingAuth.ResetCode;
+
+                    if (!string.IsNullOrEmpty(code))
+                    {
+                        mailMessage.Subject = "LMS Verification Code";
+                        textpart.Text = $"Your LMS verification code is: \n\n" + code;
+                    }
                 }
+
+                if (notification != null)
+                {
+                    mailMessage.Subject = notification.Title;
+                    textpart.Text = notification.Message;
+                }
+
                 mailMessage.Body = textpart;
                 var success = await DoSending(mailMessage);
                 return success;
@@ -807,6 +822,7 @@ namespace LMS.Data
                         where Courses.ProfessorId == acctId && Courses.DeleteDate == null
                         select new AnnouncementViewModel()
                         {
+                            NotificationId = Notifications.NotificationId,
                             CourseId = Courses.CourseId,
                             CourseName = Courses.Name,
                             ProfessorAccountId = acctId,
@@ -815,7 +831,7 @@ namespace LMS.Data
                             Title = Notifications.Title,
                             Message = Notifications.Message,
                             Type = Notifications.Type
-                        }).OrderBy(a => a.AnnouncementDate).ToListAsync();
+                        }).OrderByDescending(a => a.AnnouncementDate).ToListAsync();
                 }
                 else
                 {
@@ -830,6 +846,7 @@ namespace LMS.Data
                         where courseIds.Contains(Courses.CourseId) && Courses.DeleteDate == null
                         select new AnnouncementViewModel()
                         {
+                            NotificationId = Notifications.NotificationId,
                             CourseId = Courses.CourseId,
                             CourseName = Courses.Name,
                             ProfessorAccountId = db.Accounts.First(a => a.AccountId == Courses.ProfessorId).AccountId,
@@ -838,7 +855,7 @@ namespace LMS.Data
                             AnnouncementDate = Notifications.CreateDate,
                             Title = Notifications.Title,
                             Message = Notifications.Message
-                        }).OrderBy(a => a.AnnouncementDate).ThenBy(a => a.CourseId)
+                        }).OrderByDescending(a => a.AnnouncementDate).ThenBy(a => a.CourseId)
                         .ToListAsync();
                 }
             }
@@ -873,8 +890,12 @@ namespace LMS.Data
                 notification.DeleteDate = DateTime.UtcNow;
             }
 
-            db.Notifications.Add(notification);
-            saved = await db.SaveChangesAsync() > 0;
+            notification.Message = $"Hello,\n\nA new announcement" +
+            $"has been made for course\n\n{db.Courses.First(c => c.CourseId == notification.CourseId).Name}.\n\n" +
+            $"\n\n{model.Message}" +
+            $"\n\nThis is an automated message from LMS.";
+
+            saved = await Announcement(db, notification, true);
             return saved;
         }
 
@@ -936,7 +957,6 @@ namespace LMS.Data
                     var gradedGrades = gradeViewModel.Grades.Where(g => g.Score > 0);
                     var sum = gradedGrades.Sum(g => g.Score);
 
-
                     gradeViewModel.OverallPercentageGrade = gradedGrades.Count() > 0 ? sum / gradedGrades.Count() : 0.00m;
                     gradeViewModel.OverallLetterGrade = gradeViewModel.OverallPercentageGrade > 0 ?
                         GradeHelper.GenGradeFromPercentage(gradeViewModel.OverallPercentageGrade) : "N/A";
@@ -960,18 +980,54 @@ namespace LMS.Data
         /// <returns></returns>
         public async Task<bool> SaveGrades(AzureDbContext db, List<Submission> gradedSubmissions)
         {
-            var allSaved = new bool[gradedSubmissions.Count];
+            var allSaved = false;
             try
             {
-                var index = 0;
+                var submissions = gradedSubmissions.Select(s => s.SubmissionId);
+                var dbSubmissions = db.Submissions.Where(s => submissions.Contains(s.SubmissionId) && s.DeleteDate == null);
+
                 var tasks = gradedSubmissions.Select(s => SaveSubmission(db, s));
-                allSaved = await Task.WhenAll(tasks);
+                var allSubmissionsSaved = await Task.WhenAll(tasks);
+
+                var joined = from accounts in db.Accounts
+                             join gs in dbSubmissions on accounts.AccountId equals gs.AccountId
+                             select new
+                             {
+                                 email = accounts.Email,
+                                 score = gs.Score,
+                                 assId = gs.AssignmentId
+                             };
+
+                var emails = joined
+                    .Select(eat => new
+                    {
+                        email = eat.email,
+                        score = eat.score,
+                        assTitle = db.Assignments.First(x => x.AssignmentId == eat.assId).Name,
+                        courseName = db.Courses.First(c => c.CourseId == db.Assignments.First(x => x.AssignmentId == eat.assId).CourseId).Name,
+                        courseId = db.Courses.First(c => c.CourseId == db.Assignments.First(x => x.AssignmentId == eat.assId).CourseId).CourseId,
+                        possibleScore = db.Assignments.First(x => x.AssignmentId == eat.assId).MaxScore
+                    }).ToArray();
+
+                var emailTasks = emails.Select(e => SendEmail(e.email, null, new Notification()
+                {
+                    CourseId = e.courseId,
+                    CreateDate = DateTime.UtcNow,
+                    Title = $"Assignment Graded",
+                    Type = (int)NotificationType.SYSTEM,
+                    Message = $"Your assignment\n\n{e.assTitle}\n\nfor class\n\n{e.courseName}\n\nhas been graded with a score of {e.score}/{e.possibleScore}."
+                }));
+                var allEmailsSaved = await Task.WhenAll(emailTasks);
+
+                //TODO: Add notification to table and entries to notificationViewed
+
+                allSaved = allEmailsSaved.All(e => e == true) || allSubmissionsSaved.All(s => s == true);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
-            return allSaved.All(s => s == true);
+            return allSaved;
         }
 
         /// <summary>
@@ -1061,6 +1117,8 @@ namespace LMS.Data
                 .OrderBy(s => s)
                 .ToArrayAsync();
 
+                if (gradedSubmissions.Length <= 0) continue;
+
                 var quartileLength = (gradedSubmissions.Length / 2) - 1;
                 var quartileMedian = (int)(Math.Round(quartileLength / 2d, 0));
                 var median = (int)(Math.Round(gradedSubmissions.Length / 2d, 0));
@@ -1088,6 +1146,128 @@ namespace LMS.Data
             }
 
             return chart;
+        }
+
+        /// <summary>
+        /// Gets the class standings of all students in a class, or the individual standing provided an accountId.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="courseId"></param>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        public async Task<List<(int, int, string)>> GetClassStandings(AzureDbContext db, int courseId, int accountId = 0)
+        {
+            var acctIds = await db.Enrollments.Where(e => e.CourseId == courseId && e.DeleteDate == null).Select(e => e.AccountId).ToListAsync(); // get all acctIds of enrollments
+
+            var overallScores = new List<(int accountId, decimal grade)>();
+            foreach (var id in acctIds)
+            {
+                var grades = await GetGrades(db, id);
+                var grade = grades.FirstOrDefault(g => g.CourseId == courseId);
+                if (grade == null) continue;
+                overallScores.Add((id, grade.OverallPercentageGrade));
+            }
+
+            if (!overallScores.Any()) return null;
+
+
+            var standings = overallScores.OrderByDescending(score => score.grade)
+                .Select(s => (courseId, s.accountId, $"{overallScores.FindIndex(x => x.accountId == s.accountId) + 1}"))
+                .ToList();
+
+            if (accountId > 0)
+            {
+                var filtered = standings.FirstOrDefault(s => s.accountId == accountId);
+                return new List<(int, int, string)>() { filtered };
+            }
+
+            return standings;
+        }
+
+        /// <summary>
+        /// Adds announcement to Notifications table and sends email notifications.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="notification"></param>
+        /// <param name="sendEmail"></param>
+        /// <returns></returns>
+        public async Task<bool> Announcement(AzureDbContext db, Notification notification, bool sendEmail = false)
+        {
+            var saved = false;
+            try
+            {
+                db.Notifications.Add(notification);
+                saved = await db.SaveChangesAsync() > 0;
+
+                // gen unviewednotifs for students applicable to the notif
+                var students = await db.Enrollments.Where(e => e.CourseId == notification.CourseId).Select(e => e.AccountId).ToListAsync();
+                for (int i = 0; i < students.Count; i++)
+                {
+                    var notif = new NotificationViewed()
+                    {
+                        AccountId = students[i],
+                        NotificationId = notification.NotificationId,
+                        Viewed = false
+                    };
+
+                    db.NotificationsViewed.Add(notif);
+                    await db.SaveChangesAsync();
+                }
+                
+                if (sendEmail)
+                {
+                    var emails = await db.Accounts
+                        .Join(db.Enrollments, a => a.AccountId, e => e.AccountId, (a, e) => new { a, e })
+                        .Where(z => z.a.Role == (int)Role.STUDENT && z.a.DeleteDate == null && z.e.CourseId == notification.CourseId)
+                        .Select(z => z.a.Email).ToArrayAsync();
+
+                    var allSent = new bool[emails.Length];
+                    for (int i = 0; i < emails.Length; i++)
+                    {
+                        allSent[i] = await SendEmail(emails[i], db, notification);
+                    }
+
+                    saved = allSent.All(a => a) && saved;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return saved;
+        }
+
+        /// <summary>
+        /// Returns the notifications that have not been dismissed yet.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="acctId"></param>
+        /// <returns></returns>
+        public async Task<List<NotificationViewed>> GetUndismissedNotifications(AzureDbContext db, int acctId) => await db.NotificationsViewed.Where(v => v.AccountId == acctId && !v.Viewed).ToListAsync();
+
+        /// <summary>
+        /// Marks a notification as viewed.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="nfViewedId"></param>
+        /// <returns></returns>
+        public async Task<bool> DismissNotification(AzureDbContext db, ILocalStorageService storage, int nfViewedId)
+        {
+            var saved = false;
+            try
+            {
+                var nv = db.NotificationsViewed.FirstOrDefault(v => v.ViewedId == nfViewedId);
+                nv.Viewed = true;
+                saved = await db.SaveChangesAsync() > 0;
+
+                var activeNotifs = await GetUndismissedNotifications(db, nv.AccountId);
+                await BrowserStorage<List<NotificationViewed>>.SaveObject(storage, "activeNotifications", activeNotifs);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return saved;
         }
     }
 }
