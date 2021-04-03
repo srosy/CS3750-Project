@@ -166,7 +166,20 @@ else
             Model.Assignments = DbService.GetAssignments(AzureDb, Model.Courses);
             Model.Submissions = await AzureDb.Submissions.Where(s => s.DeleteDate == null).ToListAsync();
             Model.StudentAccounts = await AzureDb.Accounts.Where(a => a.Role == (int)Role.STUDENT).ToListAsync();
-            _chart = await DbService.GetAssignmentStandingChart(AzureDb, Model.Assignments, "Class Standing By Assignment");
+
+            var renderChart = false;
+            foreach (var ass in Model.Assignments)
+            {
+                if (Model.Submissions.Where(s => s.AssignmentId == ass.AssignmentId).ToArray().Length > 1)
+                {
+                    renderChart = true;
+                    break;
+                }
+            }
+            if (renderChart)
+            {
+                _chart = await DbService.GetAssignmentStandingChart(AzureDb, Model.Assignments, "Class Standing By Assignment");
+            }
             ResetForm();
         }
         else
@@ -233,9 +246,9 @@ else
         _filteredSubmissions = new List<Data.Models.Submission>();
 
         _filterCourse = Model.Courses.First(c => c.CourseId == _filterCourseId);
-        _filterAss = Model.Assignments.First(a => a.AssignmentId == _filterAssId);
+        _filterAss = Model.Assignments?.FirstOrDefault(a => a.AssignmentId == _filterAssId);
 
-        if (_filterAss.CourseId == _filterCourse.CourseId)
+        if (_filterAss != null && _filterAss.CourseId == _filterCourse.CourseId)
         {
             _filteredSubmissions = Model.Submissions.Where(s => s.AssignmentId == _filterAss.AssignmentId).ToList();
         }
@@ -244,7 +257,7 @@ else
 
     private async Task SetupChart()
     {
-        if (_chart != null && _chart.Series.Any())
+        if (_chart != null && _chart.Series.Any() && !_chart.Series.ToList().Any(s => s == null) && _chart.Series.Length > 1)
         {
             var series = _chart.Series.Where(s => s != null).Select(s => s.Data).ToArray();
             var categories = _chart.Series.Where(s => s != null).Select(s => s.Name).ToArray();
