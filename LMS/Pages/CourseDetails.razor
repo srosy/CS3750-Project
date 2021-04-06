@@ -95,12 +95,19 @@ else
 
         if (Model.Assignments.Any())
         {
-
+            var renderChart = false;
             _charts = new List<BoxPlotChart>();
             foreach (var ass in Model.Assignments)
             {
-                var chart = await DbService.GetAssignmentStandingChart(AzureDb, new List<Assignment>() { ass }, ass.Name);
-                _charts.Add(chart);
+                if (Model.Submissions.Where(s => s.AssignmentId == ass.AssignmentId).ToArray().Length <= 1)
+                {
+                    continue;
+                }
+                else
+                {
+                    var chart = await DbService.GetAssignmentStandingChart(AzureDb, new List<Assignment>() { ass }, ass.Name);
+                    _charts.Add(chart);
+                }
             }
         }
 

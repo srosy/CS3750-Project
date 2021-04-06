@@ -75,6 +75,7 @@
     {
         _resetCode = await DbService.GetVerificationCode(AzureDb, Model.Email);
         ResendEmail();
+        StateHasChanged();
     }
 }
 
