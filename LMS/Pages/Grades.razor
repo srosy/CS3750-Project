@@ -83,6 +83,10 @@ else
                                     </figure>
                                 </div>
                             }
+                            else
+                            {
+                                <h4>Not enough assignments graded to generate chart(s). At least 4 submissions must be graded per assignment for a chart to generate.</h4>
+                            }
                         }
                         else
                         {
@@ -257,7 +261,7 @@ else
 
     private async Task SetupChart()
     {
-        if (_chart != null && _chart.Series.Any() && !_chart.Series.ToList().Any(s => s == null) && _chart.Series.Length > 1)
+        if (_chart != null && _chart.Series.Any())
         {
             var series = _chart.Series.Where(s => s != null).Select(s => s.Data).ToArray();
             var categories = _chart.Series.Where(s => s != null).Select(s => s.Name).ToArray();

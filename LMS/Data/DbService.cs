@@ -1117,7 +1117,7 @@ namespace LMS.Data
                 .OrderBy(s => s)
                 .ToArrayAsync();
 
-                if (gradedSubmissions.Length <= 0) continue;
+                if (gradedSubmissions.Length <= 3) continue;
 
                 var quartileLength = (gradedSubmissions.Length / 2) - 1;
                 var quartileMedian = (int)(Math.Round(quartileLength / 2d, 0));
@@ -1144,6 +1144,7 @@ namespace LMS.Data
 
                 chart.Series[i] = series;
             }
+            chart.Series = chart.Series.Where(s => s != null).ToArray();
 
             return chart;
         }
